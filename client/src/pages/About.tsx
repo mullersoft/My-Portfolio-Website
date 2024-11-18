@@ -2,10 +2,6 @@ import React from "react";
 import {
   Container,
   Typography,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
   Paper,
   Grid,
 } from "@mui/material";
