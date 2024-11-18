@@ -1,0 +1,17 @@
+# Root-level .gitignore
+
+# Node.js dependencies
+client/node_modules/
+server/node_modules/
+
+# Logs
+client/logs/
+server/logs/
+
+# Build outputs
+client/build/
+server/dist/
+
+# Environment files
+client/.env
+server/.env
