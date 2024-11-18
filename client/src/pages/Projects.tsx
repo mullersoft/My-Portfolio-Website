@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React, { useEffect, useState } from "react";
 import {
   Container,
@@ -6,23 +5,22 @@ import {
   Grid,
   Card,
   CardContent,
-  CardMedia,
   CircularProgress,
   Alert,
-  Chip, // For displaying techStack items
-  Button, // For displaying the GitHub and Deployment links
-  Link, // For making the links clickable
+  Chip,
+  Button,
+  Link,
 } from "@mui/material";
-import { fetchProjects } from "../services/apiService.ts"; // Correctly imported API function
+import { fetchProjects } from "../services/apiService.ts";
 
 interface Project {
   _id: string;
   title: string;
   description: string;
   imageUrl: string;
-  techStack: string[]; // Added techStack field
-  githubLink: string; // GitHub link
-  deploymentLink: string; // Deployment link
+  techStack: string[];
+  githubLink: string;
+  deploymentLink: string;
 }
 
 const Projects: React.FC = () => {
@@ -33,8 +31,8 @@ const Projects: React.FC = () => {
   useEffect(() => {
     const fetchProjectsData = async () => {
       try {
-        const response = await fetchProjects(); // Using the correct API function
-        setProjects(response.data); // Assuming `response.data` is an array of projects
+        const response = await fetchProjects();
+        setProjects(response.data);
       } catch (err) {
         setError("Failed to fetch projects. Please try again later.");
       } finally {
@@ -47,14 +45,10 @@ const Projects: React.FC = () => {
 
   return (
     <Container>
-      {/* <Typography variant="h3" gutterBottom align="center" color="primary">
-        About Me
-      </Typography> */}
       <Typography variant="h3" gutterBottom align="center" color="primary">
         My Projects
       </Typography>
 
-      {/* Loading State */}
       {loading && (
         <Grid
           container
@@ -66,28 +60,19 @@ const Projects: React.FC = () => {
         </Grid>
       )}
 
-      {/* Error State */}
       {error && <Alert severity="error">{error}</Alert>}
 
-      {/* Projects List */}
       {!loading && !error && (
         <Grid container spacing={3}>
           {projects.map((project) => (
             <Grid item xs={12} md={4} key={project._id}>
               <Card>
-                {/* <CardMedia
-                  component="img"
-                  height="140"
-                  image={project.imageUrl || "https://via.placeholder.com/150"} // Fallback image
-                  alt={project.title}
-                /> */}
                 <CardContent>
                   <Typography variant="h5">{project.title}</Typography>
                   <Typography variant="body2" paragraph>
                     {project.description}
                   </Typography>
 
-                  {/* Tech Stack */}
                   <div style={{ marginTop: "10px" }}>
                     <Typography variant="body2" color="textSecondary">
                       <strong>Tech Stack:</strong>
@@ -101,7 +86,6 @@ const Projects: React.FC = () => {
                     </Grid>
                   </div>
 
-                  {/* GitHub and Deployment Links */}
                   <div style={{ marginTop: "15px" }}>
                     <Button
                       variant="outlined"
