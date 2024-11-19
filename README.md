@@ -8,7 +8,7 @@ This is a full-stack portfolio website with a frontend built using React, and a 
   - Built using **React** and **TypeScript**
   - Responsive and interactive user interface
   - Fetches data from the backend API for users, projects, and contact form submission
-  - Deployed on **Netlify** (Frontend URL: [https://adorable-kelpie-19779b.netlify.app](https://adorable-kelpie-19779b.netlify.app))
+  - Deployed on **Netlify** (Frontend URL: [https://aesthetic-stroopwafel-42b2f3.netlify.app/](https://aesthetic-stroopwafel-42b2f3.netlify.app/))
 
 - **Backend**:
   - Built using **NestJS** and **TypeScript**
