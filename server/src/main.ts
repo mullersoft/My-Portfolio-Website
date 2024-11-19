@@ -8,7 +8,7 @@ async function bootstrap() {
   // Correct CORS configuration (with or without trailing slash)
   app.use(
     cors({
-      origin: 'https://adorable-kelpie-19779b.netlify.app', // Make sure it matches exactly with the frontend URL (no trailing slash)
+      origin: 'https://aesthetic-stroopwafel-42b2f3.netlify.app', // Make sure it matches exactly with the frontend URL (no trailing slash)
       methods: ['GET', 'POST', 'PUT', 'DELETE'],
       allowedHeaders: ['Content-Type', 'Authorization'],
     }),
