@@ -1,8 +1,8 @@
 // src/services/apiService.ts
 import axios from "axios";
 
-// const API_URL = "http://localhost:5000";
-const API_URL = "my-portfolio-website-3.onrender.com";
+// Use the correct API URL based on your deployment.
+const API_URL = "https://my-portfolio-website-3.onrender.com"; // Ensure the URL is correct
 
 // Users API
 export const fetchUsers = async () => {
@@ -35,4 +35,4 @@ export const sendMessage = async (contact: {
   return await axios.post(`${API_URL}/contact`, contact);
 };
 
-// Additional functions for other endpoints (e.g., contact form) can be added here
+// Additional functions for other endpoints can be added here
