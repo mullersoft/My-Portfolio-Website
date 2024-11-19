@@ -2,8 +2,7 @@
 import axios from "axios";
 
 // const API_URL = "http://localhost:5000";
-const API_URL = "https://adorable-kelpie-19779b.netlify.app/";
-
+const API_URL = "my-portfolio-website-3.onrender.com";
 
 // Users API
 export const fetchUsers = async () => {
