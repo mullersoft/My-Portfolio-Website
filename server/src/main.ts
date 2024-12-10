@@ -5,16 +5,16 @@ import * as cors from 'cors'; // Import cors
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Correct CORS configuration (with or without trailing slash)
+  // Correct CORS configuration 
   app.use(
     cors({
-      origin: 'https://aesthetic-stroopwafel-42b2f3.netlify.app', // Make sure it matches exactly with the frontend URL (no trailing slash)
+      origin: 'https://aesthetic-stroopwafel-42b2f3.netlify.app', 
       methods: ['GET', 'POST', 'PUT', 'DELETE'],
       allowedHeaders: ['Content-Type', 'Authorization'],
     }),
   );
 
-  await app.listen(5000); // Ensure this is the correct port your backend is running on
+  await app.listen(5000); 
 }
 
 bootstrap();
