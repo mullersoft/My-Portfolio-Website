@@ -1,8 +1,7 @@
-// src/services/apiService.ts
 import axios from "axios";
 
-// Use the correct API URL based on your deployment.
-const API_URL = "https://my-portfolio-website-3.onrender.com"; // Ensure the URL is correct
+// Define the base API URL for different environments
+const API_URL = "http://localhost:5000";
 
 // Users API
 export const fetchUsers = async () => {
@@ -35,4 +34,7 @@ export const sendMessage = async (contact: {
   return await axios.post(`${API_URL}/contact`, contact);
 };
 
-// Additional functions for other endpoints can be added here
+// Chatbot API
+export const askChatbot = async (prompt: string) => {
+  return await axios.post(`${API_URL}/chatgpt/ask`, { prompt });
+};

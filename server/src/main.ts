@@ -1,20 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as cors from 'cors'; // Import cors
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Correct CORS configuration (with or without trailing slash)
-  app.use(
-    cors({
-      origin: 'https://aesthetic-stroopwafel-42b2f3.netlify.app', // Make sure it matches exactly with the frontend URL (no trailing slash)
-      methods: ['GET', 'POST', 'PUT', 'DELETE'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
-    }),
-  );
+  // Correct CORS configuration
+  app.enableCors(); // Enable CORS for all origins (or configure it as needed)
 
-  await app.listen(5000); // Ensure this is the correct port your backend is running on
+  await app.listen(5000);
 }
 
 bootstrap();
