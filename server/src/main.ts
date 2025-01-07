@@ -8,7 +8,7 @@ async function bootstrap() {
 
   const allowedOrigins = [
     // 'http://localhost:3000/', // Local development
-    'https://aesthetic-stroopwafel-42b2f3.netlify.app/', // Deployed frontend
+    'https://aesthetic-stroopwafel-42b2f3.netlify.app', // Deployed frontend
   ];
 
   app.enableCors({
