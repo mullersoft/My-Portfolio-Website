@@ -7,7 +7,7 @@ import {
   Box,
   CircularProgress,
 } from "@mui/material";
-import { sendMessage } from "../services/apiService.ts";
+import { sendMessage } from "../services/apiService";
 
 const Contact: React.FC = () => {
   const [name, setName] = useState("");

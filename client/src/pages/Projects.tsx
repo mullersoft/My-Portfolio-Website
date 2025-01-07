@@ -1,3 +1,4 @@
+// D:\web D\portfolio-website\client\src\pages\Projects.tsx
 import React, { useEffect, useState } from "react";
 import {
   Container,
@@ -11,7 +12,7 @@ import {
   Button,
   Link,
 } from "@mui/material";
-import { fetchProjects } from "../services/apiService.ts";
+import { fetchProjects } from "../services/apiService";
 
 interface Project {
   _id: string;

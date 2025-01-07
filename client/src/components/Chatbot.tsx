@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Box, TextField, Button, Typography } from "@mui/material";
-import { askChatbot } from "../services/apiService.ts";
+import { askChatbot } from "../services/apiService";
 
 const Chatbot: React.FC = () => {
   const [userMessage, setUserMessage] = useState<string>(""); // User's message
