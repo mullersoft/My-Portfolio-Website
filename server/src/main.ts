@@ -7,7 +7,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const allowedOrigins = [
-    'http://localhost:3000/', // Local development
+    // 'http://localhost:3000/', // Local development
     'https://aesthetic-stroopwafel-42b2f3.netlify.app/', // Deployed frontend
   ];
 
