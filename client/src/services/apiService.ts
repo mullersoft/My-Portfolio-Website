@@ -1,8 +1,9 @@
 import axios from "axios";
 
 // Get the API URL from environment variables
-const API_URL = process.env.REACT_APP_API_URL;
-console.log(API_URL);
+// const API_URL = process.env.REACT_APP_API_URL;
+const API_URL = "https://my-portfolio-website-3.onrender.com";
+// console.log(API_URL);
 // Users API
 export const fetchUsers = async () => {
   return await axios.get(`${API_URL}/users`);
