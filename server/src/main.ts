@@ -1,15 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as dotenv from 'dotenv';
-
 dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const allowedOrigins = process.env.NODE_ENV === 'development'
-    ? ['http://localhost:3000']
-    : ['https://aesthetic-stroopwafel-42b2f3.netlify.app'];
+  const allowedOrigins = [
+    // 'http://localhost:3000/', // Local development
+    'https://aesthetic-stroopwafel-42b2f3.netlify.app', // Deployed frontend
+  ];
 
   app.enableCors({
     origin: (origin, callback) => {
