@@ -1,22 +1,26 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as dotenv from 'dotenv';
-
 dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Allow all origins
+  const allowedOrigins = [
+    'https://aesthetic-stroopwafel-42b2f3.netlify.app', // Replace with your actual frontend URL
+  ];
+
   app.enableCors({
-    origin: '*', // Open CORS policy
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS', // Allow all HTTP methods
-    credentials: true, // Include cookies if necessary
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
   });
 
-  const PORT = process.env.PORT || 5000;
-  await app.listen(PORT);
-  console.log(`Server is running on http://localhost:${PORT}`);
+  await app.listen(5000);
 }
 
 bootstrap();
