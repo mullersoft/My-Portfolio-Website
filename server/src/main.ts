@@ -7,14 +7,11 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Explicit CORS configuration
+  // Allow all origins
   app.enableCors({
-    origin: [
-      'http://localhost:3000', // Local development
-      'https://aesthetic-stroopwafel-42b2f3.netlify.app', // Deployed frontend
-    ],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    credentials: true, // Allow cookies if needed
+    origin: '*', // Open CORS policy
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS', // Allow all HTTP methods
+    credentials: true, // Include cookies if necessary
   });
 
   const PORT = process.env.PORT || 5000;
