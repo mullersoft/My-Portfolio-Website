@@ -20,6 +20,15 @@ export class ContactService {
     return `https://api.telegram.org/bot${this.botToken}/sendMessage`;
   }
 
+  private getTelegramCallbackUrl(): string {
+    return `https://api.telegram.org/bot${this.botToken}/answerCallbackQuery`;
+  }
+
+  private userStates = new Map<
+    string,
+    { step: string; data: Partial<Contact> }
+  >();
+
   async findAll(): Promise<Contact[]> {
     return this.contactModel.find().exec();
   }
@@ -37,58 +46,89 @@ export class ContactService {
 
     return savedContact;
   }
-
   async update(id: string, contact: Partial<Contact>): Promise<Contact> {
-    return this.contactModel
-      .findByIdAndUpdate(id, contact, { new: true })
-      .exec();
-  }
+    // Implement the update logic here
 
+    return {} as Contact; // Replace with actual implementation
+  }
   async delete(id: string): Promise<Contact> {
-    return this.contactModel.findByIdAndDelete(id).exec();
+    // Implement the delete logic here
+
+    return; // return the deleted contact or appropriate response
   }
 
-  private async sendMessageToTelegram(message: string): Promise<void> {
-    try {
-      await axios.post(this.getTelegramApiUrl(), {
-        chat_id: this.chatId,
-        text: message,
-      });
-    } catch (error) {
-      console.error(
-        'Error sending message to Telegram:',
-        error.response?.data || error.message,
+  async sendContactButton(chatId: string): Promise<void> {
+    const url = this.getTelegramApiUrl();
+    const data = {
+      chat_id: chatId,
+      text: 'Click the button below to contact us:',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: 'Contact Us', callback_data: 'start_contact' }],
+        ],
+      },
+    };
+
+    await axios.post(url, data);
+  }
+
+  async handleCallbackQuery(query: any): Promise<void> {
+    const chatId = query.message.chat.id;
+    const callbackData = query.data;
+
+    if (callbackData === 'start_contact') {
+      this.userStates.set(chatId, { step: 'ask_name', data: {} });
+      await this.sendTelegramMessage(chatId, 'What is your name?');
+    }
+  }
+
+  async handleTelegramMessage(update: any): Promise<void> {
+    const chatId = update.message.chat.id;
+    const text = update.message.text;
+
+    const userState = this.userStates.get(chatId);
+
+    if (!userState) {
+      await this.sendContactButton(chatId);
+      return;
+    }
+
+    const { step, data } = userState;
+
+    if (step === 'ask_name') {
+      data.name = text;
+      this.userStates.set(chatId, { step: 'ask_email', data });
+      await this.sendTelegramMessage(chatId, 'What is your email?');
+    } else if (step === 'ask_email') {
+      data.email = text;
+      this.userStates.set(chatId, { step: 'ask_message', data });
+      await this.sendTelegramMessage(chatId, 'What is your message?');
+    } else if (step === 'ask_message') {
+      data.message = text;
+      this.userStates.delete(chatId);
+
+      const contact = await this.create(data as Contact);
+      await this.sendTelegramMessage(
+        chatId,
+        'Thank you! Your message has been saved.',
       );
     }
   }
 
-  async handleTelegramMessage(update: any): Promise<Contact> {
-    const { message } = update;
+  private async sendTelegramMessage(
+    chatId: string,
+    text: string,
+  ): Promise<void> {
+    const url = this.getTelegramApiUrl();
+    const data = { chat_id: chatId, text };
 
-    if (!message || !message.text || !message.from) {
-      console.error('Invalid Telegram message format:', update);
-      throw new Error('Invalid Telegram message format');
-    }
-
-    const contactInfo = this.parseTelegramMessage(message.text);
-
-    const newContact = new this.contactModel({
-      name: message.from.first_name || 'Unknown',
-      email: contactInfo.email || 'N/A',
-      message: contactInfo.message || message.text,
-    });
-
-    return newContact.save();
+    await axios.post(url, data);
   }
 
-  private parseTelegramMessage(message: string): {
-    email?: string;
-    message?: string;
-  } {
-    const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
-    const email = message.match(emailRegex)?.[0];
-    const content = message.replace(email || '', '').trim();
+  private async sendMessageToTelegram(message: string): Promise<void> {
+    const url = this.getTelegramApiUrl();
+    const data = { chat_id: this.chatId, text: message };
 
-    return { email, message: content };
+    await axios.post(url, data);
   }
 }

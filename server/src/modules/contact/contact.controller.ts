@@ -44,12 +44,11 @@ export class ContactController {
 
   @Post('telegram-webhook')
   async handleTelegramWebhook(@Body() update: any): Promise<any> {
-    try {
-      const contact = await this.contactService.handleTelegramMessage(update);
-      return { success: true, data: contact };
-    } catch (error) {
-      console.error('Error handling Telegram webhook:', error.message);
-      return { success: false, message: error.message };
+    if (update.message) {
+      await this.contactService.handleTelegramMessage(update);
+    } else if (update.callback_query) {
+      await this.contactService.handleCallbackQuery(update.callback_query);
     }
+    return { success: true };
   }
 }
