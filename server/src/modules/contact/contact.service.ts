@@ -37,7 +37,7 @@ export class ContactService {
     return this.contactModel.findById(id).exec();
   }
 
-  async create(contact: Contact): Promise<Contact> {
+  async create(contact: Partial<Contact>): Promise<Contact> {
     const newContact = new this.contactModel(contact);
     const savedContact = await newContact.save();
 
@@ -48,13 +48,13 @@ export class ContactService {
   }
 
   async update(id: string, contact: Partial<Contact>): Promise<Contact> {
-    // Implement the update logic here
-    return {} as Contact; // Replace with actual implementation
+    return this.contactModel
+      .findByIdAndUpdate(id, contact, { new: true })
+      .exec();
   }
 
   async delete(id: string): Promise<Contact> {
-    // Implement the delete logic here
-    return {} as Contact; // return the deleted contact or appropriate response
+    return this.contactModel.findByIdAndDelete(id).exec();
   }
 
   async sendContactButton(chatId: string): Promise<void> {
@@ -77,7 +77,6 @@ export class ContactService {
     const callbackData = query.data;
 
     if (callbackData === 'start_contact') {
-      // Start the contact flow
       this.userStates.set(chatId, { step: 'ask_name', data: {} });
       await this.sendTelegramMessage(chatId, 'What is your name?');
     }
@@ -87,21 +86,14 @@ export class ContactService {
     const chatId = update.message.chat.id;
     const text = update.message.text;
 
-    console.log(`Received message: ${text} from chat: ${chatId}`);
-
     const userState = this.userStates.get(chatId);
 
     if (!userState) {
-      console.log(
-        `No state found for chat: ${chatId}. Sending contact button.`,
-      );
       await this.sendContactButton(chatId);
       return;
     }
 
     const { step, data } = userState;
-
-    console.log(`Current step: ${step}, Data: ${JSON.stringify(data)}`);
 
     if (step === 'ask_name') {
       data.name = text;
@@ -115,8 +107,7 @@ export class ContactService {
       data.message = text;
       this.userStates.delete(chatId);
 
-      const contact = await this.create(data as Contact);
-      console.log(`Saved contact: ${JSON.stringify(contact)}`);
+      const contact = await this.create(data as Partial<Contact>);
       await this.sendTelegramMessage(
         chatId,
         'Thank you! Your message has been saved.',
