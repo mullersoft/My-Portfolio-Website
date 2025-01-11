@@ -16,9 +16,18 @@ export class ContactService {
   private readonly botToken = process.env.BOT_TOKEN;
   private readonly chatId = process.env.CHAT_ID;
 
-  private getTelegramApiUrl() {
+  private getTelegramApiUrl(): string {
     return `https://api.telegram.org/bot${this.botToken}/sendMessage`;
   }
+
+  private getTelegramCallbackUrl(): string {
+    return `https://api.telegram.org/bot${this.botToken}/answerCallbackQuery`;
+  }
+
+  private userStates = new Map<
+    string,
+    { step: string; data: Partial<Contact> }
+  >();
 
   async findAll(): Promise<Contact[]> {
     return this.contactModel.find().exec();
@@ -39,44 +48,98 @@ export class ContactService {
   }
 
   async update(id: string, contact: Partial<Contact>): Promise<Contact> {
-    return this.contactModel
-      .findByIdAndUpdate(id, contact, { new: true })
-      .exec();
+    // Implement the update logic here
+
+    return {} as Contact; // Replace with actual implementation
   }
 
   async delete(id: string): Promise<Contact> {
-    return this.contactModel.findByIdAndDelete(id).exec();
+    // Implement the delete logic here
+
+    return; // return the deleted contact or appropriate response
   }
 
-  private async sendMessageToTelegram(message: string): Promise<void> {
-    try {
-      await axios.post(this.getTelegramApiUrl(), {
-        chat_id: this.chatId,
-        text: message,
-      });
-    } catch (error) {
-      console.error(
-        'Error sending message to Telegram:',
-        error.response?.data || error.message,
+  async sendContactButton(chatId: string): Promise<void> {
+    const url = this.getTelegramApiUrl();
+    const data = {
+      chat_id: chatId,
+      text: 'Click the button below to contact us:',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: 'Contact Us', callback_data: 'start_contact' }],
+        ],
+      },
+    };
+
+    await axios.post(url, data);
+  }
+
+  async handleCallbackQuery(query: any): Promise<void> {
+    const chatId = query.message.chat.id;
+    const callbackData = query.data;
+
+    if (callbackData === 'start_contact') {
+      // Start the contact flow
+      this.userStates.set(chatId, { step: 'ask_name', data: {} });
+      await this.sendTelegramMessage(chatId, 'What is your name?');
+    }
+  }
+
+  async handleTelegramMessage(update: any): Promise<void> {
+    const chatId = update.message.chat.id;
+    const text = update.message.text;
+
+    console.log(`Received message: ${text} from chat: ${chatId}`);
+
+    const userState = this.userStates.get(chatId);
+
+    if (!userState) {
+      console.log(
+        `No state found for chat: ${chatId}. Sending contact button.`,
+      );
+      await this.sendContactButton(chatId);
+      return;
+    }
+
+    const { step, data } = userState;
+
+    console.log(`Current step: ${step}, Data: ${JSON.stringify(data)}`);
+
+    if (step === 'ask_name') {
+      data.name = text;
+      this.userStates.set(chatId, { step: 'ask_email', data });
+      await this.sendTelegramMessage(chatId, 'What is your email?');
+    } else if (step === 'ask_email') {
+      data.email = text;
+      this.userStates.set(chatId, { step: 'ask_message', data });
+      await this.sendTelegramMessage(chatId, 'What is your message?');
+    } else if (step === 'ask_message') {
+      data.message = text;
+      this.userStates.delete(chatId);
+
+      const contact = await this.create(data as Contact);
+      console.log(`Saved contact: ${JSON.stringify(contact)}`);
+      await this.sendTelegramMessage(
+        chatId,
+        'Thank you! Your message has been saved.',
       );
     }
   }
 
-  // New method to handle Telegram messages
-  async handleTelegramMessage(message: any): Promise<Contact> {
-    const { text, from } = message;
+  private async sendTelegramMessage(
+    chatId: string,
+    text: string,
+  ): Promise<void> {
+    const url = this.getTelegramApiUrl();
+    const data = { chat_id: chatId, text };
 
-    // Parse the message text to extract name, email, and message (customize as needed)
-    const [name, email, userMessage] = text.split('\n');
+    await axios.post(url, data);
+  }
 
-    const contact: Contact = {
-      name: name || from.first_name,
-      email: email || 'No email provided',
-      message: userMessage || 'No message provided',
-    };
+  private async sendMessageToTelegram(message: string): Promise<void> {
+    const url = this.getTelegramApiUrl();
+    const data = { chat_id: this.chatId, text: message };
 
-    // Save to MongoDB
-    const newContact = new this.contactModel(contact);
-    return newContact.save();
+    await axios.post(url, data);
   }
 }

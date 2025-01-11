@@ -42,13 +42,22 @@ export class ContactController {
     return this.contactService.delete(id);
   }
 
-  // New route for Telegram webhook
-  @Post('telegram/webhook')
-  async handleTelegramWebhook(@Body() body: any): Promise<Contact> {
-    const message = body.message;
-    if (message) {
-      return this.contactService.handleTelegramMessage(message);
+  // @Post('telegram-webhook')
+  // async handleTelegramWebhook(@Body() update: any): Promise<any> {
+  //   if (update.message) {
+  //     await this.contactService.handleTelegramMessage(update);
+  //   } else if (update.callback_query) {
+  //     await this.contactService.handleCallbackQuery(update.callback_query);
+  //   }
+  //   return { success: true };
+  // }
+  @Post('telegram-webhook')
+  async handleTelegramWebhook(@Body() update: any): Promise<any> {
+    if (update.message) {
+      await this.contactService.handleTelegramMessage(update);
+    } else if (update.callback_query) {
+      await this.contactService.handleCallbackQuery(update.callback_query);
     }
-    return null;
+    return { success: true };
   }
 }
