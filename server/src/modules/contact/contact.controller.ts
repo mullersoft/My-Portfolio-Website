@@ -1,4 +1,3 @@
-// server/src/modules/contact/contact.controller.ts
 import {
   Controller,
   Get,
@@ -7,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Req,
 } from '@nestjs/common';
 import { ContactService } from './contact.service';
 import { Contact } from './contact.schema';
@@ -15,25 +15,21 @@ import { Contact } from './contact.schema';
 export class ContactController {
   constructor(private readonly contactService: ContactService) {}
 
-  // Get all contacts
   @Get()
   async findAll(): Promise<Contact[]> {
     return this.contactService.findAll();
   }
 
-  // Get a single contact by ID
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Contact> {
     return this.contactService.findOne(id);
   }
 
-  // Create a new contact
   @Post()
   async create(@Body() contact: Contact): Promise<Contact> {
     return this.contactService.create(contact);
   }
 
-  // Update a contact by ID
   @Put(':id')
   async update(
     @Param('id') id: string,
@@ -42,9 +38,14 @@ export class ContactController {
     return this.contactService.update(id, contact);
   }
 
-  // Delete a contact by ID
   @Delete(':id')
   async delete(@Param('id') id: string): Promise<Contact> {
     return this.contactService.delete(id);
+  }
+
+  // New webhook endpoint for Telegram
+  @Post('telegram-webhook')
+  async handleTelegramWebhook(@Body() update: any): Promise<Contact> {
+    return this.contactService.handleTelegramMessage(update);
   }
 }

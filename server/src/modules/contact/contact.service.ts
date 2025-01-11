@@ -50,19 +50,45 @@ export class ContactService {
 
   private async sendMessageToTelegram(message: string): Promise<void> {
     try {
-      await axios.post(this.getTelegramApiUrl(), {
-        chat_id: this.chatId,
-        text: message,
-      }, {
-        timeout: 5000,
-      });
+      await axios.post(
+        this.getTelegramApiUrl(),
+        {
+          chat_id: this.chatId,
+          text: message,
+        },
+        {
+          timeout: 5000,
+        },
+      );
     } catch (error) {
       console.error(
         'Error sending message to Telegram:',
         error.response?.data || error.message,
-        'Request Data:', { chat_id: this.chatId, text: message },
-        'Environment:', process.env.NODE_ENV,
       );
     }
+  }
+
+  // New method to handle Telegram webhook
+  async handleTelegramMessage(telegramMessage: any): Promise<Contact> {
+    const { text, from } = telegramMessage.message;
+    const contactInfo = this.parseTelegramMessage(text);
+
+    const newContact = new this.contactModel({
+      name: from.first_name || 'Unknown',
+      email: contactInfo.email || 'N/A',
+      message: contactInfo.message || text,
+    });
+
+    return newContact.save();
+  }
+
+  private parseTelegramMessage(message: string): {
+    email?: string;
+    message?: string;
+  } {
+    const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
+    const email = message.match(emailRegex)?.[0];
+    const content = message.replace(email || '', '').trim();
+    return { email, message: content };
   }
 }
