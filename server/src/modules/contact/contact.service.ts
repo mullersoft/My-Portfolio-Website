@@ -16,7 +16,7 @@ export class ContactService {
   private readonly botToken = process.env.BOT_TOKEN;
   private readonly chatId = process.env.CHAT_ID;
 
-  private getTelegramApiUrl() {
+  private getTelegramApiUrl(): string {
     return `https://api.telegram.org/bot${this.botToken}/sendMessage`;
   }
 
@@ -50,16 +50,10 @@ export class ContactService {
 
   private async sendMessageToTelegram(message: string): Promise<void> {
     try {
-      await axios.post(
-        this.getTelegramApiUrl(),
-        {
-          chat_id: this.chatId,
-          text: message,
-        },
-        {
-          timeout: 5000,
-        },
-      );
+      await axios.post(this.getTelegramApiUrl(), {
+        chat_id: this.chatId,
+        text: message,
+      });
     } catch (error) {
       console.error(
         'Error sending message to Telegram:',
@@ -68,24 +62,22 @@ export class ContactService {
     }
   }
 
-  async handleTelegramMessage(telegramMessage: any): Promise<Contact> {
-    console.log('Processing Telegram message:', telegramMessage);
+  async handleTelegramMessage(update: any): Promise<Contact> {
+    const { message } = update;
 
-    const { text, from } = telegramMessage.message;
-    if (!text || !from) {
-      console.error('Invalid Telegram message format:', telegramMessage);
+    if (!message || !message.text || !message.from) {
+      console.error('Invalid Telegram message format:', update);
       throw new Error('Invalid Telegram message format');
     }
 
-    const contactInfo = this.parseTelegramMessage(text);
+    const contactInfo = this.parseTelegramMessage(message.text);
 
     const newContact = new this.contactModel({
-      name: from.first_name || 'Unknown',
+      name: message.from.first_name || 'Unknown',
       email: contactInfo.email || 'N/A',
-      message: contactInfo.message || text,
+      message: contactInfo.message || message.text,
     });
 
-    console.log('Saving contact to MongoDB:', newContact);
     return newContact.save();
   }
 
@@ -93,14 +85,10 @@ export class ContactService {
     email?: string;
     message?: string;
   } {
-    try {
-      const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
-      const email = message.match(emailRegex)?.[0];
-      const content = message.replace(email || '', '').trim();
-      return { email, message: content };
-    } catch (error) {
-      console.error('Error parsing Telegram message:', message, error);
-      return { email: undefined, message: undefined };
-    }
+    const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
+    const email = message.match(emailRegex)?.[0];
+    const content = message.replace(email || '', '').trim();
+
+    return { email, message: content };
   }
 }

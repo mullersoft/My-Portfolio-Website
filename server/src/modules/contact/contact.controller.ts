@@ -6,7 +6,6 @@ import {
   Delete,
   Body,
   Param,
-  Req,
 } from '@nestjs/common';
 import { ContactService } from './contact.service';
 import { Contact } from './contact.schema';
@@ -43,23 +42,14 @@ export class ContactController {
     return this.contactService.delete(id);
   }
 
-  // Webhook endpoint for Telegram
   @Post('telegram-webhook')
   async handleTelegramWebhook(@Body() update: any): Promise<any> {
-    console.log('Received Telegram update:', update);
-
-    // Check if the update contains a message
-    if (!update.message) {
-      console.error('Invalid Telegram update format:', update);
-      return { success: false, message: 'Invalid Telegram update format' };
-    }
-
     try {
       const contact = await this.contactService.handleTelegramMessage(update);
       return { success: true, data: contact };
     } catch (error) {
-      console.error('Error handling Telegram webhook:', error);
-      return { success: false, message: 'Error handling Telegram webhook' };
+      console.error('Error handling Telegram webhook:', error.message);
+      return { success: false, message: error.message };
     }
   }
 }
