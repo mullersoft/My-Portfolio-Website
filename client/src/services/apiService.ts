@@ -1,8 +1,8 @@
 import axios from "axios";
 
 // Get the API URL from environment variables
-// const API_URL = "https://my-portfolio-website-z18d.onrender.com";
-const API_URL = "http://localhost:5000";
+const API_URL = "https://my-portfolio-website-z18d.onrender.com";
+// const API_URL = "http://localhost:5000";
 
 //const API_URL = process.env.REACT_APP_API_URL;
 

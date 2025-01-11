@@ -7,8 +7,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const allowedOrigins = [
-    // 'https://aesthetic-stroopwafel-42b2f3.netlify.app',
-    'http://localhost:3000',
+    'https://aesthetic-stroopwafel-42b2f3.netlify.app',
+    // 'http://localhost:3000',
   ];
 
   app.enableCors({
