@@ -42,15 +42,6 @@ export class ContactController {
     return this.contactService.delete(id);
   }
 
-  // @Post('telegram-webhook')
-  // async handleTelegramWebhook(@Body() update: any): Promise<any> {
-  //   if (update.message) {
-  //     await this.contactService.handleTelegramMessage(update);
-  //   } else if (update.callback_query) {
-  //     await this.contactService.handleCallbackQuery(update.callback_query);
-  //   }
-  //   return { success: true };
-  // }
   @Post('telegram-webhook')
   async handleTelegramWebhook(@Body() update: any): Promise<any> {
     if (update.message) {
