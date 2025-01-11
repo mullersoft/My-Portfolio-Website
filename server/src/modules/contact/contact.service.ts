@@ -3,84 +3,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Contact } from './contact.schema';
 import axios from 'axios';
-import * as dotenv from 'dotenv';
-
-dotenv.config();
 
 @Injectable()
 export class ContactService {
+  private userStates = new Map<string, { step: string; data: any }>();
+
   constructor(
     @InjectModel(Contact.name) private contactModel: Model<Contact>,
   ) {}
-
-  private readonly botToken = process.env.BOT_TOKEN;
-  private readonly chatId = process.env.CHAT_ID;
-
-  private getTelegramApiUrl(): string {
-    return `https://api.telegram.org/bot${this.botToken}/sendMessage`;
-  }
-
-  private getTelegramCallbackUrl(): string {
-    return `https://api.telegram.org/bot${this.botToken}/answerCallbackQuery`;
-  }
-
-  private userStates = new Map<
-    string,
-    { step: string; data: Partial<Contact> }
-  >();
-
-  async findAll(): Promise<Contact[]> {
-    return this.contactModel.find().exec();
-  }
-
-  async findOne(id: string): Promise<Contact> {
-    return this.contactModel.findById(id).exec();
-  }
-
-  async create(contact: Partial<Contact>): Promise<Contact> {
-    const newContact = new this.contactModel(contact);
-    const savedContact = await newContact.save();
-
-    const telegramMessage = `📬 New Contact Message:\n\nName: ${contact.name}\nEmail: ${contact.email}\nMessage: ${contact.message}`;
-    await this.sendMessageToTelegram(telegramMessage);
-
-    return savedContact;
-  }
-
-  async update(id: string, contact: Partial<Contact>): Promise<Contact> {
-    return this.contactModel
-      .findByIdAndUpdate(id, contact, { new: true })
-      .exec();
-  }
-
-  async delete(id: string): Promise<Contact> {
-    return this.contactModel.findByIdAndDelete(id).exec();
-  }
-
-  async sendContactButton(chatId: string): Promise<void> {
-    const url = this.getTelegramApiUrl();
-    const data = {
-      chat_id: chatId,
-      text: 'Click the button below to contact us:',
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: 'Contact Us', callback_data: 'start_contact' }],
-        ],
-      },
-    };
-
-    await axios.post(url, data);
-  }
-
-  async handleCallbackQuery(query: any): Promise<void> {
-    const chatId = query.message.chat.id;
-    const callbackData = query.data;
-
-    if (callbackData === 'start_contact') {
-      this.userStates.set(chatId, { step: 'ask_name', data: {} });
-      await this.sendTelegramMessage(chatId, 'What is your name?');
-    }
-  }
 
   async handleTelegramMessage(update: any): Promise<void> {
     const chatId = update.message.chat.id;
@@ -107,12 +37,30 @@ export class ContactService {
       data.message = text;
       this.userStates.delete(chatId);
 
+      // Use Partial<Contact> to create the contact
       const contact = await this.create(data as Partial<Contact>);
       await this.sendTelegramMessage(
         chatId,
         'Thank you! Your message has been saved.',
       );
     }
+  }
+
+  async create(contact: Partial<Contact>): Promise<Contact> {
+    // Create a new Mongoose document
+    const newContact = new this.contactModel(contact);
+    return newContact.save();
+  }
+
+  private async sendContactButton(chatId: string): Promise<void> {
+    const url = this.getTelegramApiUrl();
+    const data = {
+      chat_id: chatId,
+      text: 'Please provide your name to start.',
+    };
+
+    this.userStates.set(chatId, { step: 'ask_name', data: {} });
+    await axios.post(url, data);
   }
 
   private async sendTelegramMessage(
@@ -125,10 +73,8 @@ export class ContactService {
     await axios.post(url, data);
   }
 
-  private async sendMessageToTelegram(message: string): Promise<void> {
-    const url = this.getTelegramApiUrl();
-    const data = { chat_id: this.chatId, text: message };
-
-    await axios.post(url, data);
+  private getTelegramApiUrl(): string {
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    return `https://api.telegram.org/bot${token}/sendMessage`;
   }
 }
