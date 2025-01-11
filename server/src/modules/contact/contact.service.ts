@@ -89,14 +89,21 @@ export class ContactService {
     const chatId = update.message.chat.id;
     const text = update.message.text;
 
+    console.log(`Received message: ${text} from chat: ${chatId}`);
+
     const userState = this.userStates.get(chatId);
 
     if (!userState) {
+      console.log(
+        `No state found for chat: ${chatId}. Sending contact button.`,
+      );
       await this.sendContactButton(chatId);
       return;
     }
 
     const { step, data } = userState;
+
+    console.log(`Current step: ${step}, Data: ${JSON.stringify(data)}`);
 
     if (step === 'ask_name') {
       data.name = text;
@@ -108,10 +115,10 @@ export class ContactService {
       await this.sendTelegramMessage(chatId, 'What is your message?');
     } else if (step === 'ask_message') {
       data.message = text;
-      this.userStates.delete(chatId); // End the conversation
+      this.userStates.delete(chatId);
 
-      // Save the contact data
       const contact = await this.create(data as Contact);
+      console.log(`Saved contact: ${JSON.stringify(contact)}`);
       await this.sendTelegramMessage(
         chatId,
         'Thank you! Your message has been saved.',
