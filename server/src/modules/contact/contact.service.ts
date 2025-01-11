@@ -46,11 +46,13 @@ export class ContactService {
 
     return savedContact;
   }
+
   async update(id: string, contact: Partial<Contact>): Promise<Contact> {
     // Implement the update logic here
 
     return {} as Contact; // Replace with actual implementation
   }
+
   async delete(id: string): Promise<Contact> {
     // Implement the delete logic here
 
@@ -77,6 +79,7 @@ export class ContactService {
     const callbackData = query.data;
 
     if (callbackData === 'start_contact') {
+      // Start the contact flow
       this.userStates.set(chatId, { step: 'ask_name', data: {} });
       await this.sendTelegramMessage(chatId, 'What is your name?');
     }
@@ -105,8 +108,9 @@ export class ContactService {
       await this.sendTelegramMessage(chatId, 'What is your message?');
     } else if (step === 'ask_message') {
       data.message = text;
-      this.userStates.delete(chatId);
+      this.userStates.delete(chatId); // End the conversation
 
+      // Save the contact data
       const contact = await this.create(data as Contact);
       await this.sendTelegramMessage(
         chatId,
