@@ -49,14 +49,12 @@ export class ContactService {
 
   async update(id: string, contact: Partial<Contact>): Promise<Contact> {
     // Implement the update logic here
-
     return {} as Contact; // Replace with actual implementation
   }
 
   async delete(id: string): Promise<Contact> {
     // Implement the delete logic here
-
-    return; // return the deleted contact or appropriate response
+    return {} as Contact; // return the deleted contact or appropriate response
   }
 
   async sendContactButton(chatId: string): Promise<void> {
