@@ -53,16 +53,30 @@ export class ContactService {
       await axios.post(this.getTelegramApiUrl(), {
         chat_id: this.chatId,
         text: message,
-      }, {
-        timeout: 5000,
       });
     } catch (error) {
       console.error(
         'Error sending message to Telegram:',
         error.response?.data || error.message,
-        'Request Data:', { chat_id: this.chatId, text: message },
-        'Environment:', process.env.NODE_ENV,
       );
     }
+  }
+
+  // New method to handle Telegram messages
+  async handleTelegramMessage(message: any): Promise<Contact> {
+    const { text, from } = message;
+
+    // Parse the message text to extract name, email, and message (customize as needed)
+    const [name, email, userMessage] = text.split('\n');
+
+    const contact: Contact = {
+      name: name || from.first_name,
+      email: email || 'No email provided',
+      message: userMessage || 'No message provided',
+    };
+
+    // Save to MongoDB
+    const newContact = new this.contactModel(contact);
+    return newContact.save();
   }
 }
