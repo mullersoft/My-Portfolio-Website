@@ -1,4 +1,3 @@
-//D:\web D\portfolio-website\server\src\modules\contact\contact.service.ts
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -70,6 +69,9 @@ export class ContactService {
       reply_markup: {
         inline_keyboard: [
           [{ text: 'Contact Us', callback_data: 'start_contact' }],
+          [{ text: 'Start the bot', callback_data: 'start_bot' }],
+          [{ text: 'Change Language', callback_data: 'change_language' }],
+          [{ text: 'Contact Admin', callback_data: 'contact_admin' }],
         ],
       },
     };
