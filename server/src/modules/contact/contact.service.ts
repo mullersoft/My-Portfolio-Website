@@ -93,42 +93,39 @@ export class ContactService {
     if (text === '/start') {
       await this.sendTelegramMessage(
         chatId,
-        'Welcome! I am a Web Developer, Telegram Bot Developer, and Chatbot Developer. How can I assist you today?',
+        'Welcome! I am Mulugeta Linger, a web, Telegram bot, and chatbot developer. Feel free to interact with me!',
       );
       return;
     } else if (text === '/help') {
-      // Save the state to expect a message from the user
-      this.userStates.set(chatId, { step: 'send_to_admin', data: {} });
+      this.userStates.set(chatId, { step: 'help_message', data: {} });
       await this.sendTelegramMessage(
         chatId,
-        'Please type your message for the admin, and I will forward it to @mulersoft.',
+        'Type your message for the admin, and I will forward it to @mulersoft.',
       );
       return;
     }
 
-    // Handle user input for the admin message
+    // Handle user input for the help message flow
     const userState = this.userStates.get(chatId);
 
-    if (userState?.step === 'send_to_admin') {
-      this.userStates.delete(chatId); // Clear the state after receiving the message
+    if (userState?.step === 'help_message') {
+      this.userStates.delete(chatId); // Clear state after receiving the message
 
-      // Forward the message to the admin
-      const adminChatId = '@mulersoft'; // Replace with the actual admin chat ID or username
-      const messageForAdmin = `📩 Message from User:\n\nChat ID: ${chatId}\nMessage: ${text}`;
-      await this.sendTelegramMessage(adminChatId, messageForAdmin);
+      // Forward the user's message to your account
+      const adminMessage = `📩 New message from user:\n\n${text}`;
+      await this.sendMessageToTelegram(adminMessage); // Sends to your account using `CHAT_ID`
 
-      // Confirm to the user
       await this.sendTelegramMessage(
         chatId,
-        'Thank you! Your message has been sent to the admin.',
+        'Your message has been sent to the admin. Thank you!',
       );
       return;
     }
 
-    // Fallback: If no specific state or command matches
+    // Default fallback if no specific command or flow is matched
     await this.sendTelegramMessage(
       chatId,
-      'I didn’t understand that. Use /start to learn about me or /help to contact the admin.',
+      'I did not understand that. Use /start to learn about me or /help to send a message to the admin.',
     );
   }
 
@@ -144,7 +141,7 @@ export class ContactService {
 
   private async sendMessageToTelegram(message: string): Promise<void> {
     const url = this.getTelegramApiUrl();
-    const data = { chat_id: this.chatId, text: message };
+    const data = { chat_id: this.chatId, text: message }; // Use your admin chat ID here
 
     await axios.post(url, data);
   }
