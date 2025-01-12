@@ -69,6 +69,9 @@ export class ContactService {
       reply_markup: {
         inline_keyboard: [
           [{ text: 'Contact Us', callback_data: 'start_contact' }],
+          [{ text: 'Start the Bot', callback_data: 'start_bot' }],
+          [{ text: 'Change Language', callback_data: 'change_language' }],
+          [{ text: 'Contact Admin', callback_data: 'contact_admin' }],
         ],
       },
     };
@@ -95,14 +98,12 @@ export class ContactService {
 
     switch (callbackData) {
       case 'start_contact':
-        // Start the contact process
         this.userStates.set(chatId, { step: 'ask_name', data: {} });
         await this.sendTelegramMessage(chatId, 'What is your name?');
         break;
 
       case 'start_bot':
-        // Send a welcome message and reset user state
-        this.userStates.delete(chatId); // Reset user state
+        this.userStates.delete(chatId);
         await this.sendTelegramMessage(
           chatId,
           'Welcome to the bot! How can I assist you today?',
@@ -110,25 +111,13 @@ export class ContactService {
         break;
 
       case 'change_language':
-        // Prompt the user to select a language (Amharic or English)
         await this.sendTelegramMessage(
           chatId,
           'Please select a language:\n1. Amharic\n2. English',
-          {
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  { text: 'Amharic', callback_data: 'amharic' },
-                  { text: 'English', callback_data: 'english' },
-                ],
-              ],
-            },
-          },
         );
         break;
 
       case 'contact_admin':
-        // Ask the user to chat with the admin and send the contact request to your Telegram
         await this.sendTelegramMessage(
           chatId,
           'Please chat with the admin by sending a message to @mulersoft.',
@@ -138,18 +127,7 @@ export class ContactService {
         );
         break;
 
-      case 'amharic':
-        // Handle Amharic language selection
-        await this.sendTelegramMessage(chatId, 'አማሪኮ ቋንቋ ተመርጷል።');
-        break;
-
-      case 'english':
-        // Handle English language selection
-        await this.sendTelegramMessage(chatId, 'English language selected.');
-        break;
-
       default:
-        // Handle invalid callback data
         await this.sendTelegramMessage(
           chatId,
           'Invalid option. Please try again.',
@@ -164,7 +142,6 @@ export class ContactService {
 
     const userState = this.userStates.get(chatId);
 
-    // If no active state, show contact button
     if (!userState) {
       await this.sendContactButton(chatId);
       return;
@@ -183,6 +160,7 @@ export class ContactService {
     } else if (step === 'ask_message') {
       data.message = text;
       this.userStates.delete(chatId);
+
       const contact = await this.create(data as Contact);
       await this.sendTelegramMessage(
         chatId,
@@ -194,10 +172,9 @@ export class ContactService {
   private async sendTelegramMessage(
     chatId: string,
     text: string,
-    options?: any,
   ): Promise<void> {
     const url = this.getTelegramApiUrl();
-    const data = { chat_id: chatId, text, ...options };
+    const data = { chat_id: chatId, text };
 
     await axios.post(url, data);
   }
