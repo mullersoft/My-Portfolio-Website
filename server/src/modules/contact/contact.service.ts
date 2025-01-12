@@ -61,32 +61,45 @@ export class ContactService {
     return this.contactModel.findByIdAndDelete(id).exec();
   }
 
+  // async sendContactButton(chatId: string): Promise<void> {
+  //   const url = this.getTelegramApiUrl();
+  //   const data = {
+  //     chat_id: chatId,
+  //     text: 'Click the button below to contact us:',
+  //     reply_markup: {
+  //       inline_keyboard: [
+  //         [{ text: 'Contact Us', callback_data: 'start_contact' }],
+  //       ],
+  //     },
+  //   };
+
+  //   await axios.post(url, data);
+  // }
   async sendContactButton(chatId: string): Promise<void> {
     const url = this.getTelegramApiUrl();
     const data = {
       chat_id: chatId,
-      text: 'Click the button below to contact us:',
+      text: 'Welcome! Choose an option below:',
       reply_markup: {
         inline_keyboard: [
           [{ text: 'Contact Us', callback_data: 'start_contact' }],
+          [{ text: 'Change Language', callback_data: 'change_language' }],
+          [{ text: 'Contact Admin', callback_data: 'contact_admin' }],
         ],
       },
     };
 
     await axios.post(url, data);
   }
-
   async setupTelegramMenu(): Promise<void> {
-    const url = this.getTelegramMenuUrl();
-    const data = {
-      commands: [
-        { command: '/start', description: 'Start the Bot' },
-        { command: '/language', description: 'Change Language' },
-        { command: '/contact_admin', description: 'Contact Admin' },
-      ],
-    };
+    const url = `https://api.telegram.org/bot${this.botToken}/setMyCommands`;
+    const commands = [
+      { command: '/start', description: 'Start the bot' },
+      { command: '/change_language', description: 'Change language' },
+      { command: '/contact_admin', description: 'Contact admin' },
+    ];
 
-    await axios.post(url, data);
+    await axios.post(url, { commands });
   }
 
   async handleCallbackQuery(query: any): Promise<void> {
@@ -96,6 +109,28 @@ export class ContactService {
     if (callbackData === 'start_contact') {
       this.userStates.set(chatId, { step: 'ask_name', data: {} });
       await this.sendTelegramMessage(chatId, 'What is your name?');
+    } else if (callbackData === 'change_language') {
+      const url = this.getTelegramApiUrl();
+      const data = {
+        chat_id: chatId,
+        text: 'Please select your preferred language:',
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: 'Amharic', callback_data: 'set_language_amharic' }],
+            [{ text: 'English', callback_data: 'set_language_english' }],
+          ],
+        },
+      };
+      await axios.post(url, data);
+    } else if (callbackData === 'set_language_amharic') {
+      await this.sendTelegramMessage(chatId, 'Language changed to Amharic.');
+    } else if (callbackData === 'set_language_english') {
+      await this.sendTelegramMessage(chatId, 'Language changed to English.');
+    } else if (callbackData === 'contact_admin') {
+      const adminChatId = this.chatId; // Replace with your chat ID
+      const message = `User @${query.from.username} wants to contact you.`;
+      await this.sendTelegramMessage(adminChatId, message);
+      await this.sendTelegramMessage(chatId, 'The admin has been notified.');
     }
   }
 
