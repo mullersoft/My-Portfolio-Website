@@ -73,11 +73,11 @@ export class ContactService {
   }
 
   async handleCallbackQuery(query: any): Promise<void> {
+    console.log('Callback Query:', query); // Add this line for debugging
     const chatId = query.message.chat.id;
     const callbackData = query.data;
 
     if (callbackData === 'start_contact') {
-      // Start the contact flow
       this.userStates.set(chatId, { step: 'ask_name', data: {} });
       await this.sendTelegramMessage(chatId, 'What is your name?');
     }
