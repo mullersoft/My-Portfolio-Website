@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { ContactService } from './modules/contact/contact.service'; // Import the ContactService
 import * as dotenv from 'dotenv';
+
 dotenv.config();
 
 async function bootstrap() {
@@ -20,6 +22,9 @@ async function bootstrap() {
       }
     },
   });
+
+  const contactService = app.get(ContactService); // Get the ContactService instance
+  await contactService.setupTelegramMenu(); // Initialize the Telegram menu
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
