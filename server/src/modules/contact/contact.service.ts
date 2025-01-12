@@ -98,12 +98,14 @@ export class ContactService {
 
     switch (callbackData) {
       case 'start_contact':
+        // Start the contact process
         this.userStates.set(chatId, { step: 'ask_name', data: {} });
         await this.sendTelegramMessage(chatId, 'What is your name?');
         break;
 
       case 'start_bot':
-        this.userStates.delete(chatId);
+        // Send a welcome message and reset user state
+        this.userStates.delete(chatId); // Reset user state
         await this.sendTelegramMessage(
           chatId,
           'Welcome to the bot! How can I assist you today?',
@@ -111,6 +113,7 @@ export class ContactService {
         break;
 
       case 'change_language':
+        // Prompt the user to select a language (Amharic or English)
         await this.sendTelegramMessage(
           chatId,
           'Please select a language:\n1. Amharic\n2. English',
@@ -118,6 +121,7 @@ export class ContactService {
         break;
 
       case 'contact_admin':
+        // Ask the user to chat with the admin and send the contact request to your Telegram
         await this.sendTelegramMessage(
           chatId,
           'Please chat with the admin by sending a message to @mulersoft.',
@@ -128,21 +132,13 @@ export class ContactService {
         break;
 
       default:
+        // Handle invalid callback data
         await this.sendTelegramMessage(
           chatId,
           'Invalid option. Please try again.',
         );
         break;
     }
-
-    // After processing the callback, we answer the callback query to remove the loading state
-    const url = this.getTelegramCallbackUrl();
-    const data = {
-      callback_query_id: query.id,
-      text: 'Processing your request...',
-      show_alert: false,
-    };
-    await axios.post(url, data);
   }
 
   async handleTelegramMessage(update: any): Promise<void> {
