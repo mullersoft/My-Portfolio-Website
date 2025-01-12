@@ -65,11 +65,14 @@ export class ContactService {
     const url = this.getTelegramApiUrl();
     const data = {
       chat_id: chatId,
-      text: 'Click the button below to contact us:',
+      text: 'Welcome! Please choose an option:',
       reply_markup: {
         inline_keyboard: [
-          [{ text: 'Contact Us', callback_data: 'start_contact' }],
-          [{ text: 'Change Language', callback_data: 'change_language' }],
+          [
+            { text: 'Restart Bot', callback_data: 'restart_bot' },
+            { text: 'Change Language', callback_data: 'change_language' },
+            { text: 'Contact Admin', callback_data: 'contact_admin' },
+          ],
         ],
       },
     };
@@ -94,33 +97,29 @@ export class ContactService {
     const chatId = query.message.chat.id;
     const callbackData = query.data;
 
-    if (callbackData === 'start_contact') {
-      this.userStates.set(chatId, {
-        step: 'ask_name',
-        data: {},
-        language: 'en',
-      });
-      await this.sendTelegramMessage(chatId, 'What is your name?');
+    if (callbackData === 'restart_bot') {
+      await this.sendTelegramMessage(chatId, 'Bot is restarting...');
+      await this.sendContactButton(chatId); // Restart the menu
     } else if (callbackData === 'change_language') {
       this.userStates.set(chatId, {
-        step: 'language_selection',
+        step: 'select_language',
         data: {},
-        language: 'en',
+        language: '',
       });
       await this.sendTelegramMessage(
         chatId,
-        'Please select a language:\n1. English\n2. Amharic',
+        'Please select a language:\n1. Amharic\n2. English',
       );
     } else if (callbackData === 'contact_admin') {
-      await this.sendTelegramMessage(
-        chatId,
-        'Type your message for the admin:',
-      );
       this.userStates.set(chatId, {
         step: 'ask_message',
         data: {},
-        language: 'en',
+        language: '',
       });
+      await this.sendTelegramMessage(
+        chatId,
+        'Please type your message to the admin.',
+      );
     }
   }
 
@@ -135,49 +134,45 @@ export class ContactService {
       return;
     }
 
-    const { step, data, language } = userState;
+    const { step, data } = userState;
 
-    if (step === 'ask_name') {
-      data.name = text;
-      this.userStates.set(chatId, { step: 'ask_email', data, language });
-      await this.sendTelegramMessage(chatId, 'What is your email?');
-    } else if (step === 'ask_email') {
-      data.email = text;
-      this.userStates.set(chatId, { step: 'ask_message', data, language });
-      await this.sendTelegramMessage(chatId, 'What is your message?');
+    if (step === 'select_language') {
+      if (text === '1') {
+        this.userStates.set(chatId, {
+          step: 'ask_message',
+          data,
+          language: 'Amharic',
+        });
+        await this.sendTelegramMessage(
+          chatId,
+          'You selected Amharic. Now, please type your message.',
+        );
+      } else if (text === '2') {
+        this.userStates.set(chatId, {
+          step: 'ask_message',
+          data,
+          language: 'English',
+        });
+        await this.sendTelegramMessage(
+          chatId,
+          'You selected English. Now, please type your message.',
+        );
+      } else {
+        await this.sendTelegramMessage(
+          chatId,
+          'Invalid option. Please choose 1 for Amharic or 2 for English.',
+        );
+      }
     } else if (step === 'ask_message') {
       data.message = text;
+      const language = userState.language;
       this.userStates.delete(chatId);
 
       const contact = await this.create(data as Contact);
       await this.sendTelegramMessage(
         chatId,
-        'Thank you! Your message has been saved.',
+        `Thank you! Your message has been sent in ${language}.`,
       );
-    } else if (step === 'language_selection') {
-      if (text === '1') {
-        this.userStates.set(chatId, {
-          step: 'ask_name',
-          data: {},
-          language: 'en',
-        });
-        await this.sendTelegramMessage(
-          chatId,
-          'You selected English. What is your name?',
-        );
-      } else if (text === '2') {
-        this.userStates.set(chatId, {
-          step: 'ask_name',
-          data: {},
-          language: 'am',
-        });
-        await this.sendTelegramMessage(chatId, 'እባኮትን ስምዎን ይጻፉ');
-      } else {
-        await this.sendTelegramMessage(
-          chatId,
-          'Invalid choice. Please select a valid language.',
-        );
-      }
     }
   }
 
