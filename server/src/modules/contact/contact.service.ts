@@ -30,7 +30,7 @@ export class ContactService {
 
   private userStates = new Map<
     string,
-    { step: string; data: Partial<Contact>; language: string }
+    { step: string; data: Partial<Contact> }
   >();
 
   async findAll(): Promise<Contact[]> {
@@ -94,32 +94,8 @@ export class ContactService {
     const callbackData = query.data;
 
     if (callbackData === 'start_contact') {
-      this.userStates.set(chatId, {
-        step: 'ask_name',
-        data: {},
-        language: 'en',
-      });
+      this.userStates.set(chatId, { step: 'ask_name', data: {} });
       await this.sendTelegramMessage(chatId, 'What is your name?');
-    } else if (callbackData === 'contact_admin') {
-      this.userStates.set(chatId, {
-        step: 'ask_admin_message',
-        data: {},
-        language: 'en',
-      });
-      await this.sendTelegramMessage(
-        chatId,
-        'Type your message for the admin:',
-      );
-    } else if (callbackData === 'language') {
-      this.userStates.set(chatId, {
-        step: 'ask_language',
-        data: {},
-        language: 'en',
-      });
-      await this.sendTelegramMessage(
-        chatId,
-        'Please select your language: 1. English 2. Amharic',
-      );
     }
   }
 
@@ -130,32 +106,19 @@ export class ContactService {
     const userState = this.userStates.get(chatId);
 
     if (!userState) {
-      await this.sendContactButton(chatId);
+      await this.sendWelcomeMessage(chatId);
       return;
     }
 
-    const { step, data, language } = userState;
+    const { step, data } = userState;
 
-    if (step === 'ask_language') {
-      if (text === '1') {
-        this.userStates.set(chatId, { ...userState, language: 'en' });
-        await this.sendTelegramMessage(chatId, 'You selected English.');
-      } else if (text === '2') {
-        this.userStates.set(chatId, { ...userState, language: 'am' });
-        await this.sendTelegramMessage(chatId, 'እባኮትን ቋንቋዎን ይምረጡ፡፡');
-      } else {
-        await this.sendTelegramMessage(
-          chatId,
-          'Invalid selection. Please type 1 for English or 2 for Amharic.',
-        );
-      }
-    } else if (step === 'ask_name') {
+    if (step === 'ask_name') {
       data.name = text;
-      this.userStates.set(chatId, { step: 'ask_email', data, language });
+      this.userStates.set(chatId, { step: 'ask_email', data });
       await this.sendTelegramMessage(chatId, 'What is your email?');
     } else if (step === 'ask_email') {
       data.email = text;
-      this.userStates.set(chatId, { step: 'ask_message', data, language });
+      this.userStates.set(chatId, { step: 'ask_message', data });
       await this.sendTelegramMessage(chatId, 'What is your message?');
     } else if (step === 'ask_message') {
       data.message = text;
@@ -165,17 +128,6 @@ export class ContactService {
       await this.sendTelegramMessage(
         chatId,
         'Thank you! Your message has been saved.',
-      );
-    } else if (step === 'ask_admin_message') {
-      data.message = text;
-      this.userStates.delete(chatId);
-
-      await this.sendMessageToTelegram(
-        `Admin message from ${data.name} (${data.email}): ${data.message}`,
-      );
-      await this.sendTelegramMessage(
-        chatId,
-        'Your message has been sent to the admin.',
       );
     }
   }
@@ -195,5 +147,21 @@ export class ContactService {
     const data = { chat_id: this.chatId, text: message };
 
     await axios.post(url, data);
+  }
+
+  // New method for sending the welcome message with the description
+  private async sendWelcomeMessage(chatId: string): Promise<void> {
+    const welcomeText = `
+      Welcome to my bot! 😊
+
+      I am a web and Telegram bot developer, skilled in Express.js, NestJS, ReactJS, and MongoDB. 
+
+      This bot was developed using NestJS, MongoDB, and Telegram API. I specialize in building Telegram bots and web applications.
+
+      If you need a Telegram bot or any assistance with web development, feel free to contact me!
+
+      To get started, please choose an option from the menu below.
+    `;
+    await this.sendTelegramMessage(chatId, welcomeText);
   }
 }
