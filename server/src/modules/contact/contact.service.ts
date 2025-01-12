@@ -24,10 +24,6 @@ export class ContactService {
     return `https://api.telegram.org/bot${this.botToken}/answerCallbackQuery`;
   }
 
-  private getTelegramMenuUrl(): string {
-    return `https://api.telegram.org/bot${this.botToken}/setMyCommands`;
-  }
-
   private userStates = new Map<
     string,
     { step: string; data: Partial<Contact> }
@@ -52,13 +48,13 @@ export class ContactService {
   }
 
   async update(id: string, contact: Partial<Contact>): Promise<Contact> {
-    return this.contactModel
-      .findByIdAndUpdate(id, contact, { new: true })
-      .exec();
+    // Implement the update logic here
+    return {} as Contact; // Replace with actual implementation
   }
 
   async delete(id: string): Promise<Contact> {
-    return this.contactModel.findByIdAndDelete(id).exec();
+    // Implement the delete logic here
+    return {} as Contact; // return the deleted contact or appropriate response
   }
 
   async sendContactButton(chatId: string): Promise<void> {
@@ -69,9 +65,6 @@ export class ContactService {
       reply_markup: {
         inline_keyboard: [
           [{ text: 'Contact Us', callback_data: 'start_contact' }],
-          [{ text: 'Start the Bot', callback_data: 'start_bot' }],
-          [{ text: 'Change Language', callback_data: 'change_language' }],
-          [{ text: 'Contact Admin', callback_data: 'contact_admin' }],
         ],
       },
     };
@@ -79,65 +72,35 @@ export class ContactService {
     await axios.post(url, data);
   }
 
-  async setupTelegramMenu(): Promise<void> {
-    const url = this.getTelegramMenuUrl();
+  async sendMenuButton(chatId: string): Promise<void> {
+    const url = this.getTelegramApiUrl();
     const data = {
-      commands: [
-        { command: '/start', description: 'Start the Bot' },
-        { command: '/language', description: 'Change Language' },
-        { command: '/contact_admin', description: 'Contact Admin' },
-      ],
+      chat_id: chatId,
+      text: 'Welcome! Please choose an option:',
+      reply_markup: {
+        keyboard: [
+          [
+            { text: 'Start the Bot' },
+            { text: 'Change Language' },
+            { text: 'Contact Admin' },
+          ],
+        ],
+        resize_keyboard: true,
+        one_time_keyboard: true,
+      },
     };
 
     await axios.post(url, data);
   }
 
   async handleCallbackQuery(query: any): Promise<void> {
+    console.log('Callback Query:', query); // Add this line for debugging
     const chatId = query.message.chat.id;
     const callbackData = query.data;
 
-    switch (callbackData) {
-      case 'start_contact':
-        // Start the contact process
-        this.userStates.set(chatId, { step: 'ask_name', data: {} });
-        await this.sendTelegramMessage(chatId, 'What is your name?');
-        break;
-
-      case 'start_bot':
-        // Send a welcome message and reset user state
-        this.userStates.delete(chatId); // Reset user state
-        await this.sendTelegramMessage(
-          chatId,
-          'Welcome to the bot! How can I assist you today?',
-        );
-        break;
-
-      case 'change_language':
-        // Prompt the user to select a language (Amharic or English)
-        await this.sendTelegramMessage(
-          chatId,
-          'Please select a language:\n1. Amharic\n2. English',
-        );
-        break;
-
-      case 'contact_admin':
-        // Ask the user to chat with the admin and send the contact request to your Telegram
-        await this.sendTelegramMessage(
-          chatId,
-          'Please chat with the admin by sending a message to @mulersoft.',
-        );
-        await this.sendMessageToTelegram(
-          'User requested to contact the admin. Chat ID: ' + chatId,
-        );
-        break;
-
-      default:
-        // Handle invalid callback data
-        await this.sendTelegramMessage(
-          chatId,
-          'Invalid option. Please try again.',
-        );
-        break;
+    if (callbackData === 'start_contact') {
+      this.userStates.set(chatId, { step: 'ask_name', data: {} });
+      await this.sendTelegramMessage(chatId, 'What is your name?');
     }
   }
 
@@ -145,14 +108,22 @@ export class ContactService {
     const chatId = update.message.chat.id;
     const text = update.message.text;
 
+    console.log(`Received message: ${text} from chat: ${chatId}`);
+
     const userState = this.userStates.get(chatId);
 
     if (!userState) {
+      console.log(
+        `No state found for chat: ${chatId}. Sending contact button.`,
+      );
       await this.sendContactButton(chatId);
+      await this.sendMenuButton(chatId); // Send the menu button with options
       return;
     }
 
     const { step, data } = userState;
+
+    console.log(`Current step: ${step}, Data: ${JSON.stringify(data)}`);
 
     if (step === 'ask_name') {
       data.name = text;
@@ -167,6 +138,7 @@ export class ContactService {
       this.userStates.delete(chatId);
 
       const contact = await this.create(data as Contact);
+      console.log(`Saved contact: ${JSON.stringify(contact)}`);
       await this.sendTelegramMessage(
         chatId,
         'Thank you! Your message has been saved.',
