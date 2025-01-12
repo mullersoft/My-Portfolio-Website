@@ -61,32 +61,39 @@ export class ContactService {
     return this.contactModel.findByIdAndDelete(id).exec();
   }
 
-  // Send introductory message when user joins
-  async sendIntroMessage(chatId: string): Promise<void> {
-    const url = this.getTelegramApiUrl();
-    const message = `Welcome to my Telegram Bot! I am a web and Telegram bot developer using Express.js, NestJS, ReactJS, MongoDB, and the Telegram API. I am available for data collection services. If you need a bot or any assistance, feel free to contact me.`;
+  // Send a welcome message with a description
+  async sendWelcomeMessage(chatId: string): Promise<void> {
+    const message = `👋 Welcome! I am a web and Telegram bot developer. I use Express.js, NestJS, ReactJS, and MongoDB to build web apps and Telegram bots. If you're interested in my services, feel free to contact me for data collection or bot development.`;
 
-    const data = { chat_id: chatId, text: message };
-    await axios.post(url, data);
+    const data = {
+      chat_id: chatId,
+      text: message,
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: 'Start', callback_data: 'start_contact' }],
+          [{ text: 'Change Language', callback_data: 'language' }],
+          [{ text: 'Contact Admin', callback_data: 'contact_admin' }],
+        ],
+      },
+    };
+
+    await axios.post(this.getTelegramApiUrl(), data);
   }
 
   async sendContactButton(chatId: string): Promise<void> {
-    const url = this.getTelegramApiUrl();
     const data = {
       chat_id: chatId,
       text: 'Click the button below to contact us:',
       reply_markup: {
         inline_keyboard: [
           [{ text: 'Contact Us', callback_data: 'start_contact' }],
-          [{ text: 'Change Language', callback_data: 'language' }],
         ],
       },
     };
 
-    await axios.post(url, data);
+    await axios.post(this.getTelegramApiUrl(), data);
   }
 
-  // Setup Telegram menu
   async setupTelegramMenu(): Promise<void> {
     const url = this.getTelegramMenuUrl();
     const data = {
@@ -100,7 +107,6 @@ export class ContactService {
     await axios.post(url, data);
   }
 
-  // Handle callback queries from buttons
   async handleCallbackQuery(query: any): Promise<void> {
     const chatId = query.message.chat.id;
     const callbackData = query.data;
@@ -108,50 +114,19 @@ export class ContactService {
     if (callbackData === 'start_contact') {
       this.userStates.set(chatId, { step: 'ask_name', data: {} });
       await this.sendTelegramMessage(chatId, 'What is your name?');
+    } else if (callbackData === 'language') {
+      await this.sendTelegramMessage(
+        chatId,
+        'Please select a language: English or Amharic',
+      );
     } else if (callbackData === 'contact_admin') {
       await this.sendTelegramMessage(
         chatId,
-        'You can contact me on Telegram: @mulersoft',
+        'Type your message for the admin:',
       );
-    } else if (callbackData === 'language') {
-      await this.sendLanguageOptions(chatId);
     }
   }
 
-  // Show language options (English and Amharic)
-  async sendLanguageOptions(chatId: string): Promise<void> {
-    const url = this.getTelegramApiUrl();
-    const data = {
-      chat_id: chatId,
-      text: 'Please select your language:',
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: 'English', callback_data: 'language_english' }],
-          [{ text: 'Amharic', callback_data: 'language_amharic' }],
-        ],
-      },
-    };
-
-    await axios.post(url, data);
-  }
-
-  // Handle language selection
-  async handleLanguageSelection(
-    chatId: string,
-    language: string,
-  ): Promise<void> {
-    let message = '';
-
-    if (language === 'english') {
-      message = 'You have selected English.';
-    } else if (language === 'amharic') {
-      message = 'እባኮትን ቋንቋዎን ምረጡ።';
-    }
-
-    await this.sendTelegramMessage(chatId, message);
-  }
-
-  // Handle messages and steps in the conversation
   async handleTelegramMessage(update: any): Promise<void> {
     const chatId = update.message.chat.id;
     const text = update.message.text;
@@ -159,8 +134,7 @@ export class ContactService {
     const userState = this.userStates.get(chatId);
 
     if (!userState) {
-      await this.sendIntroMessage(chatId);
-      await this.sendContactButton(chatId);
+      await this.sendWelcomeMessage(chatId); // Send the welcome message when the user joins
       return;
     }
 
