@@ -59,14 +59,17 @@ export class ContactService {
     return; // return the deleted contact or appropriate response
   }
 
-  async sendContactButton(chatId: string): Promise<void> {
+  // Send the menu button as inline keyboard
+  async sendMenuButton(chatId: string): Promise<void> {
     const url = this.getTelegramApiUrl();
     const data = {
       chat_id: chatId,
-      text: 'Click the button below to contact us:',
+      text: 'Welcome! Choose an option from the menu:',
       reply_markup: {
         inline_keyboard: [
           [{ text: 'Contact Us', callback_data: 'start_contact' }],
+          [{ text: 'About Us', callback_data: 'about_us' }],
+          [{ text: 'Help', callback_data: 'help' }],
         ],
       },
     };
@@ -74,70 +77,22 @@ export class ContactService {
     await axios.post(url, data);
   }
 
-  async sendMainMenu(chatId: string): Promise<void> {
-    const url = this.getTelegramApiUrl();
-    const data = {
-      chat_id: chatId,
-      text: 'Choose an option:',
-      reply_markup: {
-        inline_keyboard: [
-          [
-            { text: 'Menu Option 1', callback_data: 'option_1' },
-            { text: 'Menu Option 2', callback_data: 'option_2' },
-          ],
-          [
-            { text: 'Contact Us', callback_data: 'contact_us' },
-            { text: 'Help', callback_data: 'help' },
-          ],
-        ],
-      },
-    };
-
-    await axios.post(url, data);
-  }
-
-  async sendCustomKeyboard(chatId: string): Promise<void> {
-    const url = this.getTelegramApiUrl();
-    const data = {
-      chat_id: chatId,
-      text: 'Choose an option:',
-      reply_markup: {
-        keyboard: [
-          ['Menu Option 1', 'Menu Option 2'],
-          ['Contact Us', 'Help'],
-        ],
-        one_time_keyboard: false, // Makes the keyboard persistent
-      },
-    };
-
-    await axios.post(url, data);
-  }
-
+  // Handle callback queries for the menu
   async handleCallbackQuery(query: any): Promise<void> {
     const chatId = query.message.chat.id;
     const callbackData = query.data;
 
-    switch (callbackData) {
-      case 'option_1':
-        await this.sendTelegramMessage(chatId, 'You selected Option 1');
-        break;
-      case 'option_2':
-        await this.sendTelegramMessage(chatId, 'You selected Option 2');
-        break;
-      case 'contact_us':
-        await this.sendTelegramMessage(
-          chatId,
-          'Contact us at support@example.com',
-        );
-        break;
-      case 'help':
-        await this.sendTelegramMessage(
-          chatId,
-          'Here is how you can use the bot...',
-        );
-        break;
-      default:
-        await this.sendTelegramMessage(chatId, 'Invalid option');
+    if (callbackData === 'start_contact') {
+      // Start the contact flow
+      this.userStates.set(chatId, { step: 'ask_name', data: {} });
+      await this.sendTelegramMessage(chatId, 'What is your name?');
+    } else if (callbackData === 'about_us') {
+      await this.sendTelegramMessage(
+        chatId,
+        'We are a company that provides amazing services!',
+      );
+    } else if (callbackData === 'help') {
+      await this.sendTelegramMessage(chatId, 'How can we assist you?');
     }
   }
 
@@ -150,10 +105,8 @@ export class ContactService {
     const userState = this.userStates.get(chatId);
 
     if (!userState) {
-      console.log(
-        `No state found for chat: ${chatId}. Sending contact button.`,
-      );
-      await this.sendContactButton(chatId);
+      console.log(`No state found for chat: ${chatId}. Sending menu button.`);
+      await this.sendMenuButton(chatId);
       return;
     }
 

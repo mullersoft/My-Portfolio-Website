@@ -20,7 +20,7 @@ async function bootstrap() {
     },
   });
 
-  const contactService = app.get(ContactService); // Get the ContactService instance
+  // const contactService = app.get(ContactService); // Get the ContactService instance
   // await contactService.setupTelegramMenu(); // Initialize the Telegram menu
 
   const port = process.env.PORT || 3000;
