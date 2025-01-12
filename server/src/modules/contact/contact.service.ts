@@ -69,9 +69,6 @@ export class ContactService {
       reply_markup: {
         inline_keyboard: [
           [{ text: 'Contact Us', callback_data: 'start_contact' }],
-          [{ text: 'Start the bot', callback_data: 'start_bot' }],
-          [{ text: 'Change Language', callback_data: 'change_language' }],
-          [{ text: 'Contact Admin', callback_data: 'contact_admin' }],
         ],
       },
     };
@@ -117,6 +114,16 @@ export class ContactService {
         await this.sendTelegramMessage(
           chatId,
           'Please select a language:\n1. Amharic\n2. English',
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  { text: 'Amharic', callback_data: 'amharic' },
+                  { text: 'English', callback_data: 'english' },
+                ],
+              ],
+            },
+          },
         );
         break;
 
@@ -129,6 +136,16 @@ export class ContactService {
         await this.sendMessageToTelegram(
           'User requested to contact the admin. Chat ID: ' + chatId,
         );
+        break;
+
+      case 'amharic':
+        // Handle Amharic language selection
+        await this.sendTelegramMessage(chatId, 'አማሪኮ ቋንቋ ተመርጷል።');
+        break;
+
+      case 'english':
+        // Handle English language selection
+        await this.sendTelegramMessage(chatId, 'English language selected.');
         break;
 
       default:
@@ -147,6 +164,7 @@ export class ContactService {
 
     const userState = this.userStates.get(chatId);
 
+    // If no active state, show contact button
     if (!userState) {
       await this.sendContactButton(chatId);
       return;
@@ -165,7 +183,6 @@ export class ContactService {
     } else if (step === 'ask_message') {
       data.message = text;
       this.userStates.delete(chatId);
-
       const contact = await this.create(data as Contact);
       await this.sendTelegramMessage(
         chatId,
@@ -177,9 +194,10 @@ export class ContactService {
   private async sendTelegramMessage(
     chatId: string,
     text: string,
+    options?: any,
   ): Promise<void> {
     const url = this.getTelegramApiUrl();
-    const data = { chat_id: chatId, text };
+    const data = { chat_id: chatId, text, ...options };
 
     await axios.post(url, data);
   }
