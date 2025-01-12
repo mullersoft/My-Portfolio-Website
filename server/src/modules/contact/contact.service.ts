@@ -30,7 +30,7 @@ export class ContactService {
 
   private userStates = new Map<
     string,
-    { step: string; data: Partial<Contact> }
+    { step: string; data: Partial<Contact>; language: string }
   >();
 
   async findAll(): Promise<Contact[]> {
@@ -69,6 +69,7 @@ export class ContactService {
       reply_markup: {
         inline_keyboard: [
           [{ text: 'Contact Us', callback_data: 'start_contact' }],
+          [{ text: 'Change Language', callback_data: 'change_language' }],
         ],
       },
     };
@@ -94,8 +95,32 @@ export class ContactService {
     const callbackData = query.data;
 
     if (callbackData === 'start_contact') {
-      this.userStates.set(chatId, { step: 'ask_name', data: {} });
+      this.userStates.set(chatId, {
+        step: 'ask_name',
+        data: {},
+        language: 'en',
+      });
       await this.sendTelegramMessage(chatId, 'What is your name?');
+    } else if (callbackData === 'change_language') {
+      this.userStates.set(chatId, {
+        step: 'language_selection',
+        data: {},
+        language: 'en',
+      });
+      await this.sendTelegramMessage(
+        chatId,
+        'Please select a language:\n1. English\n2. Amharic',
+      );
+    } else if (callbackData === 'contact_admin') {
+      await this.sendTelegramMessage(
+        chatId,
+        'Type your message for the admin:',
+      );
+      this.userStates.set(chatId, {
+        step: 'ask_message',
+        data: {},
+        language: 'en',
+      });
     }
   }
 
@@ -106,19 +131,19 @@ export class ContactService {
     const userState = this.userStates.get(chatId);
 
     if (!userState) {
-      await this.sendWelcomeMessage(chatId);
+      await this.sendContactButton(chatId);
       return;
     }
 
-    const { step, data } = userState;
+    const { step, data, language } = userState;
 
     if (step === 'ask_name') {
       data.name = text;
-      this.userStates.set(chatId, { step: 'ask_email', data });
+      this.userStates.set(chatId, { step: 'ask_email', data, language });
       await this.sendTelegramMessage(chatId, 'What is your email?');
     } else if (step === 'ask_email') {
       data.email = text;
-      this.userStates.set(chatId, { step: 'ask_message', data });
+      this.userStates.set(chatId, { step: 'ask_message', data, language });
       await this.sendTelegramMessage(chatId, 'What is your message?');
     } else if (step === 'ask_message') {
       data.message = text;
@@ -129,6 +154,30 @@ export class ContactService {
         chatId,
         'Thank you! Your message has been saved.',
       );
+    } else if (step === 'language_selection') {
+      if (text === '1') {
+        this.userStates.set(chatId, {
+          step: 'ask_name',
+          data: {},
+          language: 'en',
+        });
+        await this.sendTelegramMessage(
+          chatId,
+          'You selected English. What is your name?',
+        );
+      } else if (text === '2') {
+        this.userStates.set(chatId, {
+          step: 'ask_name',
+          data: {},
+          language: 'am',
+        });
+        await this.sendTelegramMessage(chatId, 'እባኮትን ስምዎን ይጻፉ');
+      } else {
+        await this.sendTelegramMessage(
+          chatId,
+          'Invalid choice. Please select a valid language.',
+        );
+      }
     }
   }
 
@@ -147,21 +196,5 @@ export class ContactService {
     const data = { chat_id: this.chatId, text: message };
 
     await axios.post(url, data);
-  }
-
-  // New method for sending the welcome message with the description
-  private async sendWelcomeMessage(chatId: string): Promise<void> {
-    const welcomeText = `
-      Welcome to my bot! 😊
-
-      I am a web and Telegram bot developer, skilled in Express.js, NestJS, ReactJS, and MongoDB. 
-
-      This bot was developed using NestJS, MongoDB, and Telegram API. I specialize in building Telegram bots and web applications.
-
-      If you need a Telegram bot or any assistance with web development, feel free to contact me!
-
-      To get started, please choose an option from the menu below.
-    `;
-    await this.sendTelegramMessage(chatId, welcomeText);
   }
 }

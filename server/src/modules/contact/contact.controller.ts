@@ -51,10 +51,4 @@ export class ContactController {
     }
     return { success: true };
   }
-
-  // Endpoint to handle language selection
-  @Post('select-language')
-  async selectLanguage(@Body() body: { language: string }): Promise<void> {
-    await this.contactService.setLanguage(body.language);
-  }
 }
