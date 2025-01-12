@@ -14,7 +14,6 @@ export class ContactService {
   ) {}
 
   private readonly botToken = process.env.BOT_TOKEN;
-  private readonly chatId = process.env.CHAT_ID;
 
   private getTelegramApiUrl(): string {
     return `https://api.telegram.org/bot${this.botToken}/sendMessage`;
@@ -46,25 +45,42 @@ export class ContactService {
 
     return savedContact;
   }
-
   async update(id: string, contact: Partial<Contact>): Promise<Contact> {
-    // Implement the update logic here
-    return {} as Contact; // Replace with actual implementation
+    const updatedContact = await this.contactModel
+      .findByIdAndUpdate(
+        id,
+        contact,
+        { new: true }, // This option returns the updated document
+      )
+      .exec();
+
+    if (!updatedContact) {
+      throw new Error(`Contact with ID ${id} not found.`);
+    }
+
+    return updatedContact;
   }
 
   async delete(id: string): Promise<Contact> {
-    // Implement the delete logic here
-    return {} as Contact; // return the deleted contact or appropriate response
+    const deletedContact = await this.contactModel.findByIdAndDelete(id).exec();
+
+    if (!deletedContact) {
+      throw new Error(`Contact with ID ${id} not found.`);
+    }
+
+    return deletedContact;
   }
 
-  async sendContactButton(chatId: string): Promise<void> {
+  async sendMenu(chatId: string): Promise<void> {
     const url = this.getTelegramApiUrl();
     const data = {
       chat_id: chatId,
-      text: 'Click the button below to contact us:',
+      text: 'Choose an option:',
       reply_markup: {
         inline_keyboard: [
-          [{ text: 'Contact Us', callback_data: 'start_contact' }],
+          [{ text: 'Start the Bot', callback_data: 'start_bot' }],
+          [{ text: 'Change Language', callback_data: 'change_language' }],
+          [{ text: 'Contact Admin', callback_data: 'contact_admin' }],
         ],
       },
     };
@@ -73,13 +89,22 @@ export class ContactService {
   }
 
   async handleCallbackQuery(query: any): Promise<void> {
-    console.log('Callback Query:', query); // Add this line for debugging
     const chatId = query.message.chat.id;
     const callbackData = query.data;
 
-    if (callbackData === 'start_contact') {
-      this.userStates.set(chatId, { step: 'ask_name', data: {} });
-      await this.sendTelegramMessage(chatId, 'What is your name?');
+    if (callbackData === 'start_bot') {
+      await this.sendTelegramMessage(chatId, 'Bot started successfully!');
+    } else if (callbackData === 'change_language') {
+      await this.sendTelegramMessage(
+        chatId,
+        'Please select your preferred language:',
+      );
+      // Add language selection logic if needed
+    } else if (callbackData === 'contact_admin') {
+      await this.sendTelegramMessage(
+        chatId,
+        'You can contact the admin at admin@example.com.',
+      );
     }
   }
 
@@ -87,39 +112,12 @@ export class ContactService {
     const chatId = update.message.chat.id;
     const text = update.message.text;
 
-    console.log(`Received message: ${text} from chat: ${chatId}`);
-
-    const userState = this.userStates.get(chatId);
-
-    if (!userState) {
-      console.log(
-        `No state found for chat: ${chatId}. Sending contact button.`,
-      );
-      await this.sendContactButton(chatId);
-      return;
-    }
-
-    const { step, data } = userState;
-
-    console.log(`Current step: ${step}, Data: ${JSON.stringify(data)}`);
-
-    if (step === 'ask_name') {
-      data.name = text;
-      this.userStates.set(chatId, { step: 'ask_email', data });
-      await this.sendTelegramMessage(chatId, 'What is your email?');
-    } else if (step === 'ask_email') {
-      data.email = text;
-      this.userStates.set(chatId, { step: 'ask_message', data });
-      await this.sendTelegramMessage(chatId, 'What is your message?');
-    } else if (step === 'ask_message') {
-      data.message = text;
-      this.userStates.delete(chatId);
-
-      const contact = await this.create(data as Contact);
-      console.log(`Saved contact: ${JSON.stringify(contact)}`);
+    if (text === '/start') {
+      await this.sendMenu(chatId);
+    } else {
       await this.sendTelegramMessage(
         chatId,
-        'Thank you! Your message has been saved.',
+        "I didn't understand that. Please use the menu.",
       );
     }
   }
@@ -136,7 +134,7 @@ export class ContactService {
 
   private async sendMessageToTelegram(message: string): Promise<void> {
     const url = this.getTelegramApiUrl();
-    const data = { chat_id: this.chatId, text: message };
+    const data = { chat_id: process.env.CHAT_ID, text: message };
 
     await axios.post(url, data);
   }

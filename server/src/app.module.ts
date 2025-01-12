@@ -9,6 +9,7 @@ import { ChatGptModule } from './modules/chatgpt/chatgpt.module';
 import { IpTrackingMiddleware } from './middlewares/ip-tracking.middleware';
 import { ScheduleModule } from '@nestjs/schedule';
 import { QuotesModule } from './modules/quotes/quotes.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot(), // Initialize ConfigModule to load .env variables
