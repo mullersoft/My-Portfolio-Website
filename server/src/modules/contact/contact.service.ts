@@ -90,57 +90,46 @@ export class ContactService {
     console.log(`Received message: ${text} from chat: ${chatId}`);
 
     // Handle specific commands
-    if (text === '/contact') {
-      await this.sendContactButton(chatId); // Send the "Contact Us" button
+    if (text === '/start') {
+      await this.sendTelegramMessage(
+        chatId,
+        'Welcome! I am a Web Developer, Telegram Bot Developer, and Chatbot Developer. How can I assist you today?',
+      );
       return;
     } else if (text === '/help') {
+      // Save the state to expect a message from the user
+      this.userStates.set(chatId, { step: 'send_to_admin', data: {} });
       await this.sendTelegramMessage(
         chatId,
-        'Here is some help information:\n\n1. Use /contact to reach out to us.\n2. Use /start to begin interacting with the bot.',
-      );
-      return;
-    } else if (text === '/start') {
-      await this.sendTelegramMessage(
-        chatId,
-        'Welcome! Use /contact to send us a message or /help for assistance.',
+        'Please type your message for the admin, and I will forward it to @mulersoft.',
       );
       return;
     }
 
-    // Handle user input for contact flow
+    // Handle user input for the admin message
     const userState = this.userStates.get(chatId);
 
-    if (!userState) {
-      console.log(
-        `No state found for chat: ${chatId}. Sending contact button.`,
+    if (userState?.step === 'send_to_admin') {
+      this.userStates.delete(chatId); // Clear the state after receiving the message
+
+      // Forward the message to the admin
+      const adminChatId = '@mulersoft'; // Replace with the actual admin chat ID or username
+      const messageForAdmin = `📩 Message from User:\n\nChat ID: ${chatId}\nMessage: ${text}`;
+      await this.sendTelegramMessage(adminChatId, messageForAdmin);
+
+      // Confirm to the user
+      await this.sendTelegramMessage(
+        chatId,
+        'Thank you! Your message has been sent to the admin.',
       );
-      await this.sendContactButton(chatId);
       return;
     }
 
-    const { step, data } = userState;
-
-    console.log(`Current step: ${step}, Data: ${JSON.stringify(data)}`);
-
-    if (step === 'ask_name') {
-      data.name = text;
-      this.userStates.set(chatId, { step: 'ask_email', data });
-      await this.sendTelegramMessage(chatId, 'What is your email?');
-    } else if (step === 'ask_email') {
-      data.email = text;
-      this.userStates.set(chatId, { step: 'ask_message', data });
-      await this.sendTelegramMessage(chatId, 'What is your message?');
-    } else if (step === 'ask_message') {
-      data.message = text;
-      this.userStates.delete(chatId);
-
-      const contact = await this.create(data as Contact);
-      console.log(`Saved contact: ${JSON.stringify(contact)}`);
-      await this.sendTelegramMessage(
-        chatId,
-        'Thank you! Your message has been saved.',
-      );
-    }
+    // Fallback: If no specific state or command matches
+    await this.sendTelegramMessage(
+      chatId,
+      'I didn’t understand that. Use /start to learn about me or /help to contact the admin.',
+    );
   }
 
   private async sendTelegramMessage(
