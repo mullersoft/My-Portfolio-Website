@@ -30,7 +30,7 @@ export class ContactService {
 
   private userStates = new Map<
     string,
-    { step: string; data: Partial<Contact> }
+    { step: string; data: Partial<Contact>; language: string }
   >();
 
   async findAll(): Promise<Contact[]> {
@@ -61,45 +61,34 @@ export class ContactService {
     return this.contactModel.findByIdAndDelete(id).exec();
   }
 
-  // async sendContactButton(chatId: string): Promise<void> {
-  //   const url = this.getTelegramApiUrl();
-  //   const data = {
-  //     chat_id: chatId,
-  //     text: 'Click the button below to contact us:',
-  //     reply_markup: {
-  //       inline_keyboard: [
-  //         [{ text: 'Contact Us', callback_data: 'start_contact' }],
-  //       ],
-  //     },
-  //   };
-
-  //   await axios.post(url, data);
-  // }
   async sendContactButton(chatId: string): Promise<void> {
     const url = this.getTelegramApiUrl();
     const data = {
       chat_id: chatId,
-      text: 'Welcome! Choose an option below:',
+      text: 'Click the button below to contact us:',
       reply_markup: {
         inline_keyboard: [
           [{ text: 'Contact Us', callback_data: 'start_contact' }],
-          [{ text: 'Change Language', callback_data: 'change_language' }],
           [{ text: 'Contact Admin', callback_data: 'contact_admin' }],
+          [{ text: 'Change Language', callback_data: 'change_language' }],
         ],
       },
     };
 
     await axios.post(url, data);
   }
-  async setupTelegramMenu(): Promise<void> {
-    const url = `https://api.telegram.org/bot${this.botToken}/setMyCommands`;
-    const commands = [
-      { command: '/start', description: 'Start the bot' },
-      { command: '/change_language', description: 'Change language' },
-      { command: '/contact_admin', description: 'Contact admin' },
-    ];
 
-    await axios.post(url, { commands });
+  async setupTelegramMenu(): Promise<void> {
+    const url = this.getTelegramMenuUrl();
+    const data = {
+      commands: [
+        { command: '/start', description: 'Start the Bot' },
+        { command: '/language', description: 'Change Language' },
+        { command: '/contact_admin', description: 'Contact Admin' },
+      ],
+    };
+
+    await axios.post(url, data);
   }
 
   async handleCallbackQuery(query: any): Promise<void> {
@@ -107,31 +96,41 @@ export class ContactService {
     const callbackData = query.data;
 
     if (callbackData === 'start_contact') {
-      this.userStates.set(chatId, { step: 'ask_name', data: {} });
+      this.userStates.set(chatId, {
+        step: 'ask_name',
+        data: {},
+        language: 'en',
+      });
       await this.sendTelegramMessage(chatId, 'What is your name?');
-    } else if (callbackData === 'change_language') {
-      const url = this.getTelegramApiUrl();
-      const data = {
-        chat_id: chatId,
-        text: 'Please select your preferred language:',
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: 'Amharic', callback_data: 'set_language_amharic' }],
-            [{ text: 'English', callback_data: 'set_language_english' }],
-          ],
-        },
-      };
-      await axios.post(url, data);
-    } else if (callbackData === 'set_language_amharic') {
-      await this.sendTelegramMessage(chatId, 'Language changed to Amharic.');
-    } else if (callbackData === 'set_language_english') {
-      await this.sendTelegramMessage(chatId, 'Language changed to English.');
     } else if (callbackData === 'contact_admin') {
-      const adminChatId = this.chatId; // Replace with your chat ID
-      const message = `User @${query.from.username} wants to contact you.`;
-      await this.sendTelegramMessage(adminChatId, message);
-      await this.sendTelegramMessage(chatId, 'The admin has been notified.');
+      this.userStates.set(chatId, {
+        step: 'ask_message_for_admin',
+        data: {},
+        language: 'en',
+      });
+      await this.sendTelegramMessage(
+        chatId,
+        'Type your message for the admin.',
+      );
+    } else if (callbackData === 'change_language') {
+      await this.sendLanguageOptions(chatId);
     }
+  }
+
+  async sendLanguageOptions(chatId: string): Promise<void> {
+    const url = this.getTelegramApiUrl();
+    const data = {
+      chat_id: chatId,
+      text: 'Please choose a language:',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: 'Amharic', callback_data: 'language_amharic' }],
+          [{ text: 'English', callback_data: 'language_english' }],
+        ],
+      },
+    };
+
+    await axios.post(url, data);
   }
 
   async handleTelegramMessage(update: any): Promise<void> {
@@ -145,15 +144,15 @@ export class ContactService {
       return;
     }
 
-    const { step, data } = userState;
+    const { step, data, language } = userState;
 
     if (step === 'ask_name') {
       data.name = text;
-      this.userStates.set(chatId, { step: 'ask_email', data });
+      this.userStates.set(chatId, { step: 'ask_email', data, language });
       await this.sendTelegramMessage(chatId, 'What is your email?');
     } else if (step === 'ask_email') {
       data.email = text;
-      this.userStates.set(chatId, { step: 'ask_message', data });
+      this.userStates.set(chatId, { step: 'ask_message', data, language });
       await this.sendTelegramMessage(chatId, 'What is your message?');
     } else if (step === 'ask_message') {
       data.message = text;
@@ -164,6 +163,23 @@ export class ContactService {
         chatId,
         'Thank you! Your message has been saved.',
       );
+    } else if (step === 'ask_message_for_admin') {
+      // Send message to admin
+      await this.sendMessageToTelegram(`New message from user:\n${text}`);
+      this.userStates.delete(chatId);
+      await this.sendTelegramMessage(
+        chatId,
+        'Your message has been sent to the admin.',
+      );
+    } else if (text === 'Amharic') {
+      this.userStates.set(chatId, { ...userState, language: 'am' });
+      await this.sendTelegramMessage(
+        chatId,
+        'በአማርኛ እንዴት ልልክ እንደምትችሉ እንደምትፈልጉ እባኮትን አስተላልፉ።',
+      );
+    } else if (text === 'English') {
+      this.userStates.set(chatId, { ...userState, language: 'en' });
+      await this.sendTelegramMessage(chatId, 'You have selected English.');
     }
   }
 
