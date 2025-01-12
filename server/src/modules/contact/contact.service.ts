@@ -78,6 +78,7 @@ export class ContactService {
       reply_markup: {
         inline_keyboard: [
           [{ text: 'Contact Us', callback_data: 'start_contact' }],
+          [{ text: 'Change Language', callback_data: 'language' }],
         ],
       },
     };
@@ -85,6 +86,7 @@ export class ContactService {
     await axios.post(url, data);
   }
 
+  // Setup Telegram menu
   async setupTelegramMenu(): Promise<void> {
     const url = this.getTelegramMenuUrl();
     const data = {
@@ -109,9 +111,44 @@ export class ContactService {
     } else if (callbackData === 'contact_admin') {
       await this.sendTelegramMessage(
         chatId,
-        'Type your message for the admin, and I will send it to the admin.',
+        'You can contact me on Telegram: @mulersoft',
       );
+    } else if (callbackData === 'language') {
+      await this.sendLanguageOptions(chatId);
     }
+  }
+
+  // Show language options (English and Amharic)
+  async sendLanguageOptions(chatId: string): Promise<void> {
+    const url = this.getTelegramApiUrl();
+    const data = {
+      chat_id: chatId,
+      text: 'Please select your language:',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: 'English', callback_data: 'language_english' }],
+          [{ text: 'Amharic', callback_data: 'language_amharic' }],
+        ],
+      },
+    };
+
+    await axios.post(url, data);
+  }
+
+  // Handle language selection
+  async handleLanguageSelection(
+    chatId: string,
+    language: string,
+  ): Promise<void> {
+    let message = '';
+
+    if (language === 'english') {
+      message = 'You have selected English.';
+    } else if (language === 'amharic') {
+      message = 'እባኮትን ቋንቋዎን ምረጡ።';
+    }
+
+    await this.sendTelegramMessage(chatId, message);
   }
 
   // Handle messages and steps in the conversation
