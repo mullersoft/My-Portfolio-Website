@@ -122,11 +122,40 @@ export class ContactService {
       return;
     }
 
-    // Default fallback if no specific command or flow is matched
-    await this.sendTelegramMessage(
-      chatId,
-      'I did not understand that. Use /start to learn about me or /help to send a message to the admin.',
-    );
+    // Handle the "Contact Us" functionality if no commands match
+    const contactState = this.userStates.get(chatId);
+
+    if (!contactState) {
+      console.log(
+        `No state found for chat: ${chatId}. Sending contact button.`,
+      );
+      await this.sendContactButton(chatId); // Send the contact button if no state exists
+      return;
+    }
+
+    const { step, data } = contactState;
+
+    console.log(`Current step: ${step}, Data: ${JSON.stringify(data)}`);
+
+    if (step === 'ask_name') {
+      data.name = text;
+      this.userStates.set(chatId, { step: 'ask_email', data });
+      await this.sendTelegramMessage(chatId, 'What is your email?');
+    } else if (step === 'ask_email') {
+      data.email = text;
+      this.userStates.set(chatId, { step: 'ask_message', data });
+      await this.sendTelegramMessage(chatId, 'What is your message?');
+    } else if (step === 'ask_message') {
+      data.message = text;
+      this.userStates.delete(chatId);
+
+      const contact = await this.create(data as Contact);
+      console.log(`Saved contact: ${JSON.stringify(contact)}`);
+      await this.sendTelegramMessage(
+        chatId,
+        'Thank you! Your message has been saved.',
+      );
+    }
   }
 
   private async sendTelegramMessage(
