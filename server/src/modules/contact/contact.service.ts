@@ -103,6 +103,14 @@ export class ContactService {
         'Type your message for the admin, and I will forward it to @mulersoft.',
       );
       return;
+    } else if (text === '/reset') {
+      // Reset the user's state
+      this.userStates.delete(chatId);
+      await this.sendTelegramMessage(
+        chatId,
+        'Your progress has been reset. You can start over by clicking the "Contact Us" button or using /help.',
+      );
+      return;
     }
 
     // Handle user input for the help message flow
