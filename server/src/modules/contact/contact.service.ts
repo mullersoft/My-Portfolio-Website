@@ -89,12 +89,25 @@ export class ContactService {
 
     console.log(`Received message: ${text} from chat: ${chatId}`);
 
+    // Handle specific commands
     if (text === '/contact') {
-      // Handle the "Contact Us" command
-      await this.sendContactButton(chatId);
+      await this.sendContactButton(chatId); // Send the "Contact Us" button
+      return;
+    } else if (text === '/help') {
+      await this.sendTelegramMessage(
+        chatId,
+        'Here is some help information:\n\n1. Use /contact to reach out to us.\n2. Use /start to begin interacting with the bot.',
+      );
+      return;
+    } else if (text === '/start') {
+      await this.sendTelegramMessage(
+        chatId,
+        'Welcome! Use /contact to send us a message or /help for assistance.',
+      );
       return;
     }
 
+    // Handle user input for contact flow
     const userState = this.userStates.get(chatId);
 
     if (!userState) {
