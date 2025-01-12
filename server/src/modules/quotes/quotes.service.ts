@@ -35,7 +35,7 @@ export class QuotesService {
   }
 
   // Schedule the daily quote task
-  @Cron('*/2 * * * *') // Runs every day at 9:00 AM
+  @Cron('0 9 * * *') // Runs every day at 9:00 AM
   async sendDailyQuote() {
     await this.sendQuoteToTelegram();
   }
