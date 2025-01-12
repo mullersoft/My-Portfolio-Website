@@ -48,13 +48,11 @@ export class ContactService {
   }
 
   async update(id: string, contact: Partial<Contact>): Promise<Contact> {
-    // Implement the update logic here
-    return {} as Contact; // Replace with actual implementation
+    return {} as Contact; // Implement update logic
   }
 
   async delete(id: string): Promise<Contact> {
-    // Implement the delete logic here
-    return {} as Contact; // return the deleted contact or appropriate response
+    return {} as Contact; // Implement delete logic
   }
 
   async sendMenuButton(chatId: string): Promise<void> {
@@ -63,15 +61,13 @@ export class ContactService {
       chat_id: chatId,
       text: 'Welcome to our bot! Choose an option:',
       reply_markup: {
-        keyboard: [
+        inline_keyboard: [
           [
-            { text: 'Start the bot' },
-            { text: 'Change language' },
-            { text: 'Contact admin' },
+            { text: 'Start the Bot', callback_data: 'start_bot' },
+            { text: 'Change Language', callback_data: 'change_language' },
+            { text: 'Contact Admin', callback_data: 'contact_admin' },
           ],
         ],
-        resize_keyboard: true, // Makes the keyboard a bit smaller
-        one_time_keyboard: true, // Closes the keyboard after selection
       },
     };
 
@@ -79,13 +75,28 @@ export class ContactService {
   }
 
   async handleCallbackQuery(query: any): Promise<void> {
-    console.log('Callback Query:', query); // Add this line for debugging
     const chatId = query.message.chat.id;
     const callbackData = query.data;
 
     if (callbackData === 'start_contact') {
       this.userStates.set(chatId, { step: 'ask_name', data: {} });
       await this.sendTelegramMessage(chatId, 'What is your name?');
+    } else if (callbackData === 'start_bot') {
+      await this.sendTelegramMessage(
+        chatId,
+        'Welcome to the bot! How can I assist you today?',
+      );
+    } else if (callbackData === 'change_language') {
+      await this.sendTelegramMessage(
+        chatId,
+        'Please select your preferred language.',
+      );
+      // Add language change logic here
+    } else if (callbackData === 'contact_admin') {
+      await this.sendTelegramMessage(
+        chatId,
+        'You can contact the admin at admin@example.com.',
+      );
     }
   }
 
@@ -98,38 +109,14 @@ export class ContactService {
     const userState = this.userStates.get(chatId);
 
     if (!userState) {
-      console.log(`No state found for chat: ${chatId}. Sending menu button.`);
-      await this.sendMenuButton(chatId);
+      console.log(`No state found for chat: ${chatId}. Sending main menu.`);
+      await this.sendMenuButton(chatId); // Send the menu when the user first interacts
       return;
     }
 
     const { step, data } = userState;
 
-    console.log(`Current step: ${step}, Data: ${JSON.stringify(data)}`);
-
-    // Handle menu options
-    if (text === 'Start the bot') {
-      await this.sendTelegramMessage(
-        chatId,
-        'Welcome to the bot! How can I assist you today?',
-      );
-      this.userStates.set(chatId, { step: 'start_bot', data: {} });
-    } else if (text === 'Change language') {
-      await this.sendTelegramMessage(
-        chatId,
-        'Please select a language:\n1. English\n2. Español',
-      );
-      this.userStates.set(chatId, { step: 'change_language', data: {} });
-    } else if (text === 'Contact admin') {
-      await this.sendTelegramMessage(
-        chatId,
-        'Please wait while I connect you to the admin...',
-      );
-      // Optionally, send a message to the admin
-      await this.sendMessageToTelegram(
-        `User ${chatId} wants to contact the admin.`,
-      );
-    } else if (step === 'ask_name') {
+    if (step === 'ask_name') {
       data.name = text;
       this.userStates.set(chatId, { step: 'ask_email', data });
       await this.sendTelegramMessage(chatId, 'What is your email?');
