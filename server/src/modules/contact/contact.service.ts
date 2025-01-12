@@ -30,7 +30,7 @@ export class ContactService {
 
   private userStates = new Map<
     string,
-    { step: string; data: Partial<Contact>; language: string }
+    { step: string; data: Partial<Contact> }
   >();
 
   async findAll(): Promise<Contact[]> {
@@ -61,6 +61,15 @@ export class ContactService {
     return this.contactModel.findByIdAndDelete(id).exec();
   }
 
+  // Send introductory message when user joins
+  async sendIntroMessage(chatId: string): Promise<void> {
+    const url = this.getTelegramApiUrl();
+    const message = `Welcome to my Telegram Bot! I am a web and Telegram bot developer using Express.js, NestJS, ReactJS, MongoDB, and the Telegram API. I am available for data collection services. If you need a bot or any assistance, feel free to contact me.`;
+
+    const data = { chat_id: chatId, text: message };
+    await axios.post(url, data);
+  }
+
   async sendContactButton(chatId: string): Promise<void> {
     const url = this.getTelegramApiUrl();
     const data = {
@@ -69,8 +78,6 @@ export class ContactService {
       reply_markup: {
         inline_keyboard: [
           [{ text: 'Contact Us', callback_data: 'start_contact' }],
-          [{ text: 'Contact Admin', callback_data: 'contact_admin' }],
-          [{ text: 'Change Language', callback_data: 'change_language' }],
         ],
       },
     };
@@ -91,48 +98,23 @@ export class ContactService {
     await axios.post(url, data);
   }
 
+  // Handle callback queries from buttons
   async handleCallbackQuery(query: any): Promise<void> {
     const chatId = query.message.chat.id;
     const callbackData = query.data;
 
     if (callbackData === 'start_contact') {
-      this.userStates.set(chatId, {
-        step: 'ask_name',
-        data: {},
-        language: 'en',
-      });
+      this.userStates.set(chatId, { step: 'ask_name', data: {} });
       await this.sendTelegramMessage(chatId, 'What is your name?');
     } else if (callbackData === 'contact_admin') {
-      this.userStates.set(chatId, {
-        step: 'ask_message_for_admin',
-        data: {},
-        language: 'en',
-      });
       await this.sendTelegramMessage(
         chatId,
-        'Type your message for the admin.',
+        'Type your message for the admin, and I will send it to the admin.',
       );
-    } else if (callbackData === 'change_language') {
-      await this.sendLanguageOptions(chatId);
     }
   }
 
-  async sendLanguageOptions(chatId: string): Promise<void> {
-    const url = this.getTelegramApiUrl();
-    const data = {
-      chat_id: chatId,
-      text: 'Please choose a language:',
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: 'Amharic', callback_data: 'language_amharic' }],
-          [{ text: 'English', callback_data: 'language_english' }],
-        ],
-      },
-    };
-
-    await axios.post(url, data);
-  }
-
+  // Handle messages and steps in the conversation
   async handleTelegramMessage(update: any): Promise<void> {
     const chatId = update.message.chat.id;
     const text = update.message.text;
@@ -140,19 +122,20 @@ export class ContactService {
     const userState = this.userStates.get(chatId);
 
     if (!userState) {
+      await this.sendIntroMessage(chatId);
       await this.sendContactButton(chatId);
       return;
     }
 
-    const { step, data, language } = userState;
+    const { step, data } = userState;
 
     if (step === 'ask_name') {
       data.name = text;
-      this.userStates.set(chatId, { step: 'ask_email', data, language });
+      this.userStates.set(chatId, { step: 'ask_email', data });
       await this.sendTelegramMessage(chatId, 'What is your email?');
     } else if (step === 'ask_email') {
       data.email = text;
-      this.userStates.set(chatId, { step: 'ask_message', data, language });
+      this.userStates.set(chatId, { step: 'ask_message', data });
       await this.sendTelegramMessage(chatId, 'What is your message?');
     } else if (step === 'ask_message') {
       data.message = text;
@@ -163,23 +146,6 @@ export class ContactService {
         chatId,
         'Thank you! Your message has been saved.',
       );
-    } else if (step === 'ask_message_for_admin') {
-      // Send message to admin
-      await this.sendMessageToTelegram(`New message from user:\n${text}`);
-      this.userStates.delete(chatId);
-      await this.sendTelegramMessage(
-        chatId,
-        'Your message has been sent to the admin.',
-      );
-    } else if (text === 'Amharic') {
-      this.userStates.set(chatId, { ...userState, language: 'am' });
-      await this.sendTelegramMessage(
-        chatId,
-        'በአማርኛ እንዴት ልልክ እንደምትችሉ እንደምትፈልጉ እባኮትን አስተላልፉ።',
-      );
-    } else if (text === 'English') {
-      this.userStates.set(chatId, { ...userState, language: 'en' });
-      await this.sendTelegramMessage(chatId, 'You have selected English.');
     }
   }
 
