@@ -8,10 +8,7 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const allowedOrigins = [
-    'https://aesthetic-stroopwafel-42b2f3.netlify.app',
-    // 'http://localhost:3000',
-  ];
+  const allowedOrigins = ['https://aesthetic-stroopwafel-42b2f3.netlify.app'];
 
   app.enableCors({
     origin: (origin, callback) => {

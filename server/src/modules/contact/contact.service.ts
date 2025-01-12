@@ -134,6 +134,15 @@ export class ContactService {
         );
         break;
     }
+
+    // After processing the callback, we answer the callback query to remove the loading state
+    const url = this.getTelegramCallbackUrl();
+    const data = {
+      callback_query_id: query.id,
+      text: 'Processing your request...',
+      show_alert: false,
+    };
+    await axios.post(url, data);
   }
 
   async handleTelegramMessage(update: any): Promise<void> {
