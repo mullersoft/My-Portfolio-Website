@@ -89,6 +89,12 @@ export class ContactService {
 
     console.log(`Received message: ${text} from chat: ${chatId}`);
 
+    if (text === '/contact') {
+      // Handle the "Contact Us" command
+      await this.sendContactButton(chatId);
+      return;
+    }
+
     const userState = this.userStates.get(chatId);
 
     if (!userState) {
