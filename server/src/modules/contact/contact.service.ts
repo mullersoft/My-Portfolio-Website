@@ -48,26 +48,65 @@ export class ContactService {
   }
 
   async update(id: string, contact: Partial<Contact>): Promise<Contact> {
-    return {} as Contact; // Implement update logic
+    // Implement the update logic here
+
+    return {} as Contact; // Replace with actual implementation
   }
 
   async delete(id: string): Promise<Contact> {
-    return {} as Contact; // Implement delete logic
+    // Implement the delete logic here
+
+    return; // return the deleted contact or appropriate response
   }
 
-  async sendMenuButton(chatId: string): Promise<void> {
+  async sendContactButton(chatId: string): Promise<void> {
     const url = this.getTelegramApiUrl();
     const data = {
       chat_id: chatId,
-      text: 'Welcome to our bot! Choose an option:',
+      text: 'Click the button below to contact us:',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: 'Contact Us', callback_data: 'start_contact' }],
+        ],
+      },
+    };
+
+    await axios.post(url, data);
+  }
+
+  async sendMainMenu(chatId: string): Promise<void> {
+    const url = this.getTelegramApiUrl();
+    const data = {
+      chat_id: chatId,
+      text: 'Choose an option:',
       reply_markup: {
         inline_keyboard: [
           [
-            { text: 'Start the Bot', callback_data: 'start_bot' },
-            { text: 'Change Language', callback_data: 'change_language' },
-            { text: 'Contact Admin', callback_data: 'contact_admin' },
+            { text: 'Menu Option 1', callback_data: 'option_1' },
+            { text: 'Menu Option 2', callback_data: 'option_2' },
+          ],
+          [
+            { text: 'Contact Us', callback_data: 'contact_us' },
+            { text: 'Help', callback_data: 'help' },
           ],
         ],
+      },
+    };
+
+    await axios.post(url, data);
+  }
+
+  async sendCustomKeyboard(chatId: string): Promise<void> {
+    const url = this.getTelegramApiUrl();
+    const data = {
+      chat_id: chatId,
+      text: 'Choose an option:',
+      reply_markup: {
+        keyboard: [
+          ['Menu Option 1', 'Menu Option 2'],
+          ['Contact Us', 'Help'],
+        ],
+        one_time_keyboard: false, // Makes the keyboard persistent
       },
     };
 
@@ -78,25 +117,27 @@ export class ContactService {
     const chatId = query.message.chat.id;
     const callbackData = query.data;
 
-    if (callbackData === 'start_contact') {
-      this.userStates.set(chatId, { step: 'ask_name', data: {} });
-      await this.sendTelegramMessage(chatId, 'What is your name?');
-    } else if (callbackData === 'start_bot') {
-      await this.sendTelegramMessage(
-        chatId,
-        'Welcome to the bot! How can I assist you today?',
-      );
-    } else if (callbackData === 'change_language') {
-      await this.sendTelegramMessage(
-        chatId,
-        'Please select your preferred language.',
-      );
-      // Add language change logic here
-    } else if (callbackData === 'contact_admin') {
-      await this.sendTelegramMessage(
-        chatId,
-        'You can contact the admin at admin@example.com.',
-      );
+    switch (callbackData) {
+      case 'option_1':
+        await this.sendTelegramMessage(chatId, 'You selected Option 1');
+        break;
+      case 'option_2':
+        await this.sendTelegramMessage(chatId, 'You selected Option 2');
+        break;
+      case 'contact_us':
+        await this.sendTelegramMessage(
+          chatId,
+          'Contact us at support@example.com',
+        );
+        break;
+      case 'help':
+        await this.sendTelegramMessage(
+          chatId,
+          'Here is how you can use the bot...',
+        );
+        break;
+      default:
+        await this.sendTelegramMessage(chatId, 'Invalid option');
     }
   }
 
@@ -109,12 +150,16 @@ export class ContactService {
     const userState = this.userStates.get(chatId);
 
     if (!userState) {
-      console.log(`No state found for chat: ${chatId}. Sending main menu.`);
-      await this.sendMenuButton(chatId); // Send the menu when the user first interacts
+      console.log(
+        `No state found for chat: ${chatId}. Sending contact button.`,
+      );
+      await this.sendContactButton(chatId);
       return;
     }
 
     const { step, data } = userState;
+
+    console.log(`Current step: ${step}, Data: ${JSON.stringify(data)}`);
 
     if (step === 'ask_name') {
       data.name = text;
