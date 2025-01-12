@@ -61,48 +61,26 @@ export class ContactService {
     return this.contactModel.findByIdAndDelete(id).exec();
   }
 
-  // Send initial description when user joins the bot
-  async sendIntroductionMessage(chatId: string): Promise<void> {
-    const url = this.getTelegramApiUrl();
-    const message = `
-      Welcome to my bot! 
-      I am a web and Telegram bot developer using Express.js, NestJS, ReactJS, and MongoDB.
-      This bot is developed using NestJS, MongoDB, and Telegram API.
-      I collect data for clients and am available for Telegram bot development. 
-      If you're interested, you can contact me directly. 
-    `;
-    const data = {
-      chat_id: chatId,
-      text: message,
-    };
-    await axios.post(url, data);
+  // Send a welcome message when the user starts the bot
+  async sendWelcomeMessage(chatId: string): Promise<void> {
+    const message = `Welcome! I am a web and Telegram bot developer. I use technologies like Express.js, NestJS, ReactJS, and MongoDB to create bots and web applications. If you need help, feel free to reach out!`;
+    await this.sendTelegramMessage(chatId, message);
   }
 
-  async sendContactButton(chatId: string): Promise<void> {
+  // Send the main menu with options after the user clicks the menu button
+  async sendMainMenu(chatId: string): Promise<void> {
     const url = this.getTelegramApiUrl();
     const data = {
       chat_id: chatId,
-      text: 'Click the button below to contact us:',
+      text: 'Please choose an option from the menu below:',
       reply_markup: {
         inline_keyboard: [
-          [{ text: 'Start', callback_data: 'start_contact' }],
+          [{ text: 'Start', callback_data: 'start' }],
           [{ text: 'Change Language', callback_data: 'language' }],
+          [{ text: 'Contact Me', callback_data: 'contact_me' }],
           [{ text: 'Contact Admin', callback_data: 'contact_admin' }],
         ],
       },
-    };
-
-    await axios.post(url, data);
-  }
-
-  async setupTelegramMenu(): Promise<void> {
-    const url = this.getTelegramMenuUrl();
-    const data = {
-      commands: [
-        { command: '/start', description: 'Start the Bot' },
-        { command: '/language', description: 'Change Language' },
-        { command: '/contact_admin', description: 'Contact Admin' },
-      ],
     };
 
     await axios.post(url, data);
@@ -112,18 +90,23 @@ export class ContactService {
     const chatId = query.message.chat.id;
     const callbackData = query.data;
 
-    if (callbackData === 'start_contact') {
+    if (callbackData === 'start') {
       this.userStates.set(chatId, { step: 'ask_name', data: {} });
       await this.sendTelegramMessage(chatId, 'What is your name?');
     } else if (callbackData === 'language') {
       await this.sendTelegramMessage(
         chatId,
-        'Please select your language: English or Amharic.',
+        'Please choose your language: English or Amharic.',
+      );
+    } else if (callbackData === 'contact_me') {
+      await this.sendTelegramMessage(
+        chatId,
+        'Please type your message to contact me.',
       );
     } else if (callbackData === 'contact_admin') {
       await this.sendTelegramMessage(
         chatId,
-        'Type your message for the admin:',
+        'Please type your message for the admin.',
       );
     }
   }
@@ -135,7 +118,7 @@ export class ContactService {
     const userState = this.userStates.get(chatId);
 
     if (!userState) {
-      await this.sendContactButton(chatId);
+      await this.sendMainMenu(chatId);
       return;
     }
 
