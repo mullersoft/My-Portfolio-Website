@@ -49,27 +49,22 @@ export class ContactService {
 
   async update(id: string, contact: Partial<Contact>): Promise<Contact> {
     // Implement the update logic here
-
     return {} as Contact; // Replace with actual implementation
   }
 
   async delete(id: string): Promise<Contact> {
     // Implement the delete logic here
-
-    return; // return the deleted contact or appropriate response
+    return {} as Contact; // return the deleted contact or appropriate response
   }
 
-  // Send the menu button as inline keyboard
-  async sendMenuButton(chatId: string): Promise<void> {
+  async sendContactButton(chatId: string): Promise<void> {
     const url = this.getTelegramApiUrl();
     const data = {
       chat_id: chatId,
-      text: 'Welcome! Choose an option from the menu:',
+      text: 'Click the button below to contact us:',
       reply_markup: {
         inline_keyboard: [
           [{ text: 'Contact Us', callback_data: 'start_contact' }],
-          [{ text: 'About Us', callback_data: 'about_us' }],
-          [{ text: 'Help', callback_data: 'help' }],
         ],
       },
     };
@@ -77,7 +72,6 @@ export class ContactService {
     await axios.post(url, data);
   }
 
-  // Handle callback queries for the menu
   async handleCallbackQuery(query: any): Promise<void> {
     const chatId = query.message.chat.id;
     const callbackData = query.data;
@@ -86,13 +80,6 @@ export class ContactService {
       // Start the contact flow
       this.userStates.set(chatId, { step: 'ask_name', data: {} });
       await this.sendTelegramMessage(chatId, 'What is your name?');
-    } else if (callbackData === 'about_us') {
-      await this.sendTelegramMessage(
-        chatId,
-        'We are a company that provides amazing services!',
-      );
-    } else if (callbackData === 'help') {
-      await this.sendTelegramMessage(chatId, 'How can we assist you?');
     }
   }
 
@@ -105,8 +92,10 @@ export class ContactService {
     const userState = this.userStates.get(chatId);
 
     if (!userState) {
-      console.log(`No state found for chat: ${chatId}. Sending menu button.`);
-      await this.sendMenuButton(chatId);
+      console.log(
+        `No state found for chat: ${chatId}. Sending contact button.`,
+      );
+      await this.sendContactButton(chatId);
       return;
     }
 
