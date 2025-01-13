@@ -88,12 +88,10 @@ export class BotService {
     }
   }
 
-  // New method to handle callback queries (button clicks)
-  async handleCallbackQuery(callbackQuery: any): Promise<void> {
+  public async handleCallbackQuery(callbackQuery: any): Promise<void> {
     const chatId = callbackQuery.message.chat.id;
     const callbackData = callbackQuery.data;
 
-    // Example handling for button click callback
     if (callbackData === 'contact_us') {
       await this.sendTelegramMessage(
         chatId,
@@ -116,10 +114,10 @@ export class BotService {
 
   private async sendMessageToTelegram(
     message: string,
-    chatId: string,
+    username: string,
   ): Promise<void> {
     const url = this.getTelegramApiUrl();
-    const data = { chat_id: chatId, text: message };
+    const data = { chat_id: username, text: message };
     await axios.post(url, data);
   }
 
