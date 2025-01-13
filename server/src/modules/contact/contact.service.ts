@@ -15,6 +15,7 @@ export class ContactService {
 
   private readonly botToken = process.env.BOT_TOKEN;
   private readonly chatId = process.env.CHAT_ID;
+  private readonly adminChatId = process.env.ADMIN_CHAT_ID; // Admin's chat ID
 
   private getTelegramApiUrl(): string {
     return `https://api.telegram.org/bot${this.botToken}/sendMessage`;
@@ -48,12 +49,10 @@ export class ContactService {
   }
 
   async update(id: string, contact: Partial<Contact>): Promise<Contact> {
-    // Implement the update logic here
     return {} as Contact; // Replace with actual implementation
   }
 
   async delete(id: string): Promise<Contact> {
-    // Implement the delete logic here
     return {} as Contact; // return the deleted contact or appropriate response
   }
 
@@ -77,7 +76,6 @@ export class ContactService {
     const callbackData = query.data;
 
     if (callbackData === 'start_contact') {
-      // Start the contact flow
       this.userStates.set(chatId, { step: 'ask_name', data: {} });
       await this.sendTelegramMessage(chatId, 'What is your name?');
     }
@@ -91,7 +89,6 @@ export class ContactService {
 
     // Handle specific commands
     if (text === '/start') {
-      // Reset user state and send welcome message
       this.userStates.delete(chatId);
       await this.sendTelegramMessage(
         chatId,
@@ -99,7 +96,6 @@ export class ContactService {
       );
       return;
     } else if (text === '/help') {
-      // Set the state to collect a message for the admin
       this.userStates.set(chatId, { step: 'ask_admin_message', data: {} });
       await this.sendTelegramMessage(
         chatId,
@@ -107,7 +103,6 @@ export class ContactService {
       );
       return;
     } else if (text === '/contact') {
-      // Start the contact flow
       this.userStates.set(chatId, { step: 'ask_name', data: {} });
       await this.sendTelegramMessage(chatId, 'What is your name?');
       return;
@@ -133,14 +128,22 @@ export class ContactService {
 
     // Handle different steps
     if (step === 'ask_admin_message') {
-      // Send the user's message to the admin's Telegram account
       const adminMessage = `📩 Message for Admin:\n\nFrom Chat ID: ${chatId}\nMessage: ${text}`;
-      await this.sendMessageToTelegram(adminMessage, '@mulersoft');
-      this.userStates.delete(chatId); // Clear the state after sending the message
-      await this.sendTelegramMessage(
-        chatId,
-        'Thank you! Your message has been sent to the admin.',
-      );
+      try {
+        // Send message to the admin's chat_id (not username)
+        await this.sendMessageToTelegram(adminMessage, this.adminChatId);
+        this.userStates.delete(chatId); // Clear the state after sending the message
+        await this.sendTelegramMessage(
+          chatId,
+          'Thank you! Your message has been sent to the admin.',
+        );
+      } catch (error) {
+        console.error('Error sending message to admin:', error);
+        await this.sendTelegramMessage(
+          chatId,
+          'Sorry, there was an error sending your message to the admin. Please try again later.',
+        );
+      }
     } else if (step === 'ask_name') {
       data.name = text;
       this.userStates.set(chatId, { step: 'ask_email', data });
