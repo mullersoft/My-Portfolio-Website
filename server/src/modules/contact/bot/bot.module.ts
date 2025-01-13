@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { BotService } from './bot.service';
 import { BotController } from './bot.controller';
+import { BotService } from './bot.service';
+import { MongooseModule } from '@nestjs/mongoose';
 import { Contact, ContactSchema } from '../contact.schema';
 
 @Module({

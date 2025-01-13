@@ -1,14 +1,16 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { BotService } from './bot.service';
 
-@Controller('bot')
+@Controller('contact/bot')
 export class BotController {
   constructor(private readonly botService: BotService) {}
 
-  @Post('webhook')
+  @Post('telegram-webhook')
   async handleTelegramWebhook(@Body() update: any): Promise<any> {
     if (update.message) {
-      await this.botService.handleTelegramMessage(update.message);
+      await this.botService.handleTelegramMessage(update);
+    } else if (update.callback_query) {
+      await this.botService.handleCallbackQuery(update.callback_query);
     }
     return { success: true };
   }

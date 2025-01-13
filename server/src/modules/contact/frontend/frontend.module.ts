@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { FrontendService } from './frontend.service';
 import { FrontendController } from './frontend.controller';
+import { FrontendService } from './frontend.service';
+import { MongooseModule } from '@nestjs/mongoose';
 import { Contact, ContactSchema } from '../contact.schema';
 
 @Module({

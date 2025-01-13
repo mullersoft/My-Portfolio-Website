@@ -4,7 +4,7 @@ import { ConfigModule } from '@nestjs/config'; // Import ConfigModule
 import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './modules/users/users.module';
 import { ProjectsModule } from './modules/projects/projects.module';
-import { ContactModule } from './modules/contact/contact.module';
+// import { ContactModule } from './modules/contact/contact.module';
 import { ChatGptModule } from './modules/chatgpt/chatgpt.module';
 // import { IpTrackingMiddleware } from './middlewares/ip-tracking.middleware';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -18,7 +18,7 @@ import { FrontendModule } from './modules/contact/frontend/frontend.module';
     MongooseModule.forRoot(process.env.MONGO_URI), // Use MONGO_URI from .env
     UsersModule,
     ProjectsModule,
-    ContactModule,
+    // ContactModule,
     ChatGptModule,
     ScheduleModule.forRoot(), // Enable scheduling
     QuotesModule, // Import the quotes module

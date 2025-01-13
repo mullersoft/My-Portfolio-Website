@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ContactService } from './modules/contact/contact.service'; // Import the ContactService
+// import { ContactService } from './modules/contact/contact.service'; // Import the ContactService
 import * as dotenv from 'dotenv';
 
 dotenv.config();
