@@ -43,10 +43,6 @@ export class BotService {
         'Please type your message for the admin:',
       );
       return;
-    } else if (text === '/contact') {
-      this.userStates.set(chatId, { step: 'ask_name', data: {} });
-      await this.sendTelegramMessage(chatId, 'What is your name?');
-      return;
     }
 
     const userState = this.userStates.get(chatId);
@@ -58,7 +54,7 @@ export class BotService {
       return;
     }
 
-    const { step, data } = userState;
+    const { step } = userState;
 
     if (step === 'ask_admin_message') {
       const adminMessage = `📩 Message for Admin:\n\nFrom Chat ID: ${chatId}\nMessage: ${text}`;
@@ -68,24 +64,21 @@ export class BotService {
         chatId,
         'Thank you! Your message has been sent to the admin.',
       );
-    } else if (step === 'ask_name') {
-      data.name = text;
-      this.userStates.set(chatId, { step: 'ask_email', data });
-      await this.sendTelegramMessage(chatId, 'What is your email?');
-    } else if (step === 'ask_email') {
-      data.email = text;
-      this.userStates.set(chatId, { step: 'ask_message', data });
-      await this.sendTelegramMessage(chatId, 'What is your message?');
-    } else if (step === 'ask_message') {
-      data.message = text;
-      this.userStates.delete(chatId);
-
-      const contact = await this.create(data as Contact);
+    } else {
       await this.sendTelegramMessage(
         chatId,
-        'Thank you! Your message has been saved.',
+        'Unexpected input. Please try again.',
       );
     }
+  }
+
+  private async sendMessageToTelegram(
+    message: string,
+    username: string,
+  ): Promise<void> {
+    const url = this.getTelegramApiUrl();
+    const data = { chat_id: username, text: message };
+    await axios.post(url, data);
   }
 
   public async handleCallbackQuery(callbackQuery: any): Promise<void> {
@@ -109,15 +102,6 @@ export class BotService {
   ): Promise<void> {
     const url = this.getTelegramApiUrl();
     const data = { chat_id: chatId, text };
-    await axios.post(url, data);
-  }
-
-  private async sendMessageToTelegram(
-    message: string,
-    username: string,
-  ): Promise<void> {
-    const url = this.getTelegramApiUrl();
-    const data = { chat_id: username, text: message };
     await axios.post(url, data);
   }
 
