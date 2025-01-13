@@ -13,8 +13,8 @@ export class BotService {
     @InjectModel(Contact.name) private contactModel: Model<Contact>,
   ) {}
 
-  private readonly botToken = process.env.BOT_TOKEN;
-  private readonly chatId = process.env.CHAT_ID;
+  private readonly botToken = '7484269859:AAFK0DiqjLzmEUIEgvzHnur__3ZSr9SoBqg'; // Use the provided BOT_TOKEN
+  private readonly chatId = '577375849'; // Use the provided CHAT_ID
 
   private getTelegramApiUrl(): string {
     return `https://api.telegram.org/bot${this.botToken}/sendMessage`;
@@ -34,6 +34,13 @@ export class BotService {
       await this.sendTelegramMessage(
         chatId,
         'Welcome! Use /contact to send us a message, or /help for assistance.',
+      );
+      return;
+    } else if (text === '/help') {
+      this.userStates.set(chatId, { step: 'ask_admin_message', data: {} });
+      await this.sendTelegramMessage(
+        chatId,
+        'Please type your message for the admin:',
       );
       return;
     } else if (text === '/contact') {
@@ -65,18 +72,16 @@ export class BotService {
       data.message = text;
       this.userStates.delete(chatId);
 
-      try {
-        const contact = await this.create(data as Contact);
-        await this.sendTelegramMessage(
-          chatId,
-          `Thank you! Your message has been saved:\n\nName: ${contact.name}\nEmail: ${contact.email}\nMessage: ${contact.message}`,
-        );
-      } catch (error) {
-        await this.sendTelegramMessage(
-          chatId,
-          'An error occurred while saving your message. Please try again later.',
-        );
-      }
+      // Save the contact data to MongoDB
+      const contact = await this.create(data as Contact);
+      await this.sendTelegramMessage(
+        chatId,
+        'Thank you! Your message has been saved and sent to the admin.',
+      );
+
+      // Send the contact data to the bot (admin)
+      const adminMessage = `📩 New Contact Message:\n\nName: ${contact.name}\nEmail: ${contact.email}\nMessage: ${contact.message}`;
+      await this.sendMessageToTelegram(adminMessage);
     }
   }
 
@@ -107,12 +112,9 @@ export class BotService {
     await axios.post(url, data);
   }
 
-  private async sendMessageToTelegram(
-    message: string,
-    chatId: string,
-  ): Promise<void> {
+  private async sendMessageToTelegram(message: string): Promise<void> {
     const url = this.getTelegramApiUrl();
-    const data = { chat_id: chatId, text: message };
+    const data = { chat_id: this.chatId, text: message }; // Send to the admin's chat ID
     await axios.post(url, data);
   }
 
