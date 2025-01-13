@@ -131,10 +131,10 @@ export class ContactService {
 
     // Handle different steps
     if (step === 'ask_admin_message') {
-      // Send the user's message to the admin's Telegram account
+      // Send the user's message to the admin's Telegram account (@mulersoft)
       const adminMessage = `📩 Message for Admin:\n\nFrom Chat ID: ${chatId}\nMessage: ${text}`;
-      await this.sendMessageToTelegram(adminMessage, '@mulersoft');
-      this.userStates.delete(chatId);
+      await this.sendMessageToTelegram(adminMessage, '@mulersoft'); // Send to @mulersoft
+      this.userStates.delete(chatId); // Reset the state after sending the message
       await this.sendTelegramMessage(
         chatId,
         'Thank you! Your message has been sent to the admin.',
@@ -172,16 +172,11 @@ export class ContactService {
 
   private async sendMessageToTelegram(
     message: string,
-    recipient: string,
+    chatId: string = this.chatId, // Default to the admin's chat ID
   ): Promise<void> {
     const url = this.getTelegramApiUrl();
-    const data = { chat_id: recipient, text: message };
+    const data = { chat_id: chatId, text: message };
 
-    try {
-      await axios.post(url, data);
-      console.log(`Message sent to ${recipient}: ${message}`);
-    } catch (error) {
-      console.error(`Failed to send message to ${recipient}:`, error.message);
-    }
+    await axios.post(url, data);
   }
 }
