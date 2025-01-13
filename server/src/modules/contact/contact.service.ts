@@ -42,7 +42,7 @@ export class ContactService {
     const savedContact = await newContact.save();
 
     const telegramMessage = `📬 New Contact Message:\n\nName: ${contact.name}\nEmail: ${contact.email}\nMessage: ${contact.message}`;
-    await this.sendMessageToTelegram(telegramMessage);
+    await this.sendMessageToTelegram(telegramMessage, this.chatId);
 
     return savedContact;
   }
@@ -136,7 +136,7 @@ export class ContactService {
       // Send the user's message to the admin's Telegram account
       const adminMessage = `📩 Message for Admin:\n\nFrom Chat ID: ${chatId}\nMessage: ${text}`;
       await this.sendMessageToTelegram(adminMessage, '@mulersoft');
-      this.userStates.delete(chatId);
+      this.userStates.delete(chatId); // Clear the state after sending the message
       await this.sendTelegramMessage(
         chatId,
         'Thank you! Your message has been sent to the admin.',
@@ -174,11 +174,16 @@ export class ContactService {
 
   private async sendMessageToTelegram(
     message: string,
-    chatId: string = this.chatId, // Default to the admin's chat ID
+    recipient: string,
   ): Promise<void> {
     const url = this.getTelegramApiUrl();
-    const data = { chat_id: chatId, text: message };
+    const data = { chat_id: recipient, text: message };
 
-    await axios.post(url, data);
+    try {
+      await axios.post(url, data);
+      console.log(`Message sent to ${recipient}: ${message}`);
+    } catch (error) {
+      console.error(`Failed to send message to ${recipient}:`, error.message);
+    }
   }
 }
