@@ -1,4 +1,4 @@
-// server/src/modules/contact/contact.schema.ts
+// D:\web D\portfolio-website\server\src\modules\contact\contact.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 

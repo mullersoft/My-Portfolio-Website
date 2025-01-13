@@ -60,16 +60,7 @@ export class BotService {
 
     const { step, data } = userState;
 
-    if (step === 'ask_admin_message') {
-      // Send the user's message to the admin (i.e., @mulersoft)
-      const adminMessage = `📩 Message for Admin:\n\nFrom Chat ID: ${chatId}\nMessage: ${text}`;
-      await this.sendMessageToTelegram(adminMessage, '@mulersoft');
-      this.userStates.delete(chatId);
-      await this.sendTelegramMessage(
-        chatId,
-        'Thank you! Your message has been sent to the admin.',
-      );
-    } else if (step === 'ask_name') {
+    if (step === 'ask_name') {
       data.name = text;
       this.userStates.set(chatId, { step: 'ask_email', data });
       await this.sendTelegramMessage(chatId, 'What is your email?');
@@ -81,11 +72,16 @@ export class BotService {
       data.message = text;
       this.userStates.delete(chatId);
 
+      // Save the contact data to MongoDB
       const contact = await this.create(data as Contact);
       await this.sendTelegramMessage(
         chatId,
-        'Thank you! Your message has been saved.',
+        'Thank you! Your message has been saved and sent to the admin.',
       );
+
+      // Send the contact data to the admin
+      const adminMessage = `📩 New Contact Message:\n\nName: ${contact.name}\nEmail: ${contact.email}\nMessage: ${contact.message}`;
+      await this.sendMessageToTelegram(adminMessage, '@mulersoft');
     }
   }
 
