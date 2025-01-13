@@ -36,13 +36,6 @@ export class BotService {
         'Welcome! Use /contact to send us a message, or /help for assistance.',
       );
       return;
-    } else if (text === '/help') {
-      this.userStates.set(chatId, { step: 'ask_admin_message', data: {} });
-      await this.sendTelegramMessage(
-        chatId,
-        'Please type your message for the admin:',
-      );
-      return;
     } else if (text === '/contact') {
       this.userStates.set(chatId, { step: 'ask_name', data: {} });
       await this.sendTelegramMessage(chatId, 'What is your name?');
@@ -72,16 +65,18 @@ export class BotService {
       data.message = text;
       this.userStates.delete(chatId);
 
-      // Save the contact data to MongoDB
-      const contact = await this.create(data as Contact);
-      await this.sendTelegramMessage(
-        chatId,
-        'Thank you! Your message has been saved and sent to the admin.',
-      );
-
-      // Send the contact data to the admin
-      const adminMessage = `📩 New Contact Message:\n\nName: ${contact.name}\nEmail: ${contact.email}\nMessage: ${contact.message}`;
-      await this.sendMessageToTelegram(adminMessage, '@mulersoft');
+      try {
+        const contact = await this.create(data as Contact);
+        await this.sendTelegramMessage(
+          chatId,
+          `Thank you! Your message has been saved:\n\nName: ${contact.name}\nEmail: ${contact.email}\nMessage: ${contact.message}`,
+        );
+      } catch (error) {
+        await this.sendTelegramMessage(
+          chatId,
+          'An error occurred while saving your message. Please try again later.',
+        );
+      }
     }
   }
 
