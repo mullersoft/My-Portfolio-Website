@@ -43,6 +43,10 @@ export class BotService {
         'Please type your message for the admin:',
       );
       return;
+    } else if (text === '/contact') {
+      this.userStates.set(chatId, { step: 'ask_name', data: {} });
+      await this.sendTelegramMessage(chatId, 'What is your name?');
+      return;
     }
 
     const userState = this.userStates.get(chatId);
@@ -54,9 +58,10 @@ export class BotService {
       return;
     }
 
-    const { step } = userState;
+    const { step, data } = userState;
 
     if (step === 'ask_admin_message') {
+      // Send the user's message to the admin (i.e., @mulersoft)
       const adminMessage = `📩 Message for Admin:\n\nFrom Chat ID: ${chatId}\nMessage: ${text}`;
       await this.sendMessageToTelegram(adminMessage, '@mulersoft');
       this.userStates.delete(chatId);
@@ -64,35 +69,41 @@ export class BotService {
         chatId,
         'Thank you! Your message has been sent to the admin.',
       );
-    } else {
+    } else if (step === 'ask_name') {
+      data.name = text;
+      this.userStates.set(chatId, { step: 'ask_email', data });
+      await this.sendTelegramMessage(chatId, 'What is your email?');
+    } else if (step === 'ask_email') {
+      data.email = text;
+      this.userStates.set(chatId, { step: 'ask_message', data });
+      await this.sendTelegramMessage(chatId, 'What is your message?');
+    } else if (step === 'ask_message') {
+      data.message = text;
+      this.userStates.delete(chatId);
+
+      const contact = await this.create(data as Contact);
       await this.sendTelegramMessage(
         chatId,
-        'Unexpected input. Please try again.',
+        'Thank you! Your message has been saved.',
       );
     }
   }
 
-  private async sendMessageToTelegram(
-    message: string,
-    username: string,
-  ): Promise<void> {
-    const url = this.getTelegramApiUrl();
-    const data = { chat_id: username, text: message };
-    await axios.post(url, data);
-  }
-
-  public async handleCallbackQuery(callbackQuery: any): Promise<void> {
+  // Handle callback queries (e.g., button clicks)
+  async handleCallbackQuery(callbackQuery: any): Promise<void> {
     const chatId = callbackQuery.message.chat.id;
-    const callbackData = callbackQuery.data;
+    const data = callbackQuery.data;
 
-    if (callbackData === 'contact_us') {
+    if (data === 'contact_us') {
       await this.sendTelegramMessage(
         chatId,
         'Please enter your name, email, and message.',
       );
-      this.userStates.set(chatId, { step: 'ask_name', data: {} });
-    } else {
-      await this.sendTelegramMessage(chatId, 'Unknown action.');
+    } else if (data === 'help') {
+      await this.sendTelegramMessage(
+        chatId,
+        'Please type your message for the admin:',
+      );
     }
   }
 
@@ -102,6 +113,15 @@ export class BotService {
   ): Promise<void> {
     const url = this.getTelegramApiUrl();
     const data = { chat_id: chatId, text };
+    await axios.post(url, data);
+  }
+
+  private async sendMessageToTelegram(
+    message: string,
+    chatId: string,
+  ): Promise<void> {
+    const url = this.getTelegramApiUrl();
+    const data = { chat_id: chatId, text: message };
     await axios.post(url, data);
   }
 
