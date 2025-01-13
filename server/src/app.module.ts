@@ -9,6 +9,8 @@ import { ChatGptModule } from './modules/chatgpt/chatgpt.module';
 // import { IpTrackingMiddleware } from './middlewares/ip-tracking.middleware';
 import { ScheduleModule } from '@nestjs/schedule';
 import { QuotesModule } from './modules/quotes/quotes.module';
+import { BotModule } from './modules/contact/bot/bot.module';
+import { FrontendModule } from './modules/contact/frontend/frontend.module';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { QuotesModule } from './modules/quotes/quotes.module';
     ChatGptModule,
     ScheduleModule.forRoot(), // Enable scheduling
     QuotesModule, // Import the quotes module
+    BotModule,
+    FrontendModule,
   ],
   controllers: [],
   providers: [],
