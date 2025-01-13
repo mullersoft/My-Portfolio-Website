@@ -91,61 +91,57 @@ export class ContactService {
 
     // Handle specific commands
     if (text === '/start') {
-      await this.sendTelegramMessage(
-        chatId,
-        'Welcome! I am Mulugeta Linger, a web, Telegram bot, and chatbot developer. Feel free to interact with me!',
-      );
-      return;
-    } else if (text === '/help') {
-      this.userStates.set(chatId, { step: 'help_message', data: {} });
-      await this.sendTelegramMessage(
-        chatId,
-        'Type your message for the admin, and I will forward it to @mulersoft.',
-      );
-      return;
-    } else if (text === '/reset') {
-      // Reset the user's state
+      // Reset user state and send welcome message
       this.userStates.delete(chatId);
       await this.sendTelegramMessage(
         chatId,
-        'Your progress has been reset. You can start over by clicking the "Contact Us" button or using /help.',
+        'Welcome! Use /contact to send us a message, or /help for assistance.',
       );
       return;
-    }
-
-    // Handle user input for the help message flow
-    const userState = this.userStates.get(chatId);
-
-    if (userState?.step === 'help_message') {
-      this.userStates.delete(chatId); // Clear state after receiving the message
-
-      // Forward the user's message to your account
-      const adminMessage = `📩 New message from user:\n\n${text}`;
-      await this.sendMessageToTelegram(adminMessage); // Sends to your account using `CHAT_ID`
-
+    } else if (text === '/help') {
+      // Set the state to collect a message for the admin
+      this.userStates.set(chatId, { step: 'ask_admin_message', data: {} });
       await this.sendTelegramMessage(
         chatId,
-        'Your message has been sent to the admin. Thank you!',
+        'Please type your message for the admin:',
       );
+      return;
+    } else if (text === '/contact') {
+      // Start the contact flow
+      this.userStates.set(chatId, { step: 'ask_name', data: {} });
+      await this.sendTelegramMessage(chatId, 'What is your name?');
       return;
     }
 
-    // Handle the "Contact Us" functionality if no commands match
-    const contactState = this.userStates.get(chatId);
+    // Handle user input based on state
+    const userState = this.userStates.get(chatId);
 
-    if (!contactState) {
+    if (!userState) {
       console.log(
-        `No state found for chat: ${chatId}. Sending contact button.`,
+        `No state found for chat: ${chatId}. Sending default message.`,
       );
-      await this.sendContactButton(chatId); // Send the contact button if no state exists
+      await this.sendTelegramMessage(
+        chatId,
+        'Please select a command from the menu: /start, /contact, or /help.',
+      );
       return;
     }
 
-    const { step, data } = contactState;
+    const { step, data } = userState;
 
     console.log(`Current step: ${step}, Data: ${JSON.stringify(data)}`);
 
-    if (step === 'ask_name') {
+    // Handle different steps
+    if (step === 'ask_admin_message') {
+      // Send the user's message to the admin's Telegram account
+      const adminMessage = `📩 Message for Admin:\n\nFrom Chat ID: ${chatId}\nMessage: ${text}`;
+      await this.sendMessageToTelegram(adminMessage, '@mulersoft');
+      this.userStates.delete(chatId);
+      await this.sendTelegramMessage(
+        chatId,
+        'Thank you! Your message has been sent to the admin.',
+      );
+    } else if (step === 'ask_name') {
       data.name = text;
       this.userStates.set(chatId, { step: 'ask_email', data });
       await this.sendTelegramMessage(chatId, 'What is your email?');
@@ -176,9 +172,12 @@ export class ContactService {
     await axios.post(url, data);
   }
 
-  private async sendMessageToTelegram(message: string): Promise<void> {
+  private async sendMessageToTelegram(
+    message: string,
+    chatId: string = this.chatId, // Default to the admin's chat ID
+  ): Promise<void> {
     const url = this.getTelegramApiUrl();
-    const data = { chat_id: this.chatId, text: message }; // Use your admin chat ID here
+    const data = { chat_id: chatId, text: message };
 
     await axios.post(url, data);
   }
