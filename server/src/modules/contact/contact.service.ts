@@ -89,6 +89,7 @@ export class ContactService {
 
     // Handle specific commands
     if (text === '/start') {
+      // Reset user state and send welcome message
       this.userStates.delete(chatId);
       await this.sendTelegramMessage(
         chatId,
@@ -96,6 +97,7 @@ export class ContactService {
       );
       return;
     } else if (text === '/help') {
+      // Set the state to collect a message for the admin
       this.userStates.set(chatId, { step: 'ask_admin_message', data: {} });
       await this.sendTelegramMessage(
         chatId,
@@ -103,6 +105,7 @@ export class ContactService {
       );
       return;
     } else if (text === '/contact') {
+      // Start the contact flow
       this.userStates.set(chatId, { step: 'ask_name', data: {} });
       await this.sendTelegramMessage(chatId, 'What is your name?');
       return;
@@ -128,22 +131,14 @@ export class ContactService {
 
     // Handle different steps
     if (step === 'ask_admin_message') {
+      // Send the user's message to the admin's Telegram account
       const adminMessage = `📩 Message for Admin:\n\nFrom Chat ID: ${chatId}\nMessage: ${text}`;
-      try {
-        // Send message to the admin's chat_id (not username)
-        await this.sendMessageToTelegram(adminMessage, this.adminChatId);
-        this.userStates.delete(chatId); // Clear the state after sending the message
-        await this.sendTelegramMessage(
-          chatId,
-          'Thank you! Your message has been sent to the admin.',
-        );
-      } catch (error) {
-        console.error('Error sending message to admin:', error);
-        await this.sendTelegramMessage(
-          chatId,
-          'Sorry, there was an error sending your message to the admin. Please try again later.',
-        );
-      }
+      await this.sendMessageToTelegram(adminMessage, '@mulersoft');
+      this.userStates.delete(chatId);
+      await this.sendTelegramMessage(
+        chatId,
+        'Thank you! Your message has been sent to the admin.',
+      );
     } else if (step === 'ask_name') {
       data.name = text;
       this.userStates.set(chatId, { step: 'ask_email', data });
