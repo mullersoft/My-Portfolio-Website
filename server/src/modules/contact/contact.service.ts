@@ -133,8 +133,8 @@ export class ContactService {
     if (step === 'ask_admin_message') {
       // Send the user's message to the admin's Telegram account (@mulersoft)
       const adminMessage = `📩 Message for Admin:\n\nFrom Chat ID: ${chatId}\nMessage: ${text}`;
-      await this.sendMessageToTelegram(adminMessage, '@mulersoft'); // Send to @mulersoft
-      this.userStates.delete(chatId); // Reset the state after sending the message
+      await this.sendMessageToTelegram(adminMessage, '@mulersoft');
+      this.userStates.delete(chatId);
       await this.sendTelegramMessage(
         chatId,
         'Thank you! Your message has been sent to the admin.',
