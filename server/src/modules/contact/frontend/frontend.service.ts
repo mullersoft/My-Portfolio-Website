@@ -1,3 +1,4 @@
+// src/modules/contact/frontend/frontend.service.ts
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -15,9 +16,10 @@ export class FrontendService {
     const newContact = new this.contactModel(contact);
     const savedContact = await newContact.save();
 
-    // Send the contact data to the bot (admin)
-    const adminMessage = `📩 New Contact Message:\n\nName: ${savedContact.name}\nEmail: ${savedContact.email}\nMessage: ${savedContact.message}`;
-    await this.botService.sendMessageToTelegram(adminMessage);
+    // Optionally, notify the bot
+    await this.botService.sendMessageToTelegram(
+      `New contact created:\nName: ${savedContact.name}\nEmail: ${savedContact.email}\nMessage: ${savedContact.message}`,
+    );
 
     return savedContact;
   }
