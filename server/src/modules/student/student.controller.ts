@@ -1,3 +1,4 @@
+// D:\web D\portfolio-website\server\src\modules\student\student.controller.ts
 import { Controller, Get, Param } from '@nestjs/common';
 import { StudentService } from './student.service';
 

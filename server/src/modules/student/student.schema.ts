@@ -3,15 +3,15 @@ import { Schema, model } from 'mongoose';
 // Define the schema
 export const StudentSchema = new Schema(
   {
-    studentId: { type: String, required: true, unique: true },
-    studentName: { type: String, required: true },
-    quiz: { type: Number, required: true },
-    test: { type: Number, required: true },
-    assignment: { type: Number, required: true },
-    project: { type: Number, required: true },
-    midExam: { type: Number, required: true },
-    finalExam: { type: Number, required: true },
-    totalGrade: { type: Number, required: true },
+    STUDENT_ID: { type: String, required: true, unique: true },
+    Name: { type: String, required: true },
+    ASSIGNMENT: { type: Number, required: true },
+    TEST_1: { type: Number, required: true },
+    TEST_2: { type: Number, required: true },
+    PROJECT: { type: Number, required: true },
+    MIDTERM: { type: Number, required: true },
+    FINALTERM: { type: Number, required: true },
+    TOTAL: { type: Number, required: true },
   },
   {
     collection: 'students', // Specify the collection name explicitly

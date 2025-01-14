@@ -23,15 +23,15 @@ export class StudentBotService {
           // Fetch grade details using the StudentService
           const student = await this.studentService.getStudentGrade(studentId);
           const response = `
-Student Name: ${student.studentName}
-Student ID: ${student.studentId}
-Quiz: ${student.quiz}
-Test: ${student.test}
-Assignment: ${student.assignment}
-Project: ${student.project}
-Mid Exam: ${student.midExam}
-Final Exam: ${student.finalExam}
-Total Grade: ${student.totalGrade}
+Student Name: ${student.Name}
+Student ID: ${student.STUDENT_ID}
+Assignment: ${student.ASSIGNMENT}
+Test 1: ${student.TEST_1}
+Test 2: ${student.TEST_2}
+Project: ${student.PROJECT}
+Midterm: ${student.MIDTERM}
+Final Term: ${student.FINALTERM}
+Total Grade: ${student.TOTAL}
           `;
           msgCtx.reply(response);
         } catch (error) {

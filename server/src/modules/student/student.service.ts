@@ -1,4 +1,3 @@
-// D:\web D\portfolio-website\server\src\modules\student\student.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -10,7 +9,7 @@ export class StudentService {
   ) {}
 
   async getStudentGrade(studentId: string) {
-    const student = await this.studentModel.findOne({ studentId });
+    const student = await this.studentModel.findOne({ STUDENT_ID: studentId });
     if (!student) {
       throw new NotFoundException('Student not found');
     }
