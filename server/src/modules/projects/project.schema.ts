@@ -10,15 +10,12 @@ export class Project extends Document {
   description: string;
 
   @Prop()
-  link: string; // Main project link (can be the project page or demo)
-
-  // Adding techStack as an array of strings
+  link: string;
   @Prop([String]) // Array of strings
   techStack: string[];
 
-  // Adding GitHub and Deployment site links
   @Prop()
-  githubLink: string; // GitHub repository link
+  githubLink: string;
 
   @Prop()
   deploymentLink: string; // Deployment (live project) link
