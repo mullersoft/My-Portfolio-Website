@@ -1,4 +1,3 @@
-// D:\web D\portfolio-website\server\src\modules\contact\frontend\frontend.service.ts
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -13,5 +12,9 @@ export class FrontendService {
   async create(contact: Contact): Promise<Contact> {
     const newContact = new this.contactModel(contact);
     return newContact.save();
+  }
+
+  async findAll(): Promise<Contact[]> {
+    return this.contactModel.find().exec();
   }
 }
