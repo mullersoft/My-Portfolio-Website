@@ -1,3 +1,4 @@
+// D:\web D\portfolio-website\server\src\modules\contact\bot\bot.service.ts
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { InjectModel } from '@nestjs/mongoose';
@@ -112,9 +113,9 @@ export class BotService {
     await axios.post(url, data);
   }
 
-  private async sendMessageToTelegram(message: string): Promise<void> {
+  public async sendMessageToTelegram(message: string): Promise<void> {
     const url = this.getTelegramApiUrl();
-    const data = { chat_id: this.chatId, text: message }; // Send to the admin's chat ID
+    const data = { chat_id: this.chatId, text: message }; // Admin's chat ID
     await axios.post(url, data);
   }
 
