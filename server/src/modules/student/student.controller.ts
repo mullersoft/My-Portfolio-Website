@@ -1,4 +1,3 @@
-// D:\web D\portfolio-website\server\src\modules\student\student.controller.ts
 import { Controller, Get, Param } from '@nestjs/common';
 import { StudentService } from './student.service';
 
@@ -8,6 +7,7 @@ export class StudentController {
 
   @Get(':studentId')
   async getStudentGrade(@Param('studentId') studentId: string) {
-    return await this.studentService.getStudentGrade(studentId);
+    const decodedStudentId = decodeURIComponent(studentId);
+    return await this.studentService.getStudentGrade(decodedStudentId);
   }
 }
