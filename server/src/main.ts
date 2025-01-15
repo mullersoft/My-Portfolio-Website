@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 // import { ContactService } from './modules/contact/contact.service'; // Import the ContactService
 import * as dotenv from 'dotenv';
-
+// some
 dotenv.config();
 
 async function bootstrap() {
@@ -25,7 +25,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  console.log(`Application is running on: ${await app.getUrl()}`);
+  console.log(`Application is running on this port: ${await app.getUrl()}`);
 }
 
 bootstrap();
