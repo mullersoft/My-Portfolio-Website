@@ -17,8 +17,15 @@ export class StudentBotService {
     // Command to retrieve grades
     this.bot.command('grade', async (ctx) => {
       ctx.reply('Please enter your Student ID:');
-      this.bot.on('text', async (msgCtx) => {
-        const studentId = msgCtx.message.text;
+      // Store the state in session
+      ctx.session.awaitingStudentId = true;
+    });
+
+    // Listen for any text input only when the bot is awaiting student ID
+    this.bot.on('text', async (ctx) => {
+      if (ctx.session.awaitingStudentId) {
+        const studentId = ctx.message.text;
+
         try {
           // Fetch grade details using the StudentService
           const student = await this.studentService.getStudentGrade(studentId);
@@ -33,13 +40,14 @@ Midterm: ${student.MIDTERM}
 Final Term: ${student.FINALTERM}
 Total Grade: ${student.TOTAL}
           `;
-          msgCtx.reply(response);
+          ctx.reply(response);
+
+          // Reset the session state after processing the student ID
+          ctx.session.awaitingStudentId = false;
         } catch (error) {
-          msgCtx.reply(
-            'Student not found. Please check your ID and try again.',
-          );
+          ctx.reply('Student not found. Please check your ID and try again.');
         }
-      });
+      }
     });
 
     // Launch the bot
