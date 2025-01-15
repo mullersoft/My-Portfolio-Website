@@ -14,7 +14,7 @@ interface MyContext extends Context {
 export class StudentBotService {
   constructor(private readonly studentService: StudentService) {}
 
-  private bot = new Telegraf<MyContext>(process.env.TELEGRAM_BOT_TOKEN);
+  private bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN);
 
   startBot() {
     // Use session middleware
