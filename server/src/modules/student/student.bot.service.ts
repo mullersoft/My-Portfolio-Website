@@ -1,14 +1,25 @@
 import { Injectable } from '@nestjs/common';
-import { Telegraf } from 'telegraf';
+import { Telegraf, Context, session } from 'telegraf';
 import { StudentService } from './student.service';
+
+interface MySessionData {
+  awaitingStudentId?: boolean;
+}
+
+interface MyContext extends Context {
+  session: MySessionData;
+}
 
 @Injectable()
 export class StudentBotService {
   constructor(private readonly studentService: StudentService) {}
 
-  private bot = new Telegraf(process.env.BOT_TOKEN);
+  private bot = new Telegraf<MyContext>(process.env.TELEGRAM_BOT_TOKEN);
 
   startBot() {
+    // Use session middleware
+    this.bot.use(session({ defaultSession: () => ({}) }));
+
     // Start command to greet the user
     this.bot.start((ctx) =>
       ctx.reply('Welcome! Use /grade to check your results.'),
