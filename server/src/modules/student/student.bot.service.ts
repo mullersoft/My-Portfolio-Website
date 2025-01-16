@@ -16,6 +16,10 @@ export class StudentBotService {
 
   private bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN);
 
+  getBotInstance(): Telegraf<MyContext> {
+    return this.bot;
+  }
+
   startBot() {
     // Use session middleware
     this.bot.use(session({ defaultSession: () => ({}) }));
@@ -28,7 +32,6 @@ export class StudentBotService {
     // Command to retrieve grades
     this.bot.command('grade', async (ctx) => {
       ctx.reply('Please enter your Student ID:');
-      // Store the state in session
       ctx.session.awaitingStudentId = true;
     });
 
@@ -38,7 +41,6 @@ export class StudentBotService {
         const studentId = ctx.message.text;
 
         try {
-          // Fetch grade details using the StudentService
           const student = await this.studentService.getStudentGrade(studentId);
           const response = `
 Student Name: ${student.Name}
@@ -53,7 +55,6 @@ Total Grade: ${student.TOTAL}
           `;
           ctx.reply(response);
 
-          // Reset the session state after processing the student ID
           ctx.session.awaitingStudentId = false;
         } catch (error) {
           ctx.reply('Student not found. Please check your ID and try again.');
@@ -61,7 +62,6 @@ Total Grade: ${student.TOTAL}
       }
     });
 
-    // Launch the bot
     this.bot.launch();
   }
 }
