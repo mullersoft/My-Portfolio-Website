@@ -1,4 +1,3 @@
-// D:\web D\portfolio-website\server\src\modules\student\student.module.ts
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { StudentController } from './student.controller';

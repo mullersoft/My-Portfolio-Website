@@ -1,4 +1,3 @@
-// D:\web D\portfolio-website\server\src\modules\student\student.bot.service.ts
 import { Injectable } from '@nestjs/common';
 import { Telegraf, Context, session } from 'telegraf';
 import { StudentService } from './student.service';
@@ -26,20 +25,24 @@ export class StudentBotService {
     this.bot.use(session({ defaultSession: () => ({}) }));
 
     // Start command to greet the user
-    this.bot.start((ctx) =>
-      ctx.reply('Welcome! Use /grade to check your results.'),
-    );
+    this.bot.start((ctx) => {
+      console.log('Start command received'); // Log the /start command
+      ctx.reply('Welcome! Use /grade to check your results.');
+    });
 
     // Command to retrieve grades
     this.bot.command('grade', async (ctx) => {
+      console.log('Grade command received'); // Log the /grade command
       ctx.reply('Please enter your Student ID:');
       ctx.session.awaitingStudentId = true;
     });
 
     // Listen for any text input only when the bot is awaiting student ID
     this.bot.on('text', async (ctx) => {
+      console.log('Text received:', ctx.message.text); // Log the text received
       if (ctx.session.awaitingStudentId) {
         const studentId = ctx.message.text;
+        console.log('Student ID received:', studentId); // Log the student ID
 
         try {
           const student = await this.studentService.getStudentGrade(studentId);
