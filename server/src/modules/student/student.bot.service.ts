@@ -32,11 +32,23 @@ export class StudentBotService {
 
     // Set webhook if the webhook URL is available
     if (this.webhookUrl) {
-      this.bot.telegram.setWebhook(`${this.webhookUrl}/webhook`);
+      this.bot.telegram.setWebhook(this.webhookUrl);
       console.log('Webhook is set to:', this.webhookUrl);
     } else {
       console.error('Webhook URL is not defined.');
+      return;
     }
+
+    // Define webhook handler for incoming updates
+    const express = require('express');
+    const app = express();
+    app.use(express.json());
+    app.use(this.bot.webhookCallback('/webhook'));
+
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+      console.log(`Webhook server is running on port ${PORT}`);
+    });
 
     // Command: /start
     this.bot.start((ctx) => {
@@ -126,8 +138,5 @@ Total Grade: ${student.TOTAL}
         );
       }
     });
-
-    // Launch the bot
-    this.bot.launch();
   }
 }
