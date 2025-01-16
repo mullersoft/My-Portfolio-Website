@@ -9,7 +9,6 @@ export class StudentBotController {
   @Post()
   async handleWebhook(@Req() req: Request, @Res() res: Response) {
     try {
-      console.log('Received webhook update:', req.body); // Log the incoming request
       const bot = this.studentBotService.getBotInstance();
       await bot.handleUpdate(req.body);
       res.status(200).send('OK');

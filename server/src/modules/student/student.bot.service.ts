@@ -17,13 +17,12 @@ export class StudentBotService {
 
   private bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN); // Ensure the token is set in .env
   private adminChatId = process.env.ADMIN_CHAT_ID; // Admin's Telegram Chat ID (set in .env)
-  private webhookUrl = process.env.WEBHOOK_URL; // Add this to your environment variables
 
   getBotInstance(): Telegraf<MyContext> {
     return this.bot;
   }
 
-  startBot() {
+  async startBot() {
     // Use session middleware
     this.bot.use(session({ defaultSession: () => ({}) }));
 
@@ -31,28 +30,17 @@ export class StudentBotService {
     console.log('Bot is starting...');
 
     // Set webhook if the webhook URL is available
-    if (this.webhookUrl) {
-      this.bot.telegram.setWebhook(this.webhookUrl);
-      console.log('Webhook is set to:', this.webhookUrl);
+    const webhookUrl = process.env.WEBHOOK_URL;
+    if (webhookUrl) {
+      await this.bot.telegram.setWebhook(webhookUrl);
+      console.log('Webhook is set to:', webhookUrl);
     } else {
       console.error('Webhook URL is not defined.');
       return;
     }
 
-    // Define webhook handler for incoming updates
-    const express = require('express');
-    const app = express();
-    app.use(express.json());
-    app.use(this.bot.webhookCallback('/webhook'));
-
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
-      console.log(`Webhook server is running on port ${PORT}`);
-    });
-
     // Command: /start
     this.bot.start((ctx) => {
-      console.log('Received /start command');
       ctx.reply(
         'Welcome! Use /grade to check your results, /contact to message the admin, or /restart to reset the session.',
       );
@@ -60,21 +48,18 @@ export class StudentBotService {
 
     // Command: /grade
     this.bot.command('grade', (ctx) => {
-      console.log('Received /grade command');
       ctx.reply('Please enter your Student ID:');
       ctx.session.awaitingStudentId = true;
     });
 
     // Command: /contact
     this.bot.command('contact', (ctx) => {
-      console.log('Received /contact command');
       ctx.reply('Please type your message for the admin:');
       ctx.session.awaitingAdminMessage = true;
     });
 
     // Command: /restart
     this.bot.command('restart', (ctx) => {
-      console.log('Received /restart command');
       ctx.session.awaitingStudentId = false;
       ctx.session.awaitingAdminMessage = false;
       ctx.reply(
@@ -84,10 +69,8 @@ export class StudentBotService {
 
     // Handle text messages
     this.bot.on('text', async (ctx) => {
-      console.log('Received a text message:', ctx.message.text);
       if (ctx.session.awaitingStudentId) {
         const studentId = ctx.message.text.trim();
-
         try {
           const student = await this.studentService.getStudentGrade(studentId);
 
@@ -118,7 +101,6 @@ Total Grade: ${student.TOTAL}
       } else if (ctx.session.awaitingAdminMessage) {
         const studentMessage = ctx.message.text.trim();
 
-        // Forward the message to the admin
         if (this.adminChatId) {
           await this.bot.telegram.sendMessage(
             this.adminChatId,
