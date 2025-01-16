@@ -41,12 +41,17 @@ export class StudentBotService {
     this.bot.on('text', async (ctx) => {
       console.log('Text received:', ctx.message.text); // Log the text received
       if (ctx.session.awaitingStudentId) {
-        const studentId = ctx.message.text;
+        const studentId = ctx.message.text.trim(); // Trim whitespace
         console.log('Student ID received:', studentId); // Log the student ID
 
         try {
           const student = await this.studentService.getStudentGrade(studentId);
-          const response = `
+
+          if (!student) {
+            // Handle case when no student is found
+            ctx.reply('Student not found. Please check your ID and try again.');
+          } else {
+            const response = `
 Student Name: ${student.Name}
 Student ID: ${student.STUDENT_ID}
 Assignment: ${student.ASSIGNMENT}
@@ -56,13 +61,21 @@ Project: ${student.PROJECT}
 Midterm: ${student.MIDTERM}
 Final Term: ${student.FINALTERM}
 Total Grade: ${student.TOTAL}
-          `;
-          ctx.reply(response);
-
-          ctx.session.awaitingStudentId = false;
+            `;
+            ctx.reply(response);
+          }
         } catch (error) {
-          ctx.reply('Student not found. Please check your ID and try again.');
+          console.error('Error fetching student data:', error);
+          ctx.reply(
+            'An error occurred while fetching the data. Please try again later.',
+          );
+        } finally {
+          // Reset the session flag
+          ctx.session.awaitingStudentId = false;
         }
+      } else {
+        // Handle unexpected text input
+        ctx.reply('Please use /grade to check your results.');
       }
     });
 
