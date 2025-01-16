@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Telegraf, Context, session } from 'telegraf';
-import rateLimit from 'telegraf-ratelimit';
+const rateLimit = require('telegraf-ratelimit'); // Adjusted import for rate limiting
 import { StudentService } from './student.service';
 
 interface MySessionData {
@@ -16,7 +16,7 @@ interface MyContext extends Context {
 export class StudentBotService {
   constructor(private readonly studentService: StudentService) {}
 
-  private bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN); // Ensure the token is set in the .env file
+  private bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN); // Ensure the token is set in .env
   private adminChatId = process.env.ADMIN_CHAT_ID; // Admin's Telegram Chat ID (set in .env)
 
   getBotInstance(): Telegraf<MyContext> {
@@ -27,7 +27,7 @@ export class StudentBotService {
     // Use session middleware
     this.bot.use(session({ defaultSession: () => ({}) }));
 
-    // Add rate limiting middleware
+    // Rate limiting configuration
     const limitConfig = {
       window: 1000, // 1 second
       limit: 3, // Maximum 3 messages per second
@@ -35,28 +35,30 @@ export class StudentBotService {
         ctx.reply('Too many requests. Please slow down.');
       },
     };
+
+    // Use rate-limiting middleware
     this.bot.use(rateLimit(limitConfig));
 
-    // Start command to greet the user
+    // Command: /start
     this.bot.start((ctx) => {
       ctx.reply(
         'Welcome! Use /grade to check your results, /contact to message the admin, or /restart to reset the session.',
       );
     });
 
-    // Command to retrieve grades
-    this.bot.command('grade', async (ctx) => {
+    // Command: /grade
+    this.bot.command('grade', (ctx) => {
       ctx.reply('Please enter your Student ID:');
       ctx.session.awaitingStudentId = true;
     });
 
-    // Command to contact the admin
+    // Command: /contact
     this.bot.command('contact', (ctx) => {
       ctx.reply('Please type your message for the admin:');
       ctx.session.awaitingAdminMessage = true;
     });
 
-    // Command to restart the session
+    // Command: /restart
     this.bot.command('restart', (ctx) => {
       ctx.session.awaitingStudentId = false;
       ctx.session.awaitingAdminMessage = false;
@@ -65,7 +67,7 @@ export class StudentBotService {
       );
     });
 
-    // Listen for any text input
+    // Handle text messages
     this.bot.on('text', async (ctx) => {
       if (ctx.session.awaitingStudentId) {
         const studentId = ctx.message.text.trim();
@@ -121,6 +123,7 @@ Total Grade: ${student.TOTAL}
       }
     });
 
+    // Launch the bot
     this.bot.launch();
   }
 }
