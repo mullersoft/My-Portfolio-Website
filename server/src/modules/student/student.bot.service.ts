@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Telegraf, Context, session } from 'telegraf';
+import rateLimit from 'telegraf-ratelimit';
 import { StudentService } from './student.service';
 
 interface MySessionData {
   awaitingStudentId?: boolean;
+  awaitingAdminMessage?: boolean;
 }
 
 interface MyContext extends Context {
@@ -15,6 +17,7 @@ export class StudentBotService {
   constructor(private readonly studentService: StudentService) {}
 
   private bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN); // Ensure the token is set in the .env file
+  private adminChatId = process.env.ADMIN_CHAT_ID; // Admin's Telegram Chat ID (set in .env)
 
   getBotInstance(): Telegraf<MyContext> {
     return this.bot;
@@ -24,31 +27,44 @@ export class StudentBotService {
     // Use session middleware
     this.bot.use(session({ defaultSession: () => ({}) }));
 
+    // Add rate limiting middleware
+    const limitConfig = {
+      window: 1000, // 1 second
+      limit: 3, // Maximum 3 messages per second
+      onLimitExceeded: (ctx: MyContext) => {
+        ctx.reply('Too many requests. Please slow down.');
+      },
+    };
+    this.bot.use(rateLimit(limitConfig));
+
     // Start command to greet the user
     this.bot.start((ctx) => {
-      console.log('Start command received'); // Log the /start command
-      ctx.reply('Welcome! Use /grade to check your results.');
+      ctx.reply(
+        'Welcome! Use /grade to check your results or /contact to message the admin.',
+      );
     });
 
     // Command to retrieve grades
     this.bot.command('grade', async (ctx) => {
-      console.log('Grade command received'); // Log the /grade command
       ctx.reply('Please enter your Student ID:');
       ctx.session.awaitingStudentId = true;
     });
 
-    // Listen for any text input only when the bot is awaiting student ID
+    // Command to contact the admin
+    this.bot.command('contact', (ctx) => {
+      ctx.reply('Please type your message for the admin:');
+      ctx.session.awaitingAdminMessage = true;
+    });
+
+    // Listen for any text input
     this.bot.on('text', async (ctx) => {
-      console.log('Text received:', ctx.message.text); // Log the text received
       if (ctx.session.awaitingStudentId) {
-        const studentId = ctx.message.text.trim(); // Trim whitespace
-        console.log('Student ID received:', studentId); // Log the student ID
+        const studentId = ctx.message.text.trim();
 
         try {
           const student = await this.studentService.getStudentGrade(studentId);
 
           if (!student) {
-            // Handle case when no student is found
             ctx.reply('Student not found. Please check your ID and try again.');
           } else {
             const response = `
@@ -70,12 +86,29 @@ Total Grade: ${student.TOTAL}
             'An error occurred while fetching the data. Please try again later.',
           );
         } finally {
-          // Reset the session flag
           ctx.session.awaitingStudentId = false;
         }
+      } else if (ctx.session.awaitingAdminMessage) {
+        const studentMessage = ctx.message.text.trim();
+
+        // Forward the message to the admin
+        if (this.adminChatId) {
+          await this.bot.telegram.sendMessage(
+            this.adminChatId,
+            `Message from ${ctx.from.first_name || 'Student'} (${ctx.from.id}):\n\n${studentMessage}`,
+          );
+          ctx.reply('Your message has been sent to the admin. Thank you!');
+        } else {
+          ctx.reply(
+            'Unable to send the message. Admin contact is not configured.',
+          );
+        }
+
+        ctx.session.awaitingAdminMessage = false;
       } else {
-        // Handle unexpected text input
-        ctx.reply('Please use /grade to check your results.');
+        ctx.reply(
+          'Please use /grade to check your results or /contact to message the admin.',
+        );
       }
     });
 
