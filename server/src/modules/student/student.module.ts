@@ -1,4 +1,3 @@
-// D:\web D\portfolio-website\server\src\modules\student\student.module.ts
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { StudentController } from './student.controller';
@@ -9,9 +8,10 @@ import { StudentBotController } from './student.bot.controller';
 
 @Module({
   imports: [
+    // Importing the StudentSchema to interact with MongoDB
     MongooseModule.forFeature([{ name: 'Student', schema: StudentSchema }]),
   ],
-  controllers: [StudentController, StudentBotController],
-  providers: [StudentService, StudentBotService],
+  controllers: [StudentController, StudentBotController], // Controllers to handle API requests and webhook updates
+  providers: [StudentService, StudentBotService], // Services to handle logic for students and the bot
 })
 export class StudentModule {}
