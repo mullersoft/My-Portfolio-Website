@@ -26,39 +26,12 @@ export class StudentBotService {
     // Use session middleware
     this.bot.use(session({ defaultSession: () => ({}) }));
 
-    // Custom rate-limiting middleware
-    const rateLimitMiddleware = (limit: number, windowMs: number) => {
-      const users: Record<number, { count: number; lastReset: number }> = {};
-
-      return async (ctx: MyContext, next: () => Promise<void>) => {
-        const userId = ctx.from?.id;
-        if (!userId) return next();
-
-        const now = Date.now();
-        const user = users[userId] || { count: 0, lastReset: now };
-
-        // Reset count if the window has passed
-        if (now - user.lastReset > windowMs) {
-          user.count = 0;
-          user.lastReset = now;
-        }
-
-        user.count++;
-        users[userId] = user;
-
-        if (user.count > limit) {
-          ctx.reply('Too many requests. Please slow down.');
-        } else {
-          await next();
-        }
-      };
-    };
-
-    // Add the custom rate-limiting middleware
-    this.bot.use(rateLimitMiddleware(3, 1000)); // 3 requests per second
+    // Log when the bot starts
+    console.log('Bot is starting...');
 
     // Command: /start
     this.bot.start((ctx) => {
+      console.log('Received /start command');
       ctx.reply(
         'Welcome! Use /grade to check your results, /contact to message the admin, or /restart to reset the session.',
       );
@@ -66,18 +39,21 @@ export class StudentBotService {
 
     // Command: /grade
     this.bot.command('grade', (ctx) => {
+      console.log('Received /grade command');
       ctx.reply('Please enter your Student ID:');
       ctx.session.awaitingStudentId = true;
     });
 
     // Command: /contact
     this.bot.command('contact', (ctx) => {
+      console.log('Received /contact command');
       ctx.reply('Please type your message for the admin:');
       ctx.session.awaitingAdminMessage = true;
     });
 
     // Command: /restart
     this.bot.command('restart', (ctx) => {
+      console.log('Received /restart command');
       ctx.session.awaitingStudentId = false;
       ctx.session.awaitingAdminMessage = false;
       ctx.reply(
@@ -87,6 +63,7 @@ export class StudentBotService {
 
     // Handle text messages
     this.bot.on('text', async (ctx) => {
+      console.log('Received a text message:', ctx.message.text);
       if (ctx.session.awaitingStudentId) {
         const studentId = ctx.message.text.trim();
 
