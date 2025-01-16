@@ -40,7 +40,7 @@ export class StudentBotService {
     // Start command to greet the user
     this.bot.start((ctx) => {
       ctx.reply(
-        'Welcome! Use /grade to check your results or /contact to message the admin.',
+        'Welcome! Use /grade to check your results, /contact to message the admin, or /restart to reset the session.',
       );
     });
 
@@ -54,6 +54,15 @@ export class StudentBotService {
     this.bot.command('contact', (ctx) => {
       ctx.reply('Please type your message for the admin:');
       ctx.session.awaitingAdminMessage = true;
+    });
+
+    // Command to restart the session
+    this.bot.command('restart', (ctx) => {
+      ctx.session.awaitingStudentId = false;
+      ctx.session.awaitingAdminMessage = false;
+      ctx.reply(
+        'Your session has been reset. Use /grade to check your results or /contact to message the admin.',
+      );
     });
 
     // Listen for any text input
@@ -107,7 +116,7 @@ Total Grade: ${student.TOTAL}
         ctx.session.awaitingAdminMessage = false;
       } else {
         ctx.reply(
-          'Please use /grade to check your results or /contact to message the admin.',
+          'Please use /grade to check your results, /contact to message the admin, or /restart to reset the session.',
         );
       }
     });
