@@ -11,7 +11,7 @@ export class StudentBotController {
     try {
       console.log('Received webhook update:', req.body); // Log the incoming request
       const bot = this.studentBotService.getBotInstance();
-      await bot.handleUpdate(req.body); // Forward the update to Telegraf
+      await bot.handleUpdate(req.body);
       res.status(200).send('OK');
     } catch (error) {
       console.error('Error handling webhook:', error);

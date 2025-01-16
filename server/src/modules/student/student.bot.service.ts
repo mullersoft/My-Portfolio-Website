@@ -17,21 +17,26 @@ export class StudentBotService {
 
   private bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN); // Ensure the token is set in .env
   private adminChatId = process.env.ADMIN_CHAT_ID; // Admin's Telegram Chat ID (set in .env)
+  private webhookUrl = process.env.WEBHOOK_URL; // Add this to your environment variables
 
   getBotInstance(): Telegraf<MyContext> {
     return this.bot;
   }
 
-  async startBot() {
+  startBot() {
     // Use session middleware
     this.bot.use(session({ defaultSession: () => ({}) }));
 
-    // Set the webhook
-    const webhookUrl = `${process.env.SERVER_URL}/webhook`; // Update with your actual server URL
-    await this.bot.telegram.setWebhook(webhookUrl);
-
     // Log when the bot starts
     console.log('Bot is starting...');
+
+    // Set webhook if the webhook URL is available
+    if (this.webhookUrl) {
+      this.bot.telegram.setWebhook(`${this.webhookUrl}/webhook`);
+      console.log('Webhook is set to:', this.webhookUrl);
+    } else {
+      console.error('Webhook URL is not defined.');
+    }
 
     // Command: /start
     this.bot.start((ctx) => {
@@ -122,7 +127,7 @@ Total Grade: ${student.TOTAL}
       }
     });
 
-    // Launch the bot (this is now unnecessary for webhook-based updates)
-    // this.bot.launch();  // Do not use launch when using webhook
+    // Launch the bot
+    this.bot.launch();
   }
 }
