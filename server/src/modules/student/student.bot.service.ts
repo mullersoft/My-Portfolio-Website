@@ -22,9 +22,13 @@ export class StudentBotService {
     return this.bot;
   }
 
-  startBot() {
+  async startBot() {
     // Use session middleware
     this.bot.use(session({ defaultSession: () => ({}) }));
+
+    // Set the webhook
+    const webhookUrl = `${process.env.SERVER_URL}/webhook`; // Update with your actual server URL
+    await this.bot.telegram.setWebhook(webhookUrl);
 
     // Log when the bot starts
     console.log('Bot is starting...');
@@ -118,7 +122,7 @@ Total Grade: ${student.TOTAL}
       }
     });
 
-    // Launch the bot
-    this.bot.launch();
+    // Launch the bot (this is now unnecessary for webhook-based updates)
+    // this.bot.launch();  // Do not use launch when using webhook
   }
 }
