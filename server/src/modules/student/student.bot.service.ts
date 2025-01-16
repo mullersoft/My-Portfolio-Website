@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { Telegraf, Context, session } from 'telegraf';
-const rateLimit = require('telegraf-ratelimit'); // Adjusted import for rate limiting
 import { StudentService } from './student.service';
 
 interface MySessionData {
@@ -27,17 +26,36 @@ export class StudentBotService {
     // Use session middleware
     this.bot.use(session({ defaultSession: () => ({}) }));
 
-    // Rate limiting configuration
-    const limitConfig = {
-      window: 1000, // 1 second
-      limit: 3, // Maximum 3 messages per second
-      onLimitExceeded: (ctx: MyContext) => {
-        ctx.reply('Too many requests. Please slow down.');
-      },
+    // Custom rate-limiting middleware
+    const rateLimitMiddleware = (limit: number, windowMs: number) => {
+      const users: Record<number, { count: number; lastReset: number }> = {};
+
+      return async (ctx: MyContext, next: () => Promise<void>) => {
+        const userId = ctx.from?.id;
+        if (!userId) return next();
+
+        const now = Date.now();
+        const user = users[userId] || { count: 0, lastReset: now };
+
+        // Reset count if the window has passed
+        if (now - user.lastReset > windowMs) {
+          user.count = 0;
+          user.lastReset = now;
+        }
+
+        user.count++;
+        users[userId] = user;
+
+        if (user.count > limit) {
+          ctx.reply('Too many requests. Please slow down.');
+        } else {
+          await next();
+        }
+      };
     };
 
-    // Use rate-limiting middleware
-    this.bot.use(rateLimit(limitConfig));
+    // Add the custom rate-limiting middleware
+    this.bot.use(rateLimitMiddleware(3, 1000)); // 3 requests per second
 
     // Command: /start
     this.bot.start((ctx) => {
