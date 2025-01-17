@@ -7,8 +7,10 @@ export class QuotesService implements OnModuleInit {
   private readonly botToken = process.env.TELEGRAM_BOT_TOKEN; // Telegram bot token from .env
   private readonly chatId = process.env.QUOTE_BOT_CHAT_ID; // Telegram chat ID from .env
   private readonly telegramApiUrl = `https://api.telegram.org/bot${this.botToken}/sendMessage`;
+  // private readonly botToken = process.env.BOT_TOKEN; // Bot token from environment variables
+  // private readonly adminChatId = process.env.CONTACT_BOT_CHAT_ID; // Admin chat ID from environment variables
 
-  private readonly webhookUrl = `https://yourdomain.com/quotes/bot/telegram-webhook`; // Replace with your actual URL
+  private readonly webhookUrl = process.env.QUOT_WEBHOOK_URL;
 
   // Fetch a random quote from the Quotable API
   async fetchQuote(): Promise<string> {
