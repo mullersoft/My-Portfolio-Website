@@ -117,7 +117,12 @@ export class BotService {
     await axios.post(url, payload);
   }
 
-  private async sendMessageToTelegram(message: string): Promise<void> {
+  // private async sendMessageToTelegram(message: string): Promise<void> {
+  //   const url = this.getTelegramApiUrl();
+  //   const payload = { chat_id: this.adminChatId, text: message };
+  //   await axios.post(url, payload);
+  // }
+  public async sendMessageToTelegram(message: string): Promise<void> {
     const url = this.getTelegramApiUrl();
     const payload = { chat_id: this.adminChatId, text: message };
     await axios.post(url, payload);
