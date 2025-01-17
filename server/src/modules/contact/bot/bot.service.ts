@@ -13,20 +13,19 @@ export class BotService implements OnModuleInit {
     @InjectModel(Contact.name) private contactModel: Model<Contact>,
   ) {}
 
-  private readonly botToken = process.env.BOT_TOKEN; // Use environment variable for bot token
-  private readonly adminChatId = process.env.CONTACT_BOT_CHAT_ID; // Use environment variable for admin chat ID
-
-  private getTelegramApiUrl(): string {
-    return `https://api.telegram.org/bot${this.botToken}`;
-  }
+  private readonly botToken = process.env.BOT_TOKEN; // Bot token from environment variables
+  private readonly adminChatId = process.env.CONTACT_BOT_CHAT_ID; // Admin chat ID from environment variables
 
   private userStates = new Map<
     string,
     { step: string; data: Partial<Contact> }
   >();
 
+  private getTelegramApiUrl(): string {
+    return `https://api.telegram.org/bot${this.botToken}`;
+  }
+
   async onModuleInit() {
-    // Set webhook when the bot service is initialized
     await this.setWebhook();
   }
 
@@ -34,7 +33,6 @@ export class BotService implements OnModuleInit {
     const webhookUrl = process.env.CONTACT_WEBHOOK_URL;
 
     const url = `${this.getTelegramApiUrl()}/setWebhook?url=${webhookUrl}`;
-
     try {
       await axios.get(url);
       console.log('Webhook set successfully!');
@@ -96,14 +94,12 @@ export class BotService implements OnModuleInit {
       data.message = text;
       this.userStates.delete(chatId);
 
-      // Save the contact data to MongoDB
       const contact = await this.createContact(data as Contact);
       await this.sendTelegramMessage(
         chatId,
         'Thank you! Your message has been saved and sent to the admin.',
       );
 
-      // Send the contact data to the admin
       const adminMessage = `📩 New Contact Message:\n\nName: ${contact.name}\nEmail: ${contact.email}\nMessage: ${contact.message}`;
       await this.sendMessageToTelegram(adminMessage);
     }
@@ -130,13 +126,13 @@ export class BotService implements OnModuleInit {
     chatId: string,
     text: string,
   ): Promise<void> {
-    const url = this.getTelegramApiUrl();
+    const url = `${this.getTelegramApiUrl()}/sendMessage`;
     const payload = { chat_id: chatId, text };
     await axios.post(url, payload);
   }
 
   public async sendMessageToTelegram(message: string): Promise<void> {
-    const url = this.getTelegramApiUrl();
+    const url = `${this.getTelegramApiUrl()}/sendMessage`;
     const payload = { chat_id: this.adminChatId, text: message };
     await axios.post(url, payload);
   }
