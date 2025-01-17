@@ -14,7 +14,7 @@ export class BotService implements OnModuleInit {
   ) {}
 
   private readonly botToken = process.env.BOT_TOKEN; // Use environment variable for bot token
-  private readonly adminChatId = process.env.CHAT_ID; // Use environment variable for admin chat ID
+  private readonly adminChatId = process.env.CONTACT_BOT_CHAT_ID; // Use environment variable for admin chat ID
 
   private getTelegramApiUrl(): string {
     return `https://api.telegram.org/bot${this.botToken}`;

@@ -16,7 +16,7 @@ export class StudentBotService {
   constructor(private readonly studentService: StudentService) {}
 
   private bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN); // Ensure the token is set in .env
-  private adminChatId = process.env.ADMIN_CHAT_ID; // Admin's Telegram Chat ID (set in .env)
+  private adminChatId = process.env.ASSESSMENT_BOT_CHAT_ID; // Admin's Telegram Chat ID (set in .env)
 
   getBotInstance(): Telegraf<MyContext> {
     return this.bot;

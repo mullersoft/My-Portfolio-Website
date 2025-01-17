@@ -5,7 +5,7 @@ import axios from 'axios';
 @Injectable()
 export class QuotesService implements OnModuleInit {
   private readonly botToken = process.env.TELEGRAM_BOT_TOKEN; // Telegram bot token from .env
-  private readonly chatId = process.env.TELEGRAM_CHAT_ID; // Telegram chat ID from .env
+  private readonly chatId = process.env.QUOTE_BOT_CHAT_ID; // Telegram chat ID from .env
   private readonly telegramApiUrl = `https://api.telegram.org/bot${this.botToken}/sendMessage`;
 
   private readonly webhookUrl = `https://yourdomain.com/quotes/bot/telegram-webhook`; // Replace with your actual URL
