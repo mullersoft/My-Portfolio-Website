@@ -8,11 +8,40 @@ export class QuotesController {
   @Post('telegram-webhook')
   async handleTelegramWebhook(@Body() update: any): Promise<any> {
     try {
-      // Log the incoming update (this can be customized to process specific messages)
+      // Log the incoming update
       console.log('Received update from Telegram:', update);
 
-      // You can add logic here to process the update if needed
-      // For example, you can send responses based on the message content
+      const message = update.message;
+      if (!message || !message.text) {
+        return { success: true }; // Ignore updates without text
+      }
+
+      const chatId = message.chat.id;
+      const text = message.text.trim();
+
+      // Handle commands
+      if (text === '/start') {
+        await this.quotesService.sendMessageToTelegram(
+          chatId,
+          'Welcome to the Daily Quotes Bot! 🌟\n\nYou can use the following commands:\n/start - Start the bot\n/help - Get help\n/contact - Contact us',
+        );
+      } else if (text === '/help') {
+        await this.quotesService.sendMessageToTelegram(
+          chatId,
+          'Here are the available commands:\n/start - Start the bot\n/help - Get help\n/contact - Contact us\n\nYou will also receive daily quotes at 9:00 AM!',
+        );
+      } else if (text === '/contact') {
+        await this.quotesService.sendMessageToTelegram(
+          chatId,
+          '📩 Contact Us:\n\nIf you have any questions or feedback, please reach out to us at support@yourdomain.com.',
+        );
+      } else {
+        // Default response for unknown commands
+        await this.quotesService.sendMessageToTelegram(
+          chatId,
+          "Sorry, I didn't understand that command. Type /help to see the available commands.",
+        );
+      }
 
       return { success: true };
     } catch (error) {

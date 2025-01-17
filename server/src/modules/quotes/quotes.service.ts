@@ -42,6 +42,19 @@ export class QuotesService implements OnModuleInit {
     await this.sendQuoteToTelegram();
   }
 
+  // Send a message to Telegram
+  async sendMessageToTelegram(chatId: number, text: string): Promise<void> {
+    try {
+      await axios.post(this.telegramApiUrl, {
+        chat_id: chatId,
+        text,
+      });
+      console.log('Message sent to Telegram successfully.');
+    } catch (error) {
+      console.error('Error sending message to Telegram:', error.message);
+    }
+  }
+
   // Set the webhook for Telegram bot
   private async setWebhook(): Promise<void> {
     const url = `https://api.telegram.org/bot${this.botToken}/setWebhook?url=${this.webhookUrl}`;
