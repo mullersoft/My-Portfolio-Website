@@ -13,8 +13,8 @@ export class BotService {
     @InjectModel(Contact.name) private contactModel: Model<Contact>,
   ) {}
 
-  private readonly botToken = process.env.BOT_TOKEN;
-  private readonly adminChatId = process.env.CHAT_ID;
+  private readonly botToken = process.env.BOT_TOKEN; // Use environment variable for bot token
+  private readonly adminChatId = process.env.CHAT_ID; // Use environment variable for admin chat ID
 
   private getTelegramApiUrl(): string {
     return `https://api.telegram.org/bot${this.botToken}/sendMessage`;
@@ -29,35 +29,37 @@ export class BotService {
     const chatId = update.message.chat.id;
     const text = update.message.text;
 
-    if (text === '/start') {
-      this.userStates.delete(chatId);
-      await this.sendTelegramMessage(
-        chatId,
-        'Welcome! Use /contact to send us a message, or /help for assistance.',
-      );
-      return;
-    }
+    switch (text) {
+      case '/start':
+        this.userStates.delete(chatId);
+        await this.sendTelegramMessage(
+          chatId,
+          'Welcome! Use /contact to send us a message, or /help for assistance.',
+        );
+        return;
 
-    if (text === '/help') {
-      this.userStates.set(chatId, { step: 'ask_admin_message', data: {} });
-      await this.sendTelegramMessage(
-        chatId,
-        'Please type your message for the admin:',
-      );
-      return;
-    }
+      case '/help':
+        this.userStates.delete(chatId);
+        await this.sendTelegramMessage(
+          chatId,
+          'How can we assist you? Use /contact to send us a message or ask specific questions.',
+        );
+        return;
 
-    if (text === '/contact') {
-      this.userStates.set(chatId, { step: 'ask_name', data: {} });
-      await this.sendTelegramMessage(chatId, 'What is your name?');
-      return;
+      case '/contact':
+        this.userStates.set(chatId, { step: 'ask_name', data: {} });
+        await this.sendTelegramMessage(chatId, 'What is your name?');
+        return;
+
+      default:
+        break;
     }
 
     const userState = this.userStates.get(chatId);
     if (!userState) {
       await this.sendTelegramMessage(
         chatId,
-        'Please select a command: /start, /contact, or /help.',
+        'Please use a valid command: /start, /contact, or /help.',
       );
       return;
     }
@@ -76,12 +78,14 @@ export class BotService {
       data.message = text;
       this.userStates.delete(chatId);
 
-      const contact = await this.create(data as Contact);
+      // Save the contact data to MongoDB
+      const contact = await this.createContact(data as Contact);
       await this.sendTelegramMessage(
         chatId,
         'Thank you! Your message has been saved and sent to the admin.',
       );
 
+      // Send the contact data to the admin
       const adminMessage = `📩 New Contact Message:\n\nName: ${contact.name}\nEmail: ${contact.email}\nMessage: ${contact.message}`;
       await this.sendMessageToTelegram(adminMessage);
     }
@@ -99,7 +103,7 @@ export class BotService {
     } else if (data === 'help') {
       await this.sendTelegramMessage(
         chatId,
-        'Please type your message for the admin:',
+        'Please type your message for the admin.',
       );
     }
   }
@@ -109,15 +113,17 @@ export class BotService {
     text: string,
   ): Promise<void> {
     const url = this.getTelegramApiUrl();
-    await axios.post(url, { chat_id: chatId, text });
+    const payload = { chat_id: chatId, text };
+    await axios.post(url, payload);
   }
 
-  public async sendMessageToTelegram(message: string): Promise<void> {
+  private async sendMessageToTelegram(message: string): Promise<void> {
     const url = this.getTelegramApiUrl();
-    await axios.post(url, { chat_id: this.adminChatId, text: message });
+    const payload = { chat_id: this.adminChatId, text: message };
+    await axios.post(url, payload);
   }
 
-  private async create(contact: Contact): Promise<Contact> {
+  private async createContact(contact: Contact): Promise<Contact> {
     const newContact = new this.contactModel(contact);
     return newContact.save();
   }
