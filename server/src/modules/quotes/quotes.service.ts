@@ -1,12 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
 
 @Injectable()
-export class QuotesService {
+export class QuotesService implements OnModuleInit {
   private readonly botToken = process.env.TELEGRAM_BOT_TOKEN; // Telegram bot token from .env
   private readonly chatId = process.env.TELEGRAM_CHAT_ID; // Telegram chat ID from .env
   private readonly telegramApiUrl = `https://api.telegram.org/bot${this.botToken}/sendMessage`;
+
+  private readonly webhookUrl = `https://yourdomain.com/quotes/bot/telegram-webhook`; // Replace with your actual URL
 
   // Fetch a random quote from the Quotable API
   async fetchQuote(): Promise<string> {
@@ -39,5 +41,20 @@ export class QuotesService {
   async sendDailyQuote() {
     await this.sendQuoteToTelegram();
   }
+
+  // Set the webhook for Telegram bot
+  private async setWebhook(): Promise<void> {
+    const url = `https://api.telegram.org/bot${this.botToken}/setWebhook?url=${this.webhookUrl}`;
+    try {
+      await axios.get(url);
+      console.log('Webhook set successfully!');
+    } catch (error) {
+      console.error('Error setting webhook:', error.message);
+    }
+  }
+
+  // Call setWebhook on module initialization
+  async onModuleInit() {
+    await this.setWebhook();
+  }
 }
-// git

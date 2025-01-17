@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import axios from 'axios';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -8,7 +8,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 @Injectable()
-export class BotService {
+export class BotService implements OnModuleInit {
   constructor(
     @InjectModel(Contact.name) private contactModel: Model<Contact>,
   ) {}
@@ -17,13 +17,31 @@ export class BotService {
   private readonly adminChatId = process.env.CHAT_ID; // Use environment variable for admin chat ID
 
   private getTelegramApiUrl(): string {
-    return `https://api.telegram.org/bot${this.botToken}/sendMessage`;
+    return `https://api.telegram.org/bot${this.botToken}`;
   }
 
   private userStates = new Map<
     string,
     { step: string; data: Partial<Contact> }
   >();
+
+  async onModuleInit() {
+    // Set webhook when the bot service is initialized
+    await this.setWebhook();
+  }
+
+  private async setWebhook(): Promise<void> {
+    const webhookUrl = process.env.CONTACT_WEBHOOK_URL;
+
+    const url = `${this.getTelegramApiUrl()}/setWebhook?url=${webhookUrl}`;
+
+    try {
+      await axios.get(url);
+      console.log('Webhook set successfully!');
+    } catch (error) {
+      console.error('Error setting webhook:', error);
+    }
+  }
 
   async handleTelegramMessage(update: any): Promise<void> {
     const chatId = update.message.chat.id;
@@ -117,11 +135,6 @@ export class BotService {
     await axios.post(url, payload);
   }
 
-  // private async sendMessageToTelegram(message: string): Promise<void> {
-  //   const url = this.getTelegramApiUrl();
-  //   const payload = { chat_id: this.adminChatId, text: message };
-  //   await axios.post(url, payload);
-  // }
   public async sendMessageToTelegram(message: string): Promise<void> {
     const url = this.getTelegramApiUrl();
     const payload = { chat_id: this.adminChatId, text: message };

@@ -30,7 +30,7 @@ export class StudentBotService {
     console.log('Bot is starting...');
 
     // Set webhook if the webhook URL is available
-    const webhookUrl = process.env.WEBHOOK_URL;
+    const webhookUrl = process.env.ASSESSMENT_WEBHOOK_URL;
     if (webhookUrl) {
       await this.bot.telegram.setWebhook(webhookUrl);
       console.log('Webhook is set to:', webhookUrl);
@@ -42,7 +42,7 @@ export class StudentBotService {
     // Command: /start
     this.bot.start((ctx) => {
       ctx.reply(
-        'Welcome! Use /grade to check your results, /contact to message the admin, or /restart to reset the session(e.g Student ID:WOUR/0181/16 ).',
+        'Welcome! Use /grade to check your results, /contact to message the admin, or /restart to reset the session (e.g. Student ID: WOUR/0181/16).',
       );
     });
 
