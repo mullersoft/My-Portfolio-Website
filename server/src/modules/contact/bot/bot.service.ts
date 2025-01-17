@@ -14,7 +14,7 @@ export class BotService {
   ) {}
 
   private readonly botToken = process.env.BOT_TOKEN;
-  private readonly adminChatId = process.env.ADMIN_CHAT_ID;
+  private readonly adminChatId = process.env.CHAT_ID;
 
   private getTelegramApiUrl(): string {
     return `https://api.telegram.org/bot${this.botToken}/sendMessage`;
