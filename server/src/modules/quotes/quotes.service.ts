@@ -7,11 +7,9 @@ export class QuotesService implements OnModuleInit {
   private readonly botToken = process.env.TELEGRAM_BOT_TOKEN; // Telegram bot token from .env
   private readonly chatId = process.env.QUOTE_BOT_CHAT_ID; // Telegram chat ID from .env
   private readonly telegramApiUrl = `https://api.telegram.org/bot${this.botToken}/sendMessage`;
-  // private readonly botToken = process.env.BOT_TOKEN; // Bot token from environment variables
-  // private readonly adminChatId = process.env.CONTACT_BOT_CHAT_ID; // Admin chat ID from environment variables
 
+  // private readonly webhookUrl = `https://yourdomain.com/quotes/bot/telegram-webhook`; // Replace with your actual URL
   private readonly webhookUrl = process.env.QUOT_WEBHOOK_URL;
-
   // Fetch a random quote from the Quotable API
   async fetchQuote(): Promise<string> {
     try {
@@ -24,24 +22,71 @@ export class QuotesService implements OnModuleInit {
     }
   }
 
-  // Send the quote to Telegram
-  async sendQuoteToTelegram(): Promise<void> {
+  // Fetch a motivational speech from an external API (e.g., Inspire API)
+  async fetchMotivationalSpeech(): Promise<string> {
+    try {
+      const response = await axios.get(
+        'https://inspire-api.herokuapp.com/api/quote',
+      );
+      const { quote, author } = response.data; // Assuming the API returns a quote and author
+      return `"${quote}"\n- ${author}`;
+    } catch (error) {
+      console.error('Error fetching motivational speech:', error.message);
+      return 'Could not fetch a motivational speech at this time. Please try again later.';
+    }
+  }
+
+  // Send the quote and motivational speech to Telegram
+  async sendDailyMessageToTelegram(): Promise<void> {
     try {
       const quote = await this.fetchQuote();
+      const motivationalSpeech = await this.fetchMotivationalSpeech();
+
+      // Send quote
       await axios.post(this.telegramApiUrl, {
         chat_id: this.chatId,
         text: `📜 Daily Quote:\n\n${quote}`,
       });
-      console.log('Quote sent to Telegram successfully.');
+
+      // Send motivational speech
+      await axios.post(this.telegramApiUrl, {
+        chat_id: this.chatId,
+        text: `💪 Daily Motivational Speech:\n\n${motivationalSpeech}`,
+      });
+
+      console.log(
+        'Quote and Motivational Speech sent to Telegram successfully.',
+      );
     } catch (error) {
-      console.error('Error sending quote to Telegram:', error.message);
+      console.error(
+        'Error sending quote and motivational speech to Telegram:',
+        error.message,
+      );
     }
   }
 
-  // Schedule the daily quote task
+  // Schedule the daily quote task at 9:00 AM
   @Cron('0 9 * * *') // Runs every day at 9:00 AM
   async sendDailyQuote() {
-    await this.sendQuoteToTelegram();
+    const quote = await this.fetchQuote();
+    await axios.post(this.telegramApiUrl, {
+      chat_id: this.chatId,
+      text: `📜 Daily Quote:\n\n${quote}`,
+    });
+    console.log('Quote sent to Telegram successfully at 9:00 AM.');
+  }
+
+  // Schedule the daily motivational speech task at 10:00 AM
+  @Cron('0 10 * * *') // Runs every day at 10:00 AM
+  async sendDailyMotivationalSpeech() {
+    const motivationalSpeech = await this.fetchMotivationalSpeech();
+    await axios.post(this.telegramApiUrl, {
+      chat_id: this.chatId,
+      text: `💪 Daily Motivational Speech:\n\n${motivationalSpeech}`,
+    });
+    console.log(
+      'Motivational speech sent to Telegram successfully at 10:00 AM.',
+    );
   }
 
   // Send a message to Telegram

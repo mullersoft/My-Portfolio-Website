@@ -23,17 +23,17 @@ export class QuotesController {
       if (text === '/start') {
         await this.quotesService.sendMessageToTelegram(
           chatId,
-          'Welcome to the Daily Quotes Bot! 🌟\n\nYou can use the following commands:\n/start - Start the bot\n/help - Get help\n/contact - Contact us',
+          'Welcome to the Daily Quotes & Motivational Speeches Bot! 🌟\n\nYou can use the following commands:\n/start - Start the bot\n/help - Get help\n/contact - Contact us',
         );
       } else if (text === '/help') {
         await this.quotesService.sendMessageToTelegram(
           chatId,
-          'Here are the available commands:\n/start - Start the bot\n/help - Get help\n/contact - Contact us\n\nYou will also receive daily quotes at 9:00 AM!',
+          'Here are the available commands:\n/start - Start the bot\n/help - Get help\n/contact - Contact us\n\nYou will also receive daily quotes and motivational speeches.',
         );
       } else if (text === '/contact') {
         await this.quotesService.sendMessageToTelegram(
           chatId,
-          '📩 Contact Us:\n\nIf you have any questions or feedback, please reach out to us at support@yourdomain.com.',
+          '📩 Contact Us:\n\nIf you have any questions or feedback, please reach out to us at @mulersoft.',
         );
       } else {
         // Default response for unknown commands
