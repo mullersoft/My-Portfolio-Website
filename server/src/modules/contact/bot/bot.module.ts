@@ -1,3 +1,4 @@
+// src/modules/contact/bot/bot.module.ts
 import { Module } from '@nestjs/common';
 import { BotService } from './bot.service';
 import { BotController } from './bot.controller';
@@ -10,5 +11,6 @@ import { Contact, ContactSchema } from '../contact.schema';
   ],
   controllers: [BotController],
   providers: [BotService],
+  exports: [BotService], // Export BotService
 })
 export class BotModule {}
