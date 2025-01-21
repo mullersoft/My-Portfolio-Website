@@ -54,7 +54,9 @@ export class StudentBotService {
 
     // Command: /contact
     this.bot.command('contact', (ctx) => {
-      ctx.reply('Please type your message for the admin:');
+      ctx.reply(
+        'Please type your message for the admin(you can also contact the instructor using the following telegram username:@mulersoft):',
+      );
       ctx.session.awaitingAdminMessage = true;
     });
 
