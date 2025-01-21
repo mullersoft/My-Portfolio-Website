@@ -1,3 +1,4 @@
+//D:\web D\portfolio-website\server\src\modules\quotes\quotes.module.ts
 import { Module } from '@nestjs/common';
 import { QuotesService } from './quotes.service';
 import { QuotesController } from './quotes.controller';

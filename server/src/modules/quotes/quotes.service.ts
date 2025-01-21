@@ -1,3 +1,4 @@
+//D:\web D\portfolio-website\server\src\modules\quotes\quotes.service.ts
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
@@ -8,7 +9,6 @@ export class QuotesService implements OnModuleInit {
   private readonly chatId = process.env.QUOTE_BOT_CHAT_ID; // Telegram chat ID from .env
   private readonly telegramApiUrl = `https://api.telegram.org/bot${this.botToken}/sendMessage`;
 
-  // private readonly webhookUrl = `https://yourdomain.com/quotes/bot/telegram-webhook`; // Replace with your actual URL
   private readonly webhookUrl = process.env.QUOT_WEBHOOK_URL;
   // Fetch a random quote from the Quotable API
   async fetchQuote(): Promise<string> {
@@ -25,10 +25,8 @@ export class QuotesService implements OnModuleInit {
   // Fetch a motivational speech from an external API (e.g., Inspire API)
   async fetchMotivationalSpeech(): Promise<string> {
     try {
-      const response = await axios.get(
-        'https://inspire-api.herokuapp.com/api/quote',
-      );
-      const { quote, author } = response.data; // Assuming the API returns a quote and author
+      const response = await axios.get('https://zenquotes.io/api/random'); // Use ZenQuotes API
+      const { q: quote, a: author } = response.data[0];
       return `"${quote}"\n- ${author}`;
     } catch (error) {
       console.error('Error fetching motivational speech:', error.message);
@@ -65,9 +63,9 @@ export class QuotesService implements OnModuleInit {
     }
   }
 
-  // Schedule the daily quote task at 9:00 AM
   @Cron('0 9 * * *') // Runs every day at 9:00 AM
   async sendDailyQuote() {
+    console.log('Triggering daily quote cron job...');
     const quote = await this.fetchQuote();
     await axios.post(this.telegramApiUrl, {
       chat_id: this.chatId,
@@ -77,7 +75,7 @@ export class QuotesService implements OnModuleInit {
   }
 
   // Schedule the daily motivational speech task at 10:00 AM
-  @Cron('0 10 * * *') // Runs every day at 10:00 AM
+  @Cron('0 8 * * *') // Runs every day at 10:00 AM
   async sendDailyMotivationalSpeech() {
     const motivationalSpeech = await this.fetchMotivationalSpeech();
     await axios.post(this.telegramApiUrl, {

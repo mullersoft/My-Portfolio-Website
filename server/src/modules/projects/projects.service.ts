@@ -23,7 +23,6 @@ export class ProjectsService {
   async createProject(project: Partial<Project>): Promise<Project> {
     const newProject = new this.projectModel({
       ...project,
-      // You can perform additional checks or modifications before saving the project
     });
     return newProject.save();
   }
