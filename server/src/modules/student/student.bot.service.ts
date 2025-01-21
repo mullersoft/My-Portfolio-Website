@@ -41,8 +41,11 @@ export class StudentBotService {
 
     // Command: /start
     this.bot.start((ctx) => {
+      const username = ctx.from.username
+        ? `@${ctx.from.username}`
+        : ctx.from.first_name || 'User';
       ctx.reply(
-        'Welcome! Use /grade to check your results, /contact to message the admin, or /restart to reset the session (e.g. Student ID: WOUR/0182/16).',
+        `Welcome, ${username}! Use /grade to check your results, /contact to message the admin, or /restart to reset the session (e.g. Student ID: WOUR/0182/16).`,
       );
     });
 
@@ -54,8 +57,11 @@ export class StudentBotService {
 
     // Command: /contact
     this.bot.command('contact', (ctx) => {
+      const username = ctx.from.username
+        ? `@${ctx.from.username}`
+        : ctx.from.first_name || 'User';
       ctx.reply(
-        'Please type your message for the admin(you can also contact the instructor using the following telegram username:@mulersoft):',
+        `Please type your message for the admin. Your username (${username}) will be included in the message sent to the admin.`,
       );
       ctx.session.awaitingAdminMessage = true;
     });
@@ -102,11 +108,14 @@ Total Grade: ${student.TOTAL}
         }
       } else if (ctx.session.awaitingAdminMessage) {
         const studentMessage = ctx.message.text.trim();
+        const username = ctx.from.username
+          ? `@${ctx.from.username}`
+          : ctx.from.first_name || 'User';
 
         if (this.adminChatId) {
           await this.bot.telegram.sendMessage(
             this.adminChatId,
-            `Message from ${ctx.from.first_name || 'Student'} (${ctx.from.id}):\n\n${studentMessage}`,
+            `Message from ${username} (${ctx.from.id}):\n\n${studentMessage}`,
           );
           ctx.reply('Your message has been sent to the admin. Thank you!');
         } else {
