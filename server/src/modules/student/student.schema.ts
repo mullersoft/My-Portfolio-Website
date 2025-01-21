@@ -14,9 +14,8 @@ export const StudentSchema = new Schema(
     TOTAL: { type: Number, required: true },
   },
   {
-    collection: 'students', // Specify the collection name explicitly
+    collection: 'students',
   },
 );
 
-// Create and export the model (optional)
 export const StudentModel = model('Student', StudentSchema);

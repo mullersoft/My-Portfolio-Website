@@ -42,7 +42,7 @@ export class StudentBotService {
     // Command: /start
     this.bot.start((ctx) => {
       ctx.reply(
-        'Welcome! Use /grade to check your results, /contact to message the admin, or /restart to reset the session (e.g. Student ID: WOUR/0181/16).',
+        'Welcome! Use /grade to check your results, /contact to message the admin, or /restart to reset the session (e.g. Student ID: WOUR/0182/16).',
       );
     });
 

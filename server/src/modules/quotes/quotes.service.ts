@@ -74,8 +74,8 @@ export class QuotesService implements OnModuleInit {
     console.log('Quote sent to Telegram successfully at 9:00 AM.');
   }
 
-  // Schedule the daily motivational speech task at 10:00 AM
-  @Cron('0 8 * * *') // Runs every day at 10:00 AM
+  // Schedule the daily motivational speech task at 8:00 AM
+  @Cron('0 8 * * *') // Runs every day at 8:00 AM
   async sendDailyMotivationalSpeech() {
     const motivationalSpeech = await this.fetchMotivationalSpeech();
     await axios.post(this.telegramApiUrl, {
