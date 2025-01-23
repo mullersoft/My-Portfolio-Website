@@ -3,7 +3,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { StudentBotService } from './modules/student/student.bot.service';
 import * as dotenv from 'dotenv';
-// some
 dotenv.config();
 
 async function bootstrap() {
@@ -20,7 +19,6 @@ async function bootstrap() {
       }
     },
   });
-
   // Call the startBot method to initialize the Telegram bot
   const studentBotService = app.get(StudentBotService);
   studentBotService.startBot();
@@ -28,6 +26,4 @@ async function bootstrap() {
   await app.listen(port);
   console.log(`Application is running on this port: ${await app.getUrl()}`);
 }
-
 bootstrap();
-//hi

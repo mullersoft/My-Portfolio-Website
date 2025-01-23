@@ -4,7 +4,7 @@ import { ConfigModule } from '@nestjs/config'; // Import ConfigModule
 import { MongooseModule } from '@nestjs/mongoose';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { ChatGptModule } from './modules/chatgpt/chatgpt.module';
-// import { IpTrackingMiddleware } from './middlewares/ip-tracking.middleware';
+import { IpTrackingMiddleware } from './middlewares/ip-tracking.middleware';
 import { ScheduleModule } from '@nestjs/schedule';
 import { QuotesModule } from './modules/quotes/quotes.module';
 import { BotModule } from './modules/contact/bot/bot.module';
@@ -15,12 +15,10 @@ import { StudentModule } from './modules/student/student.module';
   imports: [
     ConfigModule.forRoot(), // Initialize ConfigModule to load .env variables
     MongooseModule.forRoot(process.env.MONGO_URI), // Use MONGO_URI from .env
-    // UsersModule,
     ProjectsModule,
-    // ContactModule,
     ChatGptModule,
     ScheduleModule.forRoot(), // Enable scheduling
-    QuotesModule, // Import the quotes module
+    QuotesModule,
     BotModule,
     FrontendModule,
     StudentModule,
@@ -30,6 +28,6 @@ import { StudentModule } from './modules/student/student.module';
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    // consumer.apply(IpTrackingMiddleware).forRoutes('*'); // Apply to all routes
+    consumer.apply(IpTrackingMiddleware).forRoutes('*'); // Apply to all routes
   }
 }
