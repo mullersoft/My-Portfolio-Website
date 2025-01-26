@@ -28,40 +28,56 @@ const Header: React.FC = () => {
   const drawer = (
     <List>
       <ListItem
-        button
-        component={Link}
-        to="/"
-        onClick={handleDrawerToggle}
-        sx={{ textDecoration: "none" }} // Optional: Avoid underline
-      >
-        <ListItemText primary="Home" />
-      </ListItem>
-      <ListItem
-        button
-        component={Link}
-        to="/projects"
+        component="div"
         onClick={handleDrawerToggle}
         sx={{ textDecoration: "none" }}
       >
-        <ListItemText primary="Projects" />
+        <Button
+          component={Link}
+          to="/"
+          sx={{ width: "100%", justifyContent: "flex-start" }}
+        >
+          <ListItemText primary="Home" />
+        </Button>
       </ListItem>
       <ListItem
-        button
-        component={Link}
-        to="/about"
+        component="div"
         onClick={handleDrawerToggle}
         sx={{ textDecoration: "none" }}
       >
-        <ListItemText primary="About" />
+        <Button
+          component={Link}
+          to="/projects"
+          sx={{ width: "100%", justifyContent: "flex-start" }}
+        >
+          <ListItemText primary="Projects" />
+        </Button>
       </ListItem>
       <ListItem
-        button
-        component={Link}
-        to="/contact"
+        component="div"
         onClick={handleDrawerToggle}
         sx={{ textDecoration: "none" }}
       >
-        <ListItemText primary="Contact" />
+        <Button
+          component={Link}
+          to="/about"
+          sx={{ width: "100%", justifyContent: "flex-start" }}
+        >
+          <ListItemText primary="About" />
+        </Button>
+      </ListItem>
+      <ListItem
+        component="div"
+        onClick={handleDrawerToggle}
+        sx={{ textDecoration: "none" }}
+      >
+        <Button
+          component={Link}
+          to="/contact"
+          sx={{ width: "100%", justifyContent: "flex-start" }}
+        >
+          <ListItemText primary="Contact" />
+        </Button>
       </ListItem>
     </List>
   );
