@@ -10,6 +10,7 @@ import { QuotesModule } from './modules/quotes/quotes.module';
 import { BotModule } from './modules/contact/bot/bot.module';
 import { FrontendModule } from './modules/contact/frontend/frontend.module';
 import { StudentModule } from './modules/student/student.module';
+import { TelegramModule } from './modules/telegram/telegram.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { StudentModule } from './modules/student/student.module';
     BotModule,
     FrontendModule,
     StudentModule,
+    TelegramModule,
   ],
   controllers: [],
   providers: [],

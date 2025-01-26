@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { StudentBotService } from './modules/student/student.bot.service';
 import * as dotenv from 'dotenv';
+import { TelegramService } from './modules/telegram/telegram.service';
 dotenv.config();
 
 async function bootstrap() {
@@ -22,6 +23,10 @@ async function bootstrap() {
   // Call the startBot method to initialize the Telegram bot
   const studentBotService = app.get(StudentBotService);
   studentBotService.startBot();
+
+  // const telegramService = app.get(TelegramService);
+  // await telegramService.setWebhook(); // Set the webhook when the app starts
+
   const port = process.env.PORT || 3000;
   await app.listen(port);
   console.log(`Application is running on this port: ${await app.getUrl()}`);
