@@ -7,7 +7,8 @@ export class QuotesService implements OnModuleInit {
   private readonly botToken = process.env.TELEGRAM_BOT_TOKEN; // Telegram bot token from .env
   private readonly chatId = process.env.QUOTE_BOT_CHAT_ID; // Telegram chat ID from .env
   private readonly telegramApiUrl = `https://api.telegram.org/bot${this.botToken}/sendMessage`;
-  private readonly webhookUrl = process.env.QUOT_WEBHOOK_URL; // Webhook URL from .env
+
+  private readonly webhookUrl = process.env.QUOT_WEBHOOK_URL;
 
   // Fetch a random quote from the Quotable API
   async fetchQuote(): Promise<string> {
@@ -21,10 +22,10 @@ export class QuotesService implements OnModuleInit {
     }
   }
 
-  // Fetch a motivational speech from the ZenQuotes API
+  // Fetch a motivational speech from ZenQuotes API
   async fetchMotivationalSpeech(): Promise<string> {
     try {
-      const response = await axios.get('https://zenquotes.io/api/random'); // ZenQuotes API
+      const response = await axios.get('https://zenquotes.io/api/random');
       const { q: quote, a: author } = response.data[0];
       return `"${quote}"\n- ${author}`;
     } catch (error) {
@@ -33,44 +34,71 @@ export class QuotesService implements OnModuleInit {
     }
   }
 
-  // Send a message to Telegram
-  async sendMessageToTelegram(text: string): Promise<void> {
+  // Send the quote and motivational speech to Telegram
+  async sendDailyMessageToTelegram(): Promise<void> {
     try {
+      const quote = await this.fetchQuote();
+      const motivationalSpeech = await this.fetchMotivationalSpeech();
+
+      // Send quote
       await axios.post(this.telegramApiUrl, {
         chat_id: this.chatId,
+        text: `📜 Daily Quote:\n\n${quote}`,
+      });
+
+      // Send motivational speech
+      await axios.post(this.telegramApiUrl, {
+        chat_id: this.chatId,
+        text: `💪 Daily Motivational Speech:\n\n${motivationalSpeech}`,
+      });
+
+      console.log(
+        'Quote and Motivational Speech sent to Telegram successfully.',
+      );
+    } catch (error) {
+      console.error(
+        'Error sending quote and motivational speech to Telegram:',
+        error.message,
+      );
+    }
+  }
+
+  // Schedule the daily quote task at 9:00 AM
+  @Cron('0 9 * * *')
+  async sendDailyQuote() {
+    console.log('Triggering daily quote cron job...');
+    const quote = await this.fetchQuote();
+    await axios.post(this.telegramApiUrl, {
+      chat_id: this.chatId,
+      text: `📜 Daily Quote:\n\n${quote}`,
+    });
+    console.log('Quote sent to Telegram successfully at 9:00 AM.');
+  }
+
+  // Schedule the daily motivational speech task at 10:00 AM
+  @Cron('0 10 * * *')
+  async sendDailyMotivationalSpeech() {
+    console.log('Triggering daily motivational speech cron job...');
+    const motivationalSpeech = await this.fetchMotivationalSpeech();
+    await axios.post(this.telegramApiUrl, {
+      chat_id: this.chatId,
+      text: `💪 Daily Motivational Speech:\n\n${motivationalSpeech}`,
+    });
+    console.log(
+      'Motivational speech sent to Telegram successfully at 10:00 AM.',
+    );
+  }
+
+  // Send a message to Telegram
+  async sendMessageToTelegram(chatId: number, text: string): Promise<void> {
+    try {
+      await axios.post(this.telegramApiUrl, {
+        chat_id: chatId,
         text,
       });
       console.log('Message sent to Telegram successfully.');
     } catch (error) {
       console.error('Error sending message to Telegram:', error.message);
-    }
-  }
-
-  // Send the daily quote to Telegram
-  @Cron('0 9 * * *') // Runs every day at 9:00 AM
-  async sendDailyQuote(): Promise<void> {
-    try {
-      console.log('Triggering daily quote cron job...');
-      const quote = await this.fetchQuote();
-      await this.sendMessageToTelegram(`📜 Daily Quote:\n\n${quote}`);
-      console.log('Daily quote sent successfully.');
-    } catch (error) {
-      console.error('Error sending daily quote:', error.message);
-    }
-  }
-
-  // Send the daily motivational speech to Telegram
-  @Cron('0 10 * * *') // Runs every day at 10:00 AM
-  async sendDailyMotivationalSpeech(): Promise<void> {
-    try {
-      console.log('Triggering daily motivational speech cron job...');
-      const motivationalSpeech = await this.fetchMotivationalSpeech();
-      await this.sendMessageToTelegram(
-        `💪 Daily Motivational Speech:\n\n${motivationalSpeech}`,
-      );
-      console.log('Daily motivational speech sent successfully.');
-    } catch (error) {
-      console.error('Error sending daily motivational speech:', error.message);
     }
   }
 
@@ -85,8 +113,8 @@ export class QuotesService implements OnModuleInit {
     }
   }
 
-  // Initialize the webhook on module initialization
-  async onModuleInit(): Promise<void> {
+  // Call setWebhook on module initialization
+  async onModuleInit() {
     await this.setWebhook();
   }
 }
