@@ -19,24 +19,48 @@ import MenuIcon from "@mui/icons-material/Menu";
 const Header: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md")); // Adjusts for mobile view
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen); // Toggles the state of the Drawer
+    setMobileOpen(!mobileOpen);
   };
 
   const drawer = (
     <List>
-      <ListItem button component={Link} to="/" onClick={handleDrawerToggle}>
+      <ListItem
+        button
+        component={Link}
+        to="/"
+        onClick={handleDrawerToggle}
+        sx={{ textDecoration: "none" }} // Optional: Avoid underline
+      >
         <ListItemText primary="Home" />
       </ListItem>
-      <ListItem button component={Link} to="/projects" onClick={handleDrawerToggle}>
+      <ListItem
+        button
+        component={Link}
+        to="/projects"
+        onClick={handleDrawerToggle}
+        sx={{ textDecoration: "none" }}
+      >
         <ListItemText primary="Projects" />
       </ListItem>
-      <ListItem button component={Link} to="/about" onClick={handleDrawerToggle}>
+      <ListItem
+        button
+        component={Link}
+        to="/about"
+        onClick={handleDrawerToggle}
+        sx={{ textDecoration: "none" }}
+      >
         <ListItemText primary="About" />
       </ListItem>
-      <ListItem button component={Link} to="/contact" onClick={handleDrawerToggle}>
+      <ListItem
+        button
+        component={Link}
+        to="/contact"
+        onClick={handleDrawerToggle}
+        sx={{ textDecoration: "none" }}
+      >
         <ListItemText primary="Contact" />
       </ListItem>
     </List>
@@ -56,8 +80,8 @@ const Header: React.FC = () => {
             Mulersoft
           </Typography>
 
-          {/* Mobile view: Hamburger menu */}
           {isMobile ? (
+            // Hamburger menu for mobile
             <IconButton
               edge="start"
               color="inherit"
@@ -67,7 +91,7 @@ const Header: React.FC = () => {
               <MenuIcon />
             </IconButton>
           ) : (
-            // Desktop view: Horizontal menu
+            // Horizontal menu for desktop
             <Box sx={{ display: "flex", gap: "10px" }}>
               <Button sx={{ color: "#ecf0f1" }} component={Link} to="/">
                 Home
