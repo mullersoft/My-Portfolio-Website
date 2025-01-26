@@ -1,4 +1,3 @@
-// D:\web D\portfolio-website\server\src\middlewares\ip-tracking.middleware.ts
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import axios from 'axios';
@@ -17,15 +16,15 @@ export class IpTrackingMiddleware implements NestMiddleware {
       const response = await axios.get(`http://ip-api.com/json/${ipAddress}`);
       const { country, city, status, query } = response.data;
 
-      if (status !== 'success' || !country || !city) {
+      if (status === 'success' && country && city) {
+        return `${city}, ${country}`;
+      } else {
         console.warn(
           `Incomplete or failed location data for IP ${query}:`,
           response.data,
         );
         return 'Unknown Location';
       }
-
-      return `${city}, ${country}`;
     } catch (error) {
       console.error('Error fetching geo-location:', error.message);
       return 'Unknown Location';
@@ -46,17 +45,19 @@ export class IpTrackingMiddleware implements NestMiddleware {
     }
   }
 
+  private extractIpAddress(req: Request): string {
+    const forwardedFor = req.headers['x-forwarded-for'] as string;
+    const ipAddress = forwardedFor
+      ? forwardedFor.split(',')[0].trim() // Handle multiple IPs in x-forwarded-for
+      : req.connection.remoteAddress || req.ip;
+
+    return ipAddress === '::1' || ipAddress === '127.0.0.1'
+      ? '127.0.0.1' // Normalize localhost IP
+      : ipAddress;
+  }
+
   async use(req: Request, res: Response, next: NextFunction) {
-    let ipAddress =
-      (req.headers['x-forwarded-for'] as string) ||
-      req.connection.remoteAddress ||
-      req.ip;
-    ipAddress = Array.isArray(ipAddress) ? ipAddress[0] : ipAddress;
-
-    if (ipAddress === '::1' || ipAddress === '127.0.0.1') {
-      ipAddress = '127.0.0.1'; // Normalize localhost IP
-    }
-
+    const ipAddress = this.extractIpAddress(req);
     const userAgent = req.headers['user-agent'] || 'Unknown User-Agent';
     const requestedUrl = req.originalUrl;
     const location =
