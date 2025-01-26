@@ -16,7 +16,7 @@ const Footer: React.FC = () => {
         {/* Telegram Link */}
         <IconButton
           component={Link}
-          href="https://t.me/@mulersoft"
+          href="https://t.me/mulersoft" // Corrected Telegram link
           target="_blank"
           rel="noopener noreferrer"
           sx={{ color: "#1DA1F2" }} // Telegram blue color
