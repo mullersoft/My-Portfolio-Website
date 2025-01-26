@@ -9,6 +9,7 @@ export class TelegramService {
 
   constructor(private readonly configService: ConfigService) {
     this.botToken = this.configService.get<string>('ASSESSMENT_BOT_TOKEN');
+    console.log('ASSESSMENT_BOT_TOKEN=', this.botToken);
   }
 
   // Send a message to a specific user
