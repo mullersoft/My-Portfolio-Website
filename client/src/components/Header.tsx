@@ -19,10 +19,10 @@ import MenuIcon from "@mui/icons-material/Menu";
 const Header: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("md")); // Adjusts for mobile view
 
   const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+    setMobileOpen(!mobileOpen); // Toggles the state of the Drawer
   };
 
   const drawer = (
@@ -56,8 +56,8 @@ const Header: React.FC = () => {
             Mulersoft
           </Typography>
 
+          {/* Mobile view: Hamburger menu */}
           {isMobile ? (
-            // Hamburger menu for mobile
             <IconButton
               edge="start"
               color="inherit"
@@ -67,7 +67,7 @@ const Header: React.FC = () => {
               <MenuIcon />
             </IconButton>
           ) : (
-            // Horizontal menu for desktop
+            // Desktop view: Horizontal menu
             <Box sx={{ display: "flex", gap: "10px" }}>
               <Button sx={{ color: "#ecf0f1" }} component={Link} to="/">
                 Home
@@ -91,6 +91,9 @@ const Header: React.FC = () => {
         anchor="left"
         open={mobileOpen}
         onClose={handleDrawerToggle}
+        ModalProps={{
+          keepMounted: true, // Keeps the drawer mounted for better performance
+        }}
         sx={{
           "& .MuiDrawer-paper": {
             bgcolor: "#2c3e50",
