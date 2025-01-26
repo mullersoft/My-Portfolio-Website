@@ -10,11 +10,16 @@ import {
   List,
   ListItem,
   ListItemText,
+  Box,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 
 const Header: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -22,16 +27,16 @@ const Header: React.FC = () => {
 
   const drawer = (
     <List>
-      <ListItem button component={Link} to="/">
+      <ListItem button component={Link} to="/" onClick={handleDrawerToggle}>
         <ListItemText primary="Home" />
       </ListItem>
-      <ListItem button component={Link} to="/projects">
+      <ListItem button component={Link} to="/projects" onClick={handleDrawerToggle}>
         <ListItemText primary="Projects" />
       </ListItem>
-      <ListItem button component={Link} to="/about">
+      <ListItem button component={Link} to="/about" onClick={handleDrawerToggle}>
         <ListItemText primary="About" />
       </ListItem>
-      <ListItem button component={Link} to="/contact">
+      <ListItem button component={Link} to="/contact" onClick={handleDrawerToggle}>
         <ListItemText primary="Contact" />
       </ListItem>
     </List>
@@ -39,39 +44,45 @@ const Header: React.FC = () => {
 
   return (
     <>
-      <AppBar
-        position="static"
-        sx={{ bgcolor: "#2c3e50", color: "white" }}
-      >
+      <AppBar position="static" sx={{ bgcolor: "#2c3e50", color: "white" }}>
         <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            My Portfolio
-          </Typography>
-          {/* Hamburger menu for mobile */}
-          <IconButton
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            sx={{ display: { xs: "block", md: "none" } }}
-            onClick={handleDrawerToggle}
+          {/* Clickable Title */}
+          <Typography
+            variant="h6"
+            sx={{ flexGrow: 1, textDecoration: "none", color: "inherit" }}
+            component={Link}
+            to="/"
           >
-            <MenuIcon />
-          </IconButton>
-          {/* Horizontal menu for desktop */}
-          <div style={{ display: "flex", gap: "10px", display: { xs: "none", md: "flex" } }}>
-            <Button sx={{ color: "#ecf0f1" }} component={Link} to="/">
-              Home
-            </Button>
-            <Button sx={{ color: "#ecf0f1" }} component={Link} to="/projects">
-              Projects
-            </Button>
-            <Button sx={{ color: "#ecf0f1" }} component={Link} to="/about">
-              About
-            </Button>
-            <Button sx={{ color: "#ecf0f1" }} component={Link} to="/contact">
-              Contact
-            </Button>
-          </div>
+            Mulersoft
+          </Typography>
+
+          {isMobile ? (
+            // Hamburger menu for mobile
+            <IconButton
+              edge="start"
+              color="inherit"
+              aria-label="menu"
+              onClick={handleDrawerToggle}
+            >
+              <MenuIcon />
+            </IconButton>
+          ) : (
+            // Horizontal menu for desktop
+            <Box sx={{ display: "flex", gap: "10px" }}>
+              <Button sx={{ color: "#ecf0f1" }} component={Link} to="/">
+                Home
+              </Button>
+              <Button sx={{ color: "#ecf0f1" }} component={Link} to="/projects">
+                Projects
+              </Button>
+              <Button sx={{ color: "#ecf0f1" }} component={Link} to="/about">
+                About
+              </Button>
+              <Button sx={{ color: "#ecf0f1" }} component={Link} to="/contact">
+                Contact
+              </Button>
+            </Box>
+          )}
         </Toolbar>
       </AppBar>
 
