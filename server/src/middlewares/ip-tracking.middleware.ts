@@ -6,7 +6,7 @@ import axios from 'axios';
 @Injectable()
 export class IpTrackingMiddleware implements NestMiddleware {
   private readonly botToken = process.env.BOT_TOKEN;
-  private readonly chatId = process.env.CHAT_ID;
+  private readonly chatId = process.env.CONTACT_BOT_CHAT_ID;
 
   private getTelegramApiUrl() {
     return `https://api.telegram.org/bot${this.botToken}/sendMessage`;
