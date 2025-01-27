@@ -59,7 +59,7 @@ export class TelegramService {
       return;
     }
 
-    const url = `https://api.telegram.org/bot${this.botToken}/telegramwebhook`;
+    const url = `https://api.telegram.org/bot${this.botToken}/setWebhook`;
     const payload = { url: webhookUrl };
 
     try {
