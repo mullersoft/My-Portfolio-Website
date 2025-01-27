@@ -1,29 +1,48 @@
-// telegram.controller.ts
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get } from '@nestjs/common';
 import { TelegramService } from './telegram.service';
 
 @Controller('webhook')
 export class TelegramController {
   constructor(private readonly telegramService: TelegramService) {}
 
+  // Endpoint to handle incoming messages
   @Post()
   async handleIncomingMessages(@Body() body: any): Promise<void> {
     console.log('Received update:', body);
 
-    // Check if the message is from a private chat
     if (body.message && body.message.chat.type === 'private') {
-      const chatId = body.message.chat.id; // User's chat ID
-      const userName = body.message.from.first_name || 'there'; // User's first name
-      const userMessage = body.message.text; // Message text
+      const chatId = body.message.chat.id;
+      const userName = body.message.from.first_name || 'there';
+      const userMessage = body.message.text;
 
-      // Respond based on the user's message
-      if (userMessage === '/start') {
-        const welcomeMessage = `Hello ${userName}! Welcome to @yourAssessmentBot. How can I assist you today?`;
-        await this.telegramService.sendMessageToUser(chatId, welcomeMessage);
+      // Check your availability status
+      const isAvailable = this.telegramService.getAvailability();
+
+      if (isAvailable) {
+        // You're active, no bot response
+        console.log(
+          `User message ignored because you're active: ${userMessage}`,
+        );
       } else {
-        const responseMessage = `Hi ${userName}, you said: "${userMessage}". How can I help you further?`;
+        // You're inactive, bot responds
+        const responseMessage = `
+          Hi ${userName}, Mulugeta is not available right now.
+          You can:
+          - Call: 0947300026
+          - Contact on Facebook: www.facebook.com/mullersoft
+          - Email: mulerselinger@gmail.com
+        `;
         await this.telegramService.sendMessageToUser(chatId, responseMessage);
       }
     }
+  }
+
+  // Endpoint to toggle availability
+  @Get('toggle-availability')
+  toggleAvailability(): string {
+    this.telegramService.toggleAvailability();
+    return `Availability toggled. Current status: ${
+      this.telegramService.getAvailability() ? 'Active' : 'Inactive'
+    }`;
   }
 }
