@@ -3,13 +3,13 @@ import fetch from 'node-fetch';
 
 @Injectable()
 export class TelegramService {
-  private readonly botToken: string = process.env.ASSESSMENT_BOT_TOKEN;
+  private readonly botToken: string = process.env.AUTORESPONSE_BOT_TOKEN;
   private isActive: boolean = true; // Indicates your availability status
 
   constructor() {
     if (!this.botToken) {
       console.error(
-        'ASSESSMENT_BOT_TOKEN is not defined in environment variables.',
+        'AUTORESPONSE_BOT_TOKEN is not defined in environment variables.',
       );
     }
   }
