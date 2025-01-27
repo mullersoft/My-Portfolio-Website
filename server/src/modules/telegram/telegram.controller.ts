@@ -8,7 +8,7 @@ export class TelegramController {
   // Endpoint to handle incoming messages
   @Post()
   async handleIncomingMessages(@Body() body: any): Promise<void> {
-    console.log('Received update:', body);
+    console.log('Received update:', body); // Log the incoming request for debugging
 
     if (body.message && body.message.chat.type === 'private') {
       const chatId = body.message.chat.id;
@@ -17,6 +17,9 @@ export class TelegramController {
 
       // Check your availability status
       const isAvailable = this.telegramService.getAvailability();
+      console.log(
+        `Availability status: ${isAvailable ? 'Active' : 'Inactive'}`,
+      );
 
       if (isAvailable) {
         // You're active, no bot response
@@ -25,7 +28,6 @@ export class TelegramController {
         );
       } else {
         // You're inactive, bot responds
-        // for example, send a message to the user
         const responseMessage = `
           Hi ${userName}, Mulugeta is not available right now.
           You can:
@@ -35,6 +37,8 @@ export class TelegramController {
         `;
         await this.telegramService.sendMessageToUser(chatId, responseMessage);
       }
+    } else {
+      console.log('Received non-private message or no message in body.');
     }
   }
 
