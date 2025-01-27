@@ -1,9 +1,9 @@
-//D:\web D\portfolio-website\server\src\main.ts
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { StudentBotService } from './modules/student/student.bot.service';
-import * as dotenv from 'dotenv';
 import { TelegramService } from './modules/telegram/telegram.service';
+import * as dotenv from 'dotenv';
+
 dotenv.config();
 
 async function bootstrap() {
@@ -20,15 +20,18 @@ async function bootstrap() {
       }
     },
   });
-  // Call the startBot method to initialize the Telegram bot
+
+  // Start the Telegram bot
   const studentBotService = app.get(StudentBotService);
   studentBotService.startBot();
 
-  // const telegramService = app.get(TelegramService);
-  // await telegramService.setWebhook(); // Set the webhook when the app starts
+  // Set the Telegram webhook
+  const telegramService = app.get(TelegramService);
+  await telegramService.setWebhook();
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  console.log(`Application is running on this port: ${await app.getUrl()}`);
+  console.log(`Application is running on: ${await app.getUrl()}`);
 }
+
 bootstrap();
