@@ -1,15 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import fetch from 'node-fetch';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class TelegramService {
-  private readonly botToken: string;
+  private readonly botToken: string = process.env.ASSESSMENT_BOT_TOKEN;
   private isActive: boolean = true; // Indicates your availability status
 
-  constructor(private readonly configService: ConfigService) {
-    this.botToken = this.configService.get<string>('ASSESSMENT_BOT_TOKEN');
-    console.log('ASSESSMENT_BOT_TOKEN=', this.botToken);
+  constructor() {
+    if (!this.botToken) {
+      console.error(
+        'ASSESSMENT_BOT_TOKEN is not defined in environment variables.',
+      );
+    }
   }
 
   // Toggle your availability status
