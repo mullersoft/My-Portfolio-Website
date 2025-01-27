@@ -58,6 +58,7 @@ export class TelegramService {
       console.error('WEBHOOK_URL is not defined in environment variables.');
       return;
     }
+    console.log('Setting Telegram webhook:', webhookUrl);
 
     const url = `https://api.telegram.org/bot${this.botToken}/setWebhook`;
     const payload = { url: webhookUrl };
