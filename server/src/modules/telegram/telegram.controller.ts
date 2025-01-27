@@ -25,6 +25,7 @@ export class TelegramController {
         );
       } else {
         // You're inactive, bot responds
+        // for example, send a message to the user
         const responseMessage = `
           Hi ${userName}, Mulugeta is not available right now.
           You can:
