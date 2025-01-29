@@ -15,6 +15,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import { motion } from "framer-motion"; // Import Framer Motion
 
 const Header: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -27,58 +28,22 @@ const Header: React.FC = () => {
 
   const drawer = (
     <List>
-      <ListItem
-        component="div"
-        onClick={handleDrawerToggle}
-        sx={{ textDecoration: "none" }}
-      >
-        <Button
-          component={Link}
-          to="/"
-          sx={{ width: "100%", justifyContent: "flex-start" }}
-        >
-          <ListItemText primary="Home" />
-        </Button>
-      </ListItem>
-      <ListItem
-        component="div"
-        onClick={handleDrawerToggle}
-        sx={{ textDecoration: "none" }}
-      >
-        <Button
-          component={Link}
-          to="/projects"
-          sx={{ width: "100%", justifyContent: "flex-start" }}
-        >
-          <ListItemText primary="Projects" />
-        </Button>
-      </ListItem>
-      <ListItem
-        component="div"
-        onClick={handleDrawerToggle}
-        sx={{ textDecoration: "none" }}
-      >
-        <Button
-          component={Link}
-          to="/about"
-          sx={{ width: "100%", justifyContent: "flex-start" }}
-        >
-          <ListItemText primary="About" />
-        </Button>
-      </ListItem>
-      <ListItem
-        component="div"
-        onClick={handleDrawerToggle}
-        sx={{ textDecoration: "none" }}
-      >
-        <Button
-          component={Link}
-          to="/contact"
-          sx={{ width: "100%", justifyContent: "flex-start" }}
-        >
-          <ListItemText primary="Contact" />
-        </Button>
-      </ListItem>
+      {["Home", "Projects", "About", "Contact"].map((text, index) => (
+        <ListItem key={text} component="div" onClick={handleDrawerToggle}>
+          <motion.div
+            whileHover={{ scale: 1.1 }} // Scale effect on hover
+            whileTap={{ scale: 0.9 }} // Slight shrink effect on tap
+          >
+            <Button
+              component={Link}
+              to={`/${text.toLowerCase()}`}
+              sx={{ width: "100%", justifyContent: "flex-start" }}
+            >
+              <ListItemText primary={text} />
+            </Button>
+          </motion.div>
+        </ListItem>
+      ))}
     </List>
   );
 
@@ -86,63 +51,80 @@ const Header: React.FC = () => {
     <>
       <AppBar position="static" sx={{ bgcolor: "#2c3e50", color: "white" }}>
         <Toolbar>
-          {/* Clickable Title */}
-          <Typography
-            variant="h6"
-            sx={{ flexGrow: 1, textDecoration: "none", color: "inherit" }}
-            component={Link}
-            to="/"
+          {/* Animated Title */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
           >
-            Mulersoft
-          </Typography>
+            <Typography
+              variant="h6"
+              sx={{ flexGrow: 1, textDecoration: "none", color: "inherit" }}
+              component={Link}
+              to="/"
+            >
+              Mulersoft
+            </Typography>
+          </motion.div>
 
           {isMobile ? (
-            // Hamburger menu for mobile
-            <IconButton
-              edge="start"
-              color="inherit"
-              aria-label="menu"
-              onClick={handleDrawerToggle}
+            // Animated Hamburger Menu for Mobile
+            <motion.div
+              whileHover={{ scale: 1.2 }}
+              whileTap={{ rotate: 90 }}
             >
-              <MenuIcon />
-            </IconButton>
+              <IconButton
+                edge="start"
+                color="inherit"
+                aria-label="menu"
+                onClick={handleDrawerToggle}
+              >
+                <MenuIcon />
+              </IconButton>
+            </motion.div>
           ) : (
-            // Horizontal menu for desktop
+            // Animated Desktop Menu
             <Box sx={{ display: "flex", gap: "10px" }}>
-              <Button sx={{ color: "#ecf0f1" }} component={Link} to="/">
-                Home
-              </Button>
-              <Button sx={{ color: "#ecf0f1" }} component={Link} to="/projects">
-                Projects
-              </Button>
-              <Button sx={{ color: "#ecf0f1" }} component={Link} to="/about">
-                About
-              </Button>
-              <Button sx={{ color: "#ecf0f1" }} component={Link} to="/contact">
-                Contact
-              </Button>
+              {["Home", "Projects", "About", "Contact"].map((text, index) => (
+                <motion.div
+                  key={text}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.2 }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Button sx={{ color: "#ecf0f1" }} component={Link} to={`/${text.toLowerCase()}`}>
+                    {text}
+                  </Button>
+                </motion.div>
+              ))}
             </Box>
           )}
         </Toolbar>
       </AppBar>
 
-      {/* Drawer for mobile */}
-      <Drawer
-        anchor="left"
-        open={mobileOpen}
-        onClose={handleDrawerToggle}
-        ModalProps={{
-          keepMounted: true, // Keeps the drawer mounted for better performance
-        }}
-        sx={{
-          "& .MuiDrawer-paper": {
-            bgcolor: "#2c3e50",
-            color: "#ecf0f1",
-          },
-        }}
+      {/* Animated Drawer for Mobile */}
+      <motion.div
+        initial={{ x: "-100%" }}
+        animate={{ x: mobileOpen ? "0%" : "-100%" }}
+        transition={{ duration: 0.5 }}
       >
-        {drawer}
-      </Drawer>
+        <Drawer
+          anchor="left"
+          open={mobileOpen}
+          onClose={handleDrawerToggle}
+          ModalProps={{ keepMounted: true }}
+          sx={{
+            "& .MuiDrawer-paper": {
+              bgcolor: "#2c3e50",
+              color: "#ecf0f1",
+            },
+          }}
+        >
+          {drawer}
+        </Drawer>
+      </motion.div>
     </>
   );
 };
