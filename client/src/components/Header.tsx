@@ -15,7 +15,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import { motion } from "framer-motion"; // Import Framer Motion
+import { motion } from "framer-motion";
 
 const Header: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -68,11 +68,11 @@ const Header: React.FC = () => {
             // Animated Hamburger Menu for Mobile
             <motion.div whileHover={{ scale: 1.2 }} whileTap={{ rotate: 90 }}>
               <IconButton
-                edge="start"
+                edge="end" // Changed from "start" to "end"
                 color="inherit"
                 aria-label="menu"
                 onClick={handleDrawerToggle}
-                sx={{ marginLeft: "auto" }} // Pushes the menu to the right
+                sx={{ ml: "auto" }} // Ensures it stays on the right side
               >
                 <MenuIcon />
               </IconButton>
@@ -103,9 +103,9 @@ const Header: React.FC = () => {
         </Toolbar>
       </AppBar>
 
-      {/* Mobile Drawer (Removed motion.div to prevent animation conflicts) */}
+      {/* Mobile Drawer */}
       <Drawer
-        anchor="right"
+        anchor="right" // Ensures it opens from the right
         open={mobileOpen}
         onClose={handleDrawerToggle}
         ModalProps={{ keepMounted: true }}
