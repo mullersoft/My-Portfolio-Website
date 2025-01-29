@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   AppBar,
   Toolbar,
@@ -21,23 +21,28 @@ const Header: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const navigate = useNavigate(); // Hook for programmatic navigation
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
+  // Function to handle navigation and close the drawer
+  const handleNavigation = (path: string) => {
+    navigate(path); // Navigate to the selected page
+    setMobileOpen(false); // Close the drawer after clicking
+  };
+
   const drawer = (
     <List sx={{ width: 250 }}>
       {["Home", "Projects", "About", "Contact"].map((text) => (
-        <ListItem key={text} onClick={handleDrawerToggle}>
+        <ListItem
+          key={text}
+          onClick={() => handleNavigation(text === "Home" ? "/" : `/${text.toLowerCase()}`)}
+          button
+        >
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-            <Button
-              component={Link}
-              to={text === "Home" ? "/" : `/${text.toLowerCase()}`} // Ensures Home navigates to "/"
-              sx={{ width: "100%", justifyContent: "flex-start", color: "white" }}
-            >
-              <ListItemText primary={text} />
-            </Button>
+            <ListItemText primary={text} sx={{ color: "white", cursor: "pointer" }} />
           </motion.div>
         </ListItem>
       ))}
@@ -56,9 +61,8 @@ const Header: React.FC = () => {
           >
             <Typography
               variant="h6"
-              sx={{ textDecoration: "none", color: "inherit" }}
-              component={Link}
-              to="/"
+              sx={{ textDecoration: "none", color: "inherit", cursor: "pointer" }}
+              onClick={() => navigate("/")} // Clicking title also navigates to Home
             >
               Mulersoft
             </Typography>
@@ -71,11 +75,11 @@ const Header: React.FC = () => {
             // Animated Hamburger Menu for Mobile
             <motion.div whileHover={{ scale: 1.2 }} whileTap={{ rotate: 90 }}>
               <IconButton
-                edge="end" // Ensures the menu icon is aligned to the right
+                edge="end"
                 color="inherit"
                 aria-label="menu"
                 onClick={handleDrawerToggle}
-                sx={{ marginLeft: "auto" }} // Pushes it to the right
+                sx={{ marginLeft: "auto" }}
               >
                 <MenuIcon />
               </IconButton>
@@ -94,8 +98,7 @@ const Header: React.FC = () => {
                 >
                   <Button
                     sx={{ color: "#ecf0f1" }}
-                    component={Link}
-                    to={text === "Home" ? "/" : `/${text.toLowerCase()}`} // Ensures Home navigates to "/"
+                    onClick={() => handleNavigation(text === "Home" ? "/" : `/${text.toLowerCase()}`)}
                   >
                     {text}
                   </Button>
@@ -106,9 +109,9 @@ const Header: React.FC = () => {
         </Toolbar>
       </AppBar>
 
-      {/* Mobile Drawer (Now opens from the LEFT) */}
+      {/* Mobile Drawer (Opens from the LEFT) */}
       <Drawer
-        anchor="left" // Now opens from the left
+        anchor="left"
         open={mobileOpen}
         onClose={handleDrawerToggle}
         ModalProps={{ keepMounted: true }}
@@ -116,7 +119,7 @@ const Header: React.FC = () => {
           "& .MuiDrawer-paper": {
             bgcolor: "#2c3e50",
             color: "#ecf0f1",
-            width: 250, // Ensures proper width
+            width: 250,
           },
         }}
       >
