@@ -33,7 +33,7 @@ const Header: React.FC = () => {
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
             <Button
               component={Link}
-              to={`/${text.toLowerCase()}`}
+              to={text === "Home" ? "/" : `/${text.toLowerCase()}`} // Ensures Home navigates to "/"
               sx={{ width: "100%", justifyContent: "flex-start", color: "white" }}
             >
               <ListItemText primary={text} />
@@ -95,7 +95,7 @@ const Header: React.FC = () => {
                   <Button
                     sx={{ color: "#ecf0f1" }}
                     component={Link}
-                    to={`/${text.toLowerCase()}`}
+                    to={text === "Home" ? "/" : `/${text.toLowerCase()}`} // Ensures Home navigates to "/"
                   >
                     {text}
                   </Button>
@@ -106,9 +106,9 @@ const Header: React.FC = () => {
         </Toolbar>
       </AppBar>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer (Now opens from the LEFT) */}
       <Drawer
-        anchor="right" // Ensures the menu opens from the right
+        anchor="left" // Now opens from the left
         open={mobileOpen}
         onClose={handleDrawerToggle}
         ModalProps={{ keepMounted: true }}
