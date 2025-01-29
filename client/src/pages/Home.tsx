@@ -1,7 +1,7 @@
 import React from "react";
 import { Container, Typography, Button, Box, Avatar } from "@mui/material";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion"; // Import Framer Motion
+import { motion } from "framer-motion";
 
 const Home: React.FC = () => {
   return (
@@ -51,7 +51,7 @@ const Home: React.FC = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
         >
-          <Typography variant="body1" paragraph align="justify">
+          <Typography variant="body1" paragraph align="center">
             I am a software developer specializing in full-stack web development
             with expertise in the MERN stack (MongoDB, Express, React, Node.js).
             I am passionate about building scalable web applications and
@@ -65,7 +65,7 @@ const Home: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
         >
-          <Typography variant="h5" paragraph align="justify">
+          <Typography variant="h5" paragraph align="center">
             Let me walk you through some of my recent projects and achievements.
           </Typography>
         </motion.div>
@@ -73,19 +73,24 @@ const Home: React.FC = () => {
         {/* Animated Button with Blinking Effect */}
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: [1, 0.5, 1] }} // Blinking effect
-          transition={{ repeat: Infinity, duration: 1.5 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.8 }}
           whileHover={{ scale: 1.1 }} // Scale effect on hover
         >
-          <Button
-            variant="contained"
-            color="primary"
-            component={Link}
-            to="/about"
-            sx={{ marginTop: "20px" }}
+          <motion.div
+            animate={{ opacity: [1, 0.5, 1] }} // Blinking effect
+            transition={{ repeat: Infinity, duration: 1.5 }}
           >
-            Learn More About Me
-          </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              component={Link}
+              to="/about"
+              sx={{ marginTop: "20px" }}
+            >
+              Learn More About Me
+            </Button>
+          </motion.div>
         </motion.div>
       </Box>
     </Container>

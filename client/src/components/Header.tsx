@@ -28,12 +28,9 @@ const Header: React.FC = () => {
 
   const drawer = (
     <List>
-      {["Home", "Projects", "About", "Contact"].map((text, index) => (
+      {["Home", "Projects", "About", "Contact"].map((text) => (
         <ListItem key={text} component="div" onClick={handleDrawerToggle}>
-          <motion.div
-            whileHover={{ scale: 1.1 }} // Scale effect on hover
-            whileTap={{ scale: 0.9 }} // Slight shrink effect on tap
-          >
+          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
             <Button
               component={Link}
               to={`/${text.toLowerCase()}`}
@@ -69,10 +66,7 @@ const Header: React.FC = () => {
 
           {isMobile ? (
             // Animated Hamburger Menu for Mobile
-            <motion.div
-              whileHover={{ scale: 1.2 }}
-              whileTap={{ rotate: 90 }}
-            >
+            <motion.div whileHover={{ scale: 1.2 }} whileTap={{ rotate: 90 }}>
               <IconButton
                 edge="start"
                 color="inherit"
@@ -94,7 +88,11 @@ const Header: React.FC = () => {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
-                  <Button sx={{ color: "#ecf0f1" }} component={Link} to={`/${text.toLowerCase()}`}>
+                  <Button
+                    sx={{ color: "#ecf0f1" }}
+                    component={Link}
+                    to={`/${text.toLowerCase()}`}
+                  >
                     {text}
                   </Button>
                 </motion.div>
@@ -104,27 +102,21 @@ const Header: React.FC = () => {
         </Toolbar>
       </AppBar>
 
-      {/* Animated Drawer for Mobile */}
-      <motion.div
-        initial={{ x: "-100%" }}
-        animate={{ x: mobileOpen ? "0%" : "-100%" }}
-        transition={{ duration: 0.5 }}
+      {/* Mobile Drawer (Removed motion.div to prevent animation conflicts) */}
+      <Drawer
+        anchor="left"
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          "& .MuiDrawer-paper": {
+            bgcolor: "#2c3e50",
+            color: "#ecf0f1",
+          },
+        }}
       >
-        <Drawer
-          anchor="left"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true }}
-          sx={{
-            "& .MuiDrawer-paper": {
-              bgcolor: "#2c3e50",
-              color: "#ecf0f1",
-            },
-          }}
-        >
-          {drawer}
-        </Drawer>
-      </motion.div>
+        {drawer}
+      </Drawer>
     </>
   );
 };
