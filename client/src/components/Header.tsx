@@ -72,6 +72,7 @@ const Header: React.FC = () => {
                 color="inherit"
                 aria-label="menu"
                 onClick={handleDrawerToggle}
+                sx={{ marginLeft: "auto" }} // Pushes the menu to the right
               >
                 <MenuIcon />
               </IconButton>
@@ -104,7 +105,7 @@ const Header: React.FC = () => {
 
       {/* Mobile Drawer (Removed motion.div to prevent animation conflicts) */}
       <Drawer
-        anchor="left"
+        anchor="right"
         open={mobileOpen}
         onClose={handleDrawerToggle}
         ModalProps={{ keepMounted: true }}
