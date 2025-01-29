@@ -73,11 +73,9 @@ const Home: React.FC = () => {
         {/* Animated Button with Blinking Effect */}
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.8 }}
-          whileHover={{ scale: 1.1 }} // Scale effect on hover
           animate={{ opacity: [1, 0.5, 1] }} // Blinking effect
           transition={{ repeat: Infinity, duration: 1.5 }}
+          whileHover={{ scale: 1.1 }} // Scale effect on hover
         >
           <Button
             variant="contained"
