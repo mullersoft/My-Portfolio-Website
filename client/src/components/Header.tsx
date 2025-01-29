@@ -64,13 +64,14 @@ const Header: React.FC = () => {
             </Typography>
           </motion.div>
 
-          <Box sx={{ flexGrow: 1 }} /> {/* Pushes elements to the right */}
+          {/* Pushes the hamburger menu to the right */}
+          <Box sx={{ flexGrow: 1 }} />
 
           {isMobile ? (
             // Animated Hamburger Menu for Mobile
             <motion.div whileHover={{ scale: 1.2 }} whileTap={{ rotate: 90 }}>
               <IconButton
-                edge="end" // Ensures it's aligned to the right
+                edge="end" // Ensures the menu icon is aligned to the right
                 color="inherit"
                 aria-label="menu"
                 onClick={handleDrawerToggle}
@@ -107,7 +108,7 @@ const Header: React.FC = () => {
 
       {/* Mobile Drawer */}
       <Drawer
-        anchor="right" // Ensures it opens from the right
+        anchor="right" // Ensures the menu opens from the right
         open={mobileOpen}
         onClose={handleDrawerToggle}
         ModalProps={{ keepMounted: true }}
