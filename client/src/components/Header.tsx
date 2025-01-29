@@ -27,14 +27,14 @@ const Header: React.FC = () => {
   };
 
   const drawer = (
-    <List>
+    <List sx={{ width: 250 }}>
       {["Home", "Projects", "About", "Contact"].map((text) => (
-        <ListItem key={text} component="div" onClick={handleDrawerToggle}>
+        <ListItem key={text} onClick={handleDrawerToggle}>
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
             <Button
               component={Link}
               to={`/${text.toLowerCase()}`}
-              sx={{ width: "100%", justifyContent: "flex-start" }}
+              sx={{ width: "100%", justifyContent: "flex-start", color: "white" }}
             >
               <ListItemText primary={text} />
             </Button>
@@ -56,7 +56,7 @@ const Header: React.FC = () => {
           >
             <Typography
               variant="h6"
-              sx={{ flexGrow: 1, textDecoration: "none", color: "inherit" }}
+              sx={{ textDecoration: "none", color: "inherit" }}
               component={Link}
               to="/"
             >
@@ -64,15 +64,17 @@ const Header: React.FC = () => {
             </Typography>
           </motion.div>
 
+          <Box sx={{ flexGrow: 1 }} /> {/* Pushes elements to the right */}
+
           {isMobile ? (
             // Animated Hamburger Menu for Mobile
             <motion.div whileHover={{ scale: 1.2 }} whileTap={{ rotate: 90 }}>
               <IconButton
-                edge="end" // Changed from "start" to "end"
+                edge="end" // Ensures it's aligned to the right
                 color="inherit"
                 aria-label="menu"
                 onClick={handleDrawerToggle}
-                sx={{ ml: "auto" }} // Ensures it stays on the right side
+                sx={{ marginLeft: "auto" }} // Pushes it to the right
               >
                 <MenuIcon />
               </IconButton>
@@ -113,6 +115,7 @@ const Header: React.FC = () => {
           "& .MuiDrawer-paper": {
             bgcolor: "#2c3e50",
             color: "#ecf0f1",
+            width: 250, // Ensures proper width
           },
         }}
       >
