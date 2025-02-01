@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Telegraf, Context, session } from 'telegraf';
-import { StudentModel } from './student.schema';
+import { StudentService } from './student.service';
 
 interface MySessionData {
   awaitingStudentId?: boolean;
@@ -13,10 +13,11 @@ interface MyContext extends Context {
 
 @Injectable()
 export class StudentBotService {
+  constructor(private readonly studentService: StudentService) {}
+
   private bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN);
   private adminChatId = process.env.ASSESSMENT_BOT_CHAT_ID;
-
-  constructor() {}
+  private studentChatIds: Set<number> = new Set(); // Store student chat IDs
 
   getBotInstance(): Telegraf<MyContext> {
     return this.bot;
@@ -36,31 +37,16 @@ export class StudentBotService {
       return;
     }
 
-    this.bot.start(async (ctx) => {
-      const chatId = ctx.chat.id;
+    this.bot.start((ctx) => {
       const username = ctx.from.username
         ? `@${ctx.from.username}`
         : ctx.from.first_name || 'User';
-
       ctx.reply(
         `Welcome, ${username}! Use /grade to check your results, /contact to message the admin, or /restart to reset your session.`,
       );
 
-      try {
-        const existingStudent = await StudentModel.findOne({ chatId });
-        if (!existingStudent) {
-          await StudentModel.findOneAndUpdate(
-            { STUDENT_ID: ctx.from.id },
-            { chatId: chatId },
-            { upsert: true, new: true },
-          );
-          console.log(`New student chat ID saved: ${chatId}`);
-        } else {
-          console.log(`Student chat ID already exists: ${chatId}`);
-        }
-      } catch (error) {
-        console.error('Error saving student chat ID:', error);
-      }
+      console.log(`New student chat ID: ${ctx.chat.id}`);
+      this.studentChatIds.add(ctx.chat.id); // Store student chat ID
     });
 
     this.bot.command('grade', (ctx) => {
@@ -69,7 +55,12 @@ export class StudentBotService {
     });
 
     this.bot.command('contact', (ctx) => {
-      ctx.reply('Please type your message for the admin.');
+      const username = ctx.from.username
+        ? `@${ctx.from.username}`
+        : ctx.from.first_name || 'User';
+      ctx.reply(
+        `Please type your message for the admin. Your username (${username}) will be included in the message sent to the admin.`,
+      );
       ctx.session.awaitingAdminMessage = true;
     });
 
@@ -83,7 +74,7 @@ export class StudentBotService {
       if (ctx.session.awaitingStudentId) {
         const studentId = ctx.message.text.trim();
         try {
-          const student = await StudentModel.findOne({ STUDENT_ID: studentId });
+          const student = await this.studentService.getStudentGrade(studentId);
 
           if (!student) {
             ctx.reply('Student not found. Please check your ID and try again.');
@@ -111,49 +102,45 @@ Total Grade: ${student.TOTAL}
         }
       } else if (ctx.session.awaitingAdminMessage) {
         const studentMessage = ctx.message.text.trim();
+        const username = ctx.from.username
+          ? `@${ctx.from.username}`
+          : ctx.from.first_name || 'User';
+
         if (this.adminChatId) {
           await this.bot.telegram.sendMessage(
             this.adminChatId,
-            `Message from student: ${studentMessage}`,
+            `Message from ${username} (${ctx.from.id}):\n\n${studentMessage}`,
           );
-          ctx.reply('Your message has been sent to the admin.');
+          ctx.reply('Your message has been sent to the admin. Thank you!');
         } else {
-          ctx.reply('Admin contact is not configured.');
+          ctx.reply(
+            'Unable to send the message. Admin contact is not configured.',
+          );
         }
+
         ctx.session.awaitingAdminMessage = false;
       } else {
         ctx.reply(
-          'Use /grade to check results, /contact to message the admin.',
+          'Please use /grade to check your results, /contact to message the admin, or /restart to reset the session.',
         );
       }
     });
   }
 
   /**
-   * Send a notification to all students stored in the database.
+   * Send a notification to all students who have interacted with the bot.
    * @param message - The message to send.
    */
   async sendNotification(message: string) {
     console.log('Sending notification to students:', message);
-    try {
-      const students = await StudentModel.find({
-        chatId: { $exists: true },
-      }).select('chatId');
-      if (students.length === 0) {
-        console.log('No students found with chat IDs.');
-        return;
+    console.log('Stored student chat IDs:', this.studentChatIds); // Debugging log
+    for (const chatId of this.studentChatIds) {
+      try {
+        console.log(`Sending message to chat ID: ${chatId}`);
+        await this.bot.telegram.sendMessage(chatId, message);
+      } catch (error) {
+        console.error(`Failed to send message to ${chatId}:`, error);
       }
-
-      for (const student of students) {
-        try {
-          console.log(`Sending message to chat ID: ${student.chatId}`);
-          await this.bot.telegram.sendMessage(student.chatId, message);
-        } catch (error) {
-          console.error(`Failed to send message to ${student.chatId}:`, error);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching student chat IDs:', error);
     }
   }
 }
