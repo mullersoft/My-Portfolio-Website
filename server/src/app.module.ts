@@ -1,6 +1,5 @@
-// src/app.module.ts
 import { Module, MiddlewareConsumer } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config'; // Import ConfigModule
+import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { ChatGptModule } from './modules/chatgpt/chatgpt.module';
@@ -16,13 +15,16 @@ import { TelegramModule } from './modules/telegram/telegram.module';
   imports: [
     ConfigModule.forRoot(), // Initialize ConfigModule to load .env variables
     MongooseModule.forRoot(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 30000, // Reduce timeout
-      connectTimeoutMS: 10000, // Ensure connection timeout is not too long
+      serverSelectionTimeoutMS: 60000, // Increased timeout to 1 minute
+      connectTimeoutMS: 30000, // Increased timeout to 30 seconds
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      poolSize: 10, // Connection pooling
+      loggerLevel: 'debug', // Enable debug logging for Mongoose
     }),
-    // Use MONGO_URI from .env
     ProjectsModule,
     ChatGptModule,
-    ScheduleModule.forRoot(), // Enable scheduling
+    ScheduleModule.forRoot(),
     QuotesModule,
     BotModule,
     FrontendModule,
@@ -34,6 +36,6 @@ import { TelegramModule } from './modules/telegram/telegram.module';
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(IpTrackingMiddleware).forRoutes('*'); // Apply to all routes
+    consumer.apply(IpTrackingMiddleware).forRoutes('*');
   }
 }
