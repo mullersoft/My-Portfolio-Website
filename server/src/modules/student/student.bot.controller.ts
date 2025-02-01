@@ -13,7 +13,7 @@ export class StudentBotController {
       await bot.handleUpdate(req.body);
       res.status(200).send('OK');
     } catch (error) {
-      console.error('Error handling webhook:', error);
+      console.error('❌ Error handling webhook:', error);
       res.status(500).send('Error');
     }
   }
@@ -23,12 +23,12 @@ export class StudentBotController {
     @Body() body: { message: string },
     @Res() res: Response,
   ) {
-    console.log('Received notification request:', body);
+    console.log('📢 Received notification request:', body);
     try {
       await this.studentBotService.sendNotification(body.message);
-      res.status(200).send('Notification sent successfully.');
+      res.status(200).send('✅ Notification sent successfully.');
     } catch (error) {
-      console.error('Error sending notification:', error);
+      console.error('❌ Error sending notification:', error);
       res.status(500).send('Error sending notification.');
     }
   }

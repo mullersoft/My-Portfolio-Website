@@ -16,7 +16,7 @@ import { TelegramModule } from './modules/telegram/telegram.module';
   imports: [
     ConfigModule.forRoot(), // Initialize ConfigModule to load .env variables
     MongooseModule.forRoot(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 5000, // Reduce timeout
+      serverSelectionTimeoutMS: 30000, // Reduce timeout
       connectTimeoutMS: 10000, // Ensure connection timeout is not too long
     }),
     // Use MONGO_URI from .env
