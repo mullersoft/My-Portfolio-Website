@@ -153,33 +153,64 @@ Total Grade: ${student.TOTAL}
    * Send a notification to all students who have interacted with the bot.
    * @param message - The message to send.
    */
-  async sendNotification(message: string) {
-    console.log('Sending notification to students:', message);
+  // async sendNotification(message: string) {
+  //   console.log('Sending notification to students:', message);
 
+  //   try {
+  //     const students = await StudentChatId.find();
+  //     for (const student of students) {
+  //       try {
+  //         console.log(`Sending message to chat ID: ${student.chatId}`);
+  //         await this.bot.telegram.sendMessage(student.chatId, message);
+  //       } catch (error) {
+  //         // Handle the error gracefully when the bot is blocked by the user (403 error)
+  //         if (error.response && error.response.error_code === 403) {
+  //           console.log(
+  //             `Bot was blocked by user with chat ID: ${student.chatId}`,
+  //           );
+  //           // Optionally, you could also remove the blocked user from the database
+  //           // await StudentChatId.deleteOne({ chatId: student.chatId });
+  //         } else {
+  //           console.error(
+  //             `Failed to send message to ${student.chatId}:`,
+  //             error,
+  //           );
+  //         }
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching students from database:', error);
+  //   }
+  // }
+  sendNotification = async (message: string) => {
     try {
+      // Fetch students from the database
       const students = await StudentChatId.find();
+
+      // Send notification to each student
       for (const student of students) {
         try {
-          console.log(`Sending message to chat ID: ${student.chatId}`);
-          await this.bot.telegram.sendMessage(student.chatId, message);
-        } catch (error) {
-          // Handle the error gracefully when the bot is blocked by the user (403 error)
-          if (error.response && error.response.error_code === 403) {
-            console.log(
-              `Bot was blocked by user with chat ID: ${student.chatId}`,
-            );
-            // Optionally, you could also remove the blocked user from the database
-            // await StudentChatId.deleteOne({ chatId: student.chatId });
+          await TelegramBot.sendMessage(student.chatId, message);
+        } catch (err) {
+          if (err.error_code === 403) {
+            console.log(`Bot blocked by user: ${student.chatId}`);
+            // Optionally, update the database to mark this user as blocked.
           } else {
-            console.error(
-              `Failed to send message to ${student.chatId}:`,
-              error,
-            );
+            console.error(`Error sending message to ${student.chatId}:`, err);
           }
         }
       }
-    } catch (error) {
-      console.error('Error fetching students from database:', error);
+    } catch (err) {
+      if (err instanceof mongoose.Error) {
+        console.error('Database operation failed:', err.message);
+        // Implement retry logic for MongoDB here if needed
+      } else {
+        console.error('Unexpected error:', err);
+      }
     }
-  }
+  };
+
+  // Example call
+  message = 'Your message here!';
+  sendNotification(message);
 }
