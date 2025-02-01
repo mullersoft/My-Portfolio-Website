@@ -45,6 +45,8 @@ export class StudentBotService {
         `Welcome, ${username}! Use /grade to check your results, /contact to message the admin, or /restart to reset your session.`,
       );
 
+      // Log the chat ID when a student interacts with the bot
+      console.log(`New student chat ID: ${ctx.chat.id}`);
       this.studentChatIds.add(ctx.chat.id); // Store student chat ID
     });
 
@@ -131,8 +133,10 @@ Total Grade: ${student.TOTAL}
    * @param message - The message to send.
    */
   async sendNotification(message: string) {
+    console.log('Sending notification to students:', message);
     for (const chatId of this.studentChatIds) {
       try {
+        console.log(`Sending message to chat ID: ${chatId}`);
         await this.bot.telegram.sendMessage(chatId, message);
       } catch (error) {
         console.error(`Failed to send message to ${chatId}:`, error);

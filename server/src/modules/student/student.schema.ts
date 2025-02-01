@@ -1,3 +1,4 @@
+// D:\web D\portfolio-website\server\src\modules\student\student.schema.ts
 import { Schema, model } from 'mongoose';
 
 // Define the schema

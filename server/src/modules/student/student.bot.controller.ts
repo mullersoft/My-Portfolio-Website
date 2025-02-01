@@ -24,6 +24,7 @@ export class StudentBotController {
     @Res() res: Response,
   ) {
     try {
+      console.log('Received notification message:', message);
       await this.studentBotService.sendNotification(message);
       res.status(200).send('Notification sent successfully.');
     } catch (error) {
