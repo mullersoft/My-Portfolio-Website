@@ -13,10 +13,10 @@ interface MyContext extends Context {
 
 @Injectable()
 export class StudentBotService {
-  constructor() {}
-
   private bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN);
   private adminChatId = process.env.ASSESSMENT_BOT_CHAT_ID;
+
+  constructor() {}
 
   getBotInstance(): Telegraf<MyContext> {
     return this.bot;
@@ -47,11 +47,10 @@ export class StudentBotService {
       );
 
       try {
-        // Check if the student already exists
         const existingStudent = await StudentModel.findOne({ chatId });
         if (!existingStudent) {
           await StudentModel.findOneAndUpdate(
-            { STUDENT_ID: ctx.from.id }, // Assuming STUDENT_ID is unique per student
+            { STUDENT_ID: ctx.from.id },
             { chatId: chatId },
             { upsert: true, new: true },
           );
