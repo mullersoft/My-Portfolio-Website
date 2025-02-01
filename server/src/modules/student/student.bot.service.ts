@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Telegraf, Context, session } from 'telegraf';
-import { StudentService } from './student.service';
+import { StudentModel } from './student.schema';
 
 interface MySessionData {
   awaitingStudentId?: boolean;
@@ -13,11 +13,10 @@ interface MyContext extends Context {
 
 @Injectable()
 export class StudentBotService {
-  constructor(private readonly studentService: StudentService) {}
+  constructor() {}
 
   private bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN);
   private adminChatId = process.env.ASSESSMENT_BOT_CHAT_ID;
-  private studentChatIds: Set<number> = new Set(); // Store student chat IDs
 
   getBotInstance(): Telegraf<MyContext> {
     return this.bot;
@@ -37,7 +36,7 @@ export class StudentBotService {
       return;
     }
 
-    this.bot.start((ctx) => {
+    this.bot.start(async (ctx) => {
       const username = ctx.from.username
         ? `@${ctx.from.username}`
         : ctx.from.first_name || 'User';
@@ -45,9 +44,16 @@ export class StudentBotService {
         `Welcome, ${username}! Use /grade to check your results, /contact to message the admin, or /restart to reset your session.`,
       );
 
-      // Log the chat ID when a student interacts with the bot
-      console.log(`New student chat ID: ${ctx.chat.id}`);
-      this.studentChatIds.add(ctx.chat.id); // Store student chat ID
+      // Store chat ID in database
+      const chatId = ctx.chat.id;
+      const existingStudent = await StudentModel.findOne({ chatId });
+
+      if (!existingStudent) {
+        await StudentModel.create({ chatId });
+        console.log(`New student chat ID stored: ${chatId}`);
+      } else {
+        console.log(`Student chat ID already exists: ${chatId}`);
+      }
     });
 
     this.bot.command('grade', (ctx) => {
@@ -56,12 +62,7 @@ export class StudentBotService {
     });
 
     this.bot.command('contact', (ctx) => {
-      const username = ctx.from.username
-        ? `@${ctx.from.username}`
-        : ctx.from.first_name || 'User';
-      ctx.reply(
-        `Please type your message for the admin. Your username (${username}) will be included in the message sent to the admin.`,
-      );
+      ctx.reply('Please type your message for the admin.');
       ctx.session.awaitingAdminMessage = true;
     });
 
@@ -75,7 +76,7 @@ export class StudentBotService {
       if (ctx.session.awaitingStudentId) {
         const studentId = ctx.message.text.trim();
         try {
-          const student = await this.studentService.getStudentGrade(studentId);
+          const student = await StudentModel.findOne({ STUDENT_ID: studentId });
 
           if (!student) {
             ctx.reply('Student not found. Please check your ID and try again.');
@@ -103,43 +104,41 @@ Total Grade: ${student.TOTAL}
         }
       } else if (ctx.session.awaitingAdminMessage) {
         const studentMessage = ctx.message.text.trim();
-        const username = ctx.from.username
-          ? `@${ctx.from.username}`
-          : ctx.from.first_name || 'User';
-
         if (this.adminChatId) {
           await this.bot.telegram.sendMessage(
             this.adminChatId,
-            `Message from ${username} (${ctx.from.id}):\n\n${studentMessage}`,
+            `Message from student: ${studentMessage}`,
           );
-          ctx.reply('Your message has been sent to the admin. Thank you!');
+          ctx.reply('Your message has been sent to the admin.');
         } else {
-          ctx.reply(
-            'Unable to send the message. Admin contact is not configured.',
-          );
+          ctx.reply('Admin contact is not configured.');
         }
-
         ctx.session.awaitingAdminMessage = false;
       } else {
         ctx.reply(
-          'Please use /grade to check your results, /contact to message the admin, or /restart to reset the session.',
+          'Use /grade to check results, /contact to message the admin.',
         );
       }
     });
   }
 
   /**
-   * Send a notification to all students who have interacted with the bot.
+   * Send a notification to all students stored in the database.
    * @param message - The message to send.
    */
   async sendNotification(message: string) {
-    console.log('Sending notification to students:', message);
-    for (const chatId of this.studentChatIds) {
-      try {
-        console.log(`Sending message to chat ID: ${chatId}`);
-        await this.bot.telegram.sendMessage(chatId, message);
-      } catch (error) {
-        console.error(`Failed to send message to ${chatId}:`, error);
+    console.log('Sending notification to all students:', message);
+
+    const students = await StudentModel.find({ chatId: { $exists: true } });
+
+    for (const student of students) {
+      if (student.chatId) {
+        try {
+          console.log(`Sending message to chat ID: ${student.chatId}`);
+          await this.bot.telegram.sendMessage(student.chatId, message);
+        } catch (error) {
+          console.error(`Failed to send message to ${student.chatId}:`, error);
+        }
       }
     }
   }

@@ -1,4 +1,3 @@
-// D:\web D\portfolio-website\server\src\modules\student\student.schema.ts
 import { Schema, model } from 'mongoose';
 
 // Define the schema
@@ -13,6 +12,7 @@ export const StudentSchema = new Schema(
     MIDTERM: { type: Number, required: true },
     FINALTERM: { type: Number, required: true },
     TOTAL: { type: Number, required: true },
+    chatId: { type: Number, unique: true }, // Store Telegram chat ID
   },
   {
     collection: 'students',
