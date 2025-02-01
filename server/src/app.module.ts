@@ -14,11 +14,14 @@ import { TelegramModule } from './modules/telegram/telegram.module';
 @Module({
   imports: [
     ConfigModule.forRoot(), // Initialize ConfigModule to load .env variables
-    MongooseModule.forRoot(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 60000, // Increased timeout to 1 minute
-      connectTimeoutMS: 30000, // Increased timeout to 30 seconds
-      maxPoolSize: 10, // Connection pooling
-    }),
+    MongooseModule.forRoot(
+      process.env.MONGO_URI,
+      //    {
+      //   serverSelectionTimeoutMS: 60000, // Increased timeout to 1 minute
+      //   connectTimeoutMS: 30000, // Increased timeout to 30 seconds
+      //   maxPoolSize: 10, // Connection pooling
+      // }
+    ),
     ProjectsModule,
     ChatGptModule,
     ScheduleModule.forRoot(),
