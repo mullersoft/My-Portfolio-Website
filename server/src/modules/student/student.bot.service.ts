@@ -15,21 +15,19 @@ interface MyContext extends Context {
 export class StudentBotService {
   constructor(private readonly studentService: StudentService) {}
 
-  private bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN); // Ensure the token is set in .env
-  private adminChatId = process.env.ASSESSMENT_BOT_CHAT_ID; // Admin's Telegram Chat ID (set in .env)
+  private bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN);
+  private adminChatId = process.env.ASSESSMENT_BOT_CHAT_ID;
+  private studentChatIds: Set<number> = new Set(); // Store student chat IDs
 
   getBotInstance(): Telegraf<MyContext> {
     return this.bot;
   }
 
   async startBot() {
-    // Use session middleware
     this.bot.use(session({ defaultSession: () => ({}) }));
 
-    // Log when the bot starts
     console.log('Bot is starting...');
 
-    // Set webhook if the webhook URL is available
     const webhookUrl = process.env.ASSESSMENT_WEBHOOK_URL;
     if (webhookUrl) {
       await this.bot.telegram.setWebhook(webhookUrl);
@@ -39,23 +37,22 @@ export class StudentBotService {
       return;
     }
 
-    // Command: /start
     this.bot.start((ctx) => {
       const username = ctx.from.username
         ? `@${ctx.from.username}`
         : ctx.from.first_name || 'User';
       ctx.reply(
-        `Welcome, ${username}! Use /grade to check your results, /contact to message the admin, or /restart to reset the session (e.g. Student ID: WOUR/0182/16).`,
+        `Welcome, ${username}! Use /grade to check your results, /contact to message the admin, or /restart to reset your session.`,
       );
+
+      this.studentChatIds.add(ctx.chat.id); // Store student chat ID
     });
 
-    // Command: /grade
     this.bot.command('grade', (ctx) => {
       ctx.reply('Please enter your Student ID:');
       ctx.session.awaitingStudentId = true;
     });
 
-    // Command: /contact
     this.bot.command('contact', (ctx) => {
       const username = ctx.from.username
         ? `@${ctx.from.username}`
@@ -66,16 +63,12 @@ export class StudentBotService {
       ctx.session.awaitingAdminMessage = true;
     });
 
-    // Command: /restart
     this.bot.command('restart', (ctx) => {
       ctx.session.awaitingStudentId = false;
       ctx.session.awaitingAdminMessage = false;
-      ctx.reply(
-        'Your session has been reset. Use /grade to check your results or /contact to message the admin.',
-      );
+      ctx.reply('Your session has been reset.');
     });
 
-    // Handle text messages
     this.bot.on('text', async (ctx) => {
       if (ctx.session.awaitingStudentId) {
         const studentId = ctx.message.text.trim();
@@ -131,5 +124,19 @@ Total Grade: ${student.TOTAL}
         );
       }
     });
+  }
+
+  /**
+   * Send a notification to all students who have interacted with the bot.
+   * @param message - The message to send.
+   */
+  async sendNotification(message: string) {
+    for (const chatId of this.studentChatIds) {
+      try {
+        await this.bot.telegram.sendMessage(chatId, message);
+      } catch (error) {
+        console.error(`Failed to send message to ${chatId}:`, error);
+      }
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Post, Req, Res } from '@nestjs/common';
+import { Controller, Post, Body, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { StudentBotService } from './student.bot.service';
 
@@ -15,6 +15,20 @@ export class StudentBotController {
     } catch (error) {
       console.error('Error handling webhook:', error);
       res.status(500).send('Error');
+    }
+  }
+
+  @Post('notify')
+  async sendNotification(
+    @Body('message') message: string,
+    @Res() res: Response,
+  ) {
+    try {
+      await this.studentBotService.sendNotification(message);
+      res.status(200).send('Notification sent successfully.');
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      res.status(500).send('Error sending notification.');
     }
   }
 }
