@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Telegraf, Context, session } from 'telegraf';
 import { StudentService } from './student.service';
-import mongoose from 'mongoose';
-import { StudentChatId } from './student-chat-id.schema';
 
 interface MySessionData {
   awaitingStudentId?: boolean;
@@ -19,6 +17,7 @@ export class StudentBotService {
 
   private bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN);
   private adminChatId = process.env.ASSESSMENT_BOT_CHAT_ID;
+  private studentChatIds: Set<number> = new Set(); // Store student chat IDs
 
   getBotInstance(): Telegraf<MyContext> {
     return this.bot;
@@ -38,7 +37,7 @@ export class StudentBotService {
       return;
     }
 
-    this.bot.start(async (ctx) => {
+    this.bot.start((ctx) => {
       const username = ctx.from.username
         ? `@${ctx.from.username}`
         : ctx.from.first_name || 'User';
@@ -47,7 +46,7 @@ export class StudentBotService {
       );
 
       console.log(`New student chat ID: ${ctx.chat.id}`);
-      await this.saveStudentChatId(ctx.chat.id); // Store student chat ID in MongoDB
+      this.studentChatIds.add(ctx.chat.id); // Store student chat ID
     });
 
     this.bot.command('grade', (ctx) => {
@@ -108,18 +107,11 @@ Total Grade: ${student.TOTAL}
           : ctx.from.first_name || 'User';
 
         if (this.adminChatId) {
-          try {
-            await this.bot.telegram.sendMessage(
-              this.adminChatId,
-              `Message from ${username} (${ctx.from.id}):\n\n${studentMessage}`,
-            );
-            ctx.reply('Your message has been sent to the admin. Thank you!');
-          } catch (error) {
-            console.error('Error sending message to admin:', error);
-            ctx.reply(
-              'Failed to send the message to the admin. Please try again later.',
-            );
-          }
+          await this.bot.telegram.sendMessage(
+            this.adminChatId,
+            `Message from ${username} (${ctx.from.id}):\n\n${studentMessage}`,
+          );
+          ctx.reply('Your message has been sent to the admin. Thank you!');
         } else {
           ctx.reply(
             'Unable to send the message. Admin contact is not configured.',
@@ -135,81 +127,20 @@ Total Grade: ${student.TOTAL}
     });
   }
 
-  private async saveStudentChatId(chatId: number) {
-    try {
-      // Check if the chat ID already exists in the database
-      const existingChatId = await StudentChatId.findOne({ chatId });
-      if (!existingChatId) {
-        // Save new chat ID to the database
-        await StudentChatId.create({ chatId });
-        console.log(`Stored new chat ID: ${chatId}`);
-      }
-    } catch (error) {
-      console.error('Error saving chat ID:', error);
-    }
-  }
-
   /**
    * Send a notification to all students who have interacted with the bot.
    * @param message - The message to send.
    */
-  // async sendNotification(message: string) {
-  //   console.log('Sending notification to students:', message);
-
-  //   try {
-  //     const students = await StudentChatId.find();
-  //     for (const student of students) {
-  //       try {
-  //         console.log(`Sending message to chat ID: ${student.chatId}`);
-  //         await this.bot.telegram.sendMessage(student.chatId, message);
-  //       } catch (error) {
-  //         // Handle the error gracefully when the bot is blocked by the user (403 error)
-  //         if (error.response && error.response.error_code === 403) {
-  //           console.log(
-  //             `Bot was blocked by user with chat ID: ${student.chatId}`,
-  //           );
-  //           // Optionally, you could also remove the blocked user from the database
-  //           // await StudentChatId.deleteOne({ chatId: student.chatId });
-  //         } else {
-  //           console.error(
-  //             `Failed to send message to ${student.chatId}:`,
-  //             error,
-  //           );
-  //         }
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching students from database:', error);
-  //   }
-  // }
-  sendNotification = async (message: string) => {
-    try {
-      // Fetch students from the database
-      const students = await StudentChatId.find();
-
-      // Send notification to each student
-      for (const student of students) {
-        try {
-          await this.bot.telegram.sendMessage(student.chatId, message);
-        } catch (err) {
-          if (err.error_code === 403) {
-            console.log(`Bot blocked by user: ${student.chatId}`);
-            // Optionally, update the database to mark this user as blocked.
-          } else {
-            console.error(`Error sending message to ${student.chatId}:`, err);
-          }
-        }
-      }
-    } catch (err) {
-      if (err instanceof mongoose.Error) {
-        console.error('Database operation failed:', err.message);
-        // Implement retry logic for MongoDB here if needed
-      } else {
-        console.error('Unexpected error:', err);
+  async sendNotification(message: string) {
+    console.log('Sending notification to students:', message);
+    console.log('Stored student chat IDs:', this.studentChatIds); // Debugging log
+    for (const chatId of this.studentChatIds) {
+      try {
+        console.log(`Sending message to chat ID: ${chatId}`);
+        await this.bot.telegram.sendMessage(chatId, message);
+      } catch (error) {
+        console.error(`Failed to send message to ${chatId}:`, error);
       }
     }
-  };
-
-  // Example call
-  // this.sendNotification('Your message here!');
+  }
 }
