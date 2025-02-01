@@ -139,7 +139,14 @@ Total Grade: ${student.TOTAL}
         console.log(`Sending message to chat ID: ${chatId}`);
         await this.bot.telegram.sendMessage(chatId, message);
       } catch (error) {
-        console.error(`Failed to send message to ${chatId}:`, error);
+        if (error.response && error.response.error_code === 403) {
+          console.log(
+            `Chat ID ${chatId} has blocked the bot. Removing from list.`,
+          );
+          this.studentChatIds.delete(chatId); // Remove blocked chat ID from the list
+        } else {
+          console.error(`Failed to send message to ${chatId}:`, error);
+        }
       }
     }
   }
