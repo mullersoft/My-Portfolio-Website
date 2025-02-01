@@ -8,6 +8,7 @@ export class StudentBotController {
 
   @Post()
   async handleWebhook(@Req() req: Request, @Res() res: Response) {
+    console.log('Received webhook:', req.body); // Log incoming webhook
     try {
       const bot = this.studentBotService.getBotInstance();
       await bot.handleUpdate(req.body);
@@ -24,7 +25,7 @@ export class StudentBotController {
     @Res() res: Response,
   ) {
     try {
-      console.log('Received notification message:', message);
+      console.log('Received notification message:', message); // Log the message received
       await this.studentBotService.sendNotification(message);
       res.status(200).send('Notification sent successfully.');
     } catch (error) {
