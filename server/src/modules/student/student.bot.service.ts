@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Telegraf, Context, session } from 'telegraf';
 import { StudentService } from './student.service';
 import mongoose from 'mongoose';
-import { StudentChatId } from './schemas/student-chat-id.schema';
+import { StudentChatId } from './student-chat-id.schema';
 
 interface MySessionData {
   awaitingStudentId?: boolean;
