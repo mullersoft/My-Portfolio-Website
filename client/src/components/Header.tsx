@@ -39,10 +39,14 @@ const Header: React.FC = () => {
         <ListItem
           key={text}
           onClick={() => handleNavigation(text === "Home" ? "/" : `/${text}`)}
-          button
+          component="li"
+          disablePadding
         >
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-            <ListItemText primary={text} sx={{ color: "white", cursor: "pointer" }} />
+            <ListItemText
+              primary={text}
+              sx={{ color: "white", cursor: "pointer" }}
+            />
           </motion.div>
         </ListItem>
       ))}
@@ -61,7 +65,11 @@ const Header: React.FC = () => {
           >
             <Typography
               variant="h6"
-              sx={{ textDecoration: "none", color: "inherit", cursor: "pointer" }}
+              sx={{
+                textDecoration: "none",
+                color: "inherit",
+                cursor: "pointer",
+              }}
               onClick={() => navigate("/")}
             >
               Mulersoft
@@ -97,7 +105,9 @@ const Header: React.FC = () => {
                 >
                   <Button
                     sx={{ color: "#ecf0f1" }}
-                    onClick={() => handleNavigation(text === "Home" ? "/" : `/${text}`)}
+                    onClick={() =>
+                      handleNavigation(text === "Home" ? "/" : `/${text}`)
+                    }
                   >
                     {text}
                   </Button>
