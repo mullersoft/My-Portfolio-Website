@@ -37,22 +37,30 @@ export class StudentBotService {
     }
 
     this.bot.start(async (ctx) => {
+      const chatId = ctx.chat.id;
       const username = ctx.from.username
         ? `@${ctx.from.username}`
         : ctx.from.first_name || 'User';
+
       ctx.reply(
         `Welcome, ${username}! Use /grade to check your results, /contact to message the admin, or /restart to reset your session.`,
       );
 
-      // Store chat ID in database
-      const chatId = ctx.chat.id;
-      const existingStudent = await StudentModel.findOne({ chatId });
-
-      if (!existingStudent) {
-        await StudentModel.create({ chatId });
-        console.log(`New student chat ID stored: ${chatId}`);
-      } else {
-        console.log(`Student chat ID already exists: ${chatId}`);
+      try {
+        // Check if the student already exists
+        const existingStudent = await StudentModel.findOne({ chatId });
+        if (!existingStudent) {
+          await StudentModel.findOneAndUpdate(
+            { STUDENT_ID: ctx.from.id }, // Assuming STUDENT_ID is unique per student
+            { chatId: chatId },
+            { upsert: true, new: true },
+          );
+          console.log(`New student chat ID saved: ${chatId}`);
+        } else {
+          console.log(`Student chat ID already exists: ${chatId}`);
+        }
+      } catch (error) {
+        console.error('Error saving student chat ID:', error);
       }
     });
 
@@ -127,12 +135,17 @@ Total Grade: ${student.TOTAL}
    * @param message - The message to send.
    */
   async sendNotification(message: string) {
-    console.log('Sending notification to all students:', message);
+    console.log('Sending notification to students:', message);
+    try {
+      const students = await StudentModel.find({
+        chatId: { $exists: true },
+      }).select('chatId');
+      if (students.length === 0) {
+        console.log('No students found with chat IDs.');
+        return;
+      }
 
-    const students = await StudentModel.find({ chatId: { $exists: true } });
-
-    for (const student of students) {
-      if (student.chatId) {
+      for (const student of students) {
         try {
           console.log(`Sending message to chat ID: ${student.chatId}`);
           await this.bot.telegram.sendMessage(student.chatId, message);
@@ -140,6 +153,8 @@ Total Grade: ${student.TOTAL}
           console.error(`Failed to send message to ${student.chatId}:`, error);
         }
       }
+    } catch (error) {
+      console.error('Error fetching student chat IDs:', error);
     }
   }
 }

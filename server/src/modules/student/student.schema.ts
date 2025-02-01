@@ -1,6 +1,5 @@
 import { Schema, model } from 'mongoose';
 
-// Define the schema
 export const StudentSchema = new Schema(
   {
     STUDENT_ID: { type: String, required: true, unique: true },
@@ -12,7 +11,7 @@ export const StudentSchema = new Schema(
     MIDTERM: { type: Number, required: true },
     FINALTERM: { type: Number, required: true },
     TOTAL: { type: Number, required: true },
-    chatId: { type: Number, unique: true }, // Store Telegram chat ID
+    chatId: { type: Number, unique: true, sparse: true }, // Store Telegram chat ID
   },
   {
     collection: 'students',
