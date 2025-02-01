@@ -163,11 +163,13 @@ Total Grade: ${student.TOTAL}
           console.log(`Sending message to chat ID: ${student.chatId}`);
           await this.bot.telegram.sendMessage(student.chatId, message);
         } catch (error) {
-          // Check if the error is due to the bot being blocked by the user
+          // Handle the error gracefully when the bot is blocked by the user (403 error)
           if (error.response && error.response.error_code === 403) {
             console.log(
               `Bot was blocked by user with chat ID: ${student.chatId}`,
             );
+            // Optionally, you could also remove the blocked user from the database
+            // await StudentChatId.deleteOne({ chatId: student.chatId });
           } else {
             console.error(
               `Failed to send message to ${student.chatId}:`,
