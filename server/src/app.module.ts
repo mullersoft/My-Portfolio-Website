@@ -17,10 +17,7 @@ import { TelegramModule } from './modules/telegram/telegram.module';
     MongooseModule.forRoot(process.env.MONGO_URI, {
       serverSelectionTimeoutMS: 60000, // Increased timeout to 1 minute
       connectTimeoutMS: 30000, // Increased timeout to 30 seconds
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      poolSize: 10, // Connection pooling
-      loggerLevel: 'debug', // Enable debug logging for Mongoose
+      maxPoolSize: 10, // Connection pooling
     }),
     ProjectsModule,
     ChatGptModule,
