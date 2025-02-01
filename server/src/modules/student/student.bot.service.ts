@@ -108,11 +108,18 @@ Total Grade: ${student.TOTAL}
           : ctx.from.first_name || 'User';
 
         if (this.adminChatId) {
-          await this.bot.telegram.sendMessage(
-            this.adminChatId,
-            `Message from ${username} (${ctx.from.id}):\n\n${studentMessage}`,
-          );
-          ctx.reply('Your message has been sent to the admin. Thank you!');
+          try {
+            await this.bot.telegram.sendMessage(
+              this.adminChatId,
+              `Message from ${username} (${ctx.from.id}):\n\n${studentMessage}`,
+            );
+            ctx.reply('Your message has been sent to the admin. Thank you!');
+          } catch (error) {
+            console.error('Error sending message to admin:', error);
+            ctx.reply(
+              'Failed to send the message to the admin. Please try again later.',
+            );
+          }
         } else {
           ctx.reply(
             'Unable to send the message. Admin contact is not configured.',
@@ -156,7 +163,16 @@ Total Grade: ${student.TOTAL}
           console.log(`Sending message to chat ID: ${student.chatId}`);
           await this.bot.telegram.sendMessage(student.chatId, message);
         } catch (error) {
-          console.error(`Failed to send message to ${student.chatId}:`, error);
+          if (error.response?.error_code === 403) {
+            console.log(
+              `User blocked the bot, skipping chat ID: ${student.chatId}`,
+            );
+          } else {
+            console.error(
+              `Failed to send message to ${student.chatId}:`,
+              error,
+            );
+          }
         }
       }
     } catch (error) {
