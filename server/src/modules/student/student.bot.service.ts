@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Telegraf, Context, session } from 'telegraf';
 import { StudentService } from './student.service';
+import { StudentModel } from './student.schema'; // Import the schema to interact with MongoDB
 
 interface MySessionData {
   awaitingStudentId?: boolean;
@@ -17,7 +18,12 @@ export class StudentBotService {
 
   private bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN);
   private adminChatId = process.env.ASSESSMENT_BOT_CHAT_ID;
-  private studentChatIds: Set<number> = new Set(); // Store student chat IDs
+
+  // Retrieve all chatIds stored in the database (students who've interacted with the bot)
+  private async getStudentChatIds(): Promise<string[]> {
+    const students = await StudentModel.find({ chatId: { $ne: null } });
+    return students.map((student) => student.chatId);
+  }
 
   getBotInstance(): Telegraf<MyContext> {
     return this.bot;
@@ -37,16 +43,23 @@ export class StudentBotService {
       return;
     }
 
-    this.bot.start((ctx) => {
+    this.bot.start(async (ctx) => {
       const username = ctx.from.username
         ? `@${ctx.from.username}`
         : ctx.from.first_name || 'User';
+
+      // Store chat ID in the database for the first time the user interacts
+      await StudentModel.findOneAndUpdate(
+        { STUDENT_ID: ctx.from.id.toString() }, // Assuming `STUDENT_ID` is the unique identifier (you can use other identifiers as needed)
+        { chatId: ctx.chat.id },
+        { upsert: true }, // Create a new student document if one does not exist
+      );
+
       ctx.reply(
         `Welcome, ${username}! Use /grade to check your results, /contact to message the admin, or /restart to reset your session.`,
       );
 
       console.log(`New student chat ID: ${ctx.chat.id}`);
-      this.studentChatIds.add(ctx.chat.id); // Store student chat ID
     });
 
     this.bot.command('grade', (ctx) => {
@@ -133,8 +146,9 @@ Total Grade: ${student.TOTAL}
    */
   async sendNotification(message: string) {
     console.log('Sending notification to students:', message);
-    console.log('Stored student chat IDs:', this.studentChatIds); // Debugging log
-    for (const chatId of this.studentChatIds) {
+    const chatIds = await this.getStudentChatIds(); // Get chatIds from the database
+    console.log('Stored student chat IDs:', chatIds); // Debugging log
+    for (const chatId of chatIds) {
       try {
         console.log(`Sending message to chat ID: ${chatId}`);
         await this.bot.telegram.sendMessage(chatId, message);
