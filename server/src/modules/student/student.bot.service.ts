@@ -190,7 +190,7 @@ Total Grade: ${student.TOTAL}
       // Send notification to each student
       for (const student of students) {
         try {
-          await TelegramBot.sendMessage(student.chatId, message);
+          await this.bot.telegram.sendMessage(student.chatId, message);
         } catch (err) {
           if (err.error_code === 403) {
             console.log(`Bot blocked by user: ${student.chatId}`);
@@ -211,6 +211,5 @@ Total Grade: ${student.TOTAL}
   };
 
   // Example call
-  message = 'Your message here!';
-  sendNotification(message);
+  // this.sendNotification('Your message here!');
 }
