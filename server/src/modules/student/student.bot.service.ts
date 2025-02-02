@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Telegraf, Context, session } from 'telegraf';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { StudentService } from './student.service';
-import { StudentChatModel } from './studentChat.model';  // Import Mongoose model
-import mongoose from 'mongoose';
+import { StudentChatId } from './student-chat-id.schema';
 
 interface MySessionData {
   awaitingStudentId?: boolean;
@@ -15,7 +16,11 @@ interface MyContext extends Context {
 
 @Injectable()
 export class StudentBotService {
-  constructor(private readonly studentService: StudentService) {}
+  constructor(
+    private readonly studentService: StudentService,
+    @InjectModel('StudentChatId')
+    private readonly studentChatIdModel: Model<StudentChatId>,
+  ) {}
 
   private bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN);
   private adminChatId = process.env.ASSESSMENT_BOT_CHAT_ID;
@@ -42,22 +47,20 @@ export class StudentBotService {
       const username = ctx.from.username
         ? `@${ctx.from.username}`
         : ctx.from.first_name || 'User';
-
       ctx.reply(
         `Welcome, ${username}! Use /grade to check your results, /contact to message the admin, or /restart to reset your session.`,
       );
 
       console.log(`New student chat ID: ${ctx.chat.id}`);
 
-      // 🛑 STORE CHAT ID IN MONGODB (AVOID DUPLICATES)
-      try {
-        const existingChat = await StudentChatModel.findOne({ chatId: ctx.chat.id });
-        if (!existingChat) {
-          await new StudentChatModel({ chatId: ctx.chat.id }).save();
-          console.log(`Saved chat ID: ${ctx.chat.id} to MongoDB`);
-        }
-      } catch (error) {
-        console.error('Error saving chat ID:', error);
+      // Store student chat ID in MongoDB if it doesn't exist
+      const existingChat = await this.studentChatIdModel.findOne({
+        chatId: ctx.chat.id,
+      });
+
+      if (!existingChat) {
+        await new this.studentChatIdModel({ chatId: ctx.chat.id }).save();
+        console.log(`Stored new chat ID: ${ctx.chat.id}`);
       }
     });
 
@@ -147,22 +150,23 @@ Total Grade: ${student.TOTAL}
     console.log('Sending notification to students:', message);
 
     try {
-      // 🛑 RETRIEVE ALL CHAT IDs FROM MONGODB
-      const studentChats = await StudentChatModel.find();
-      const chatIds = studentChats.map((chat) => chat.chatId);
+      // Fetch all stored chat IDs from MongoDB
+      const studentChatIds = await this.studentChatIdModel.find({});
+      console.log(
+        'Stored student chat IDs:',
+        studentChatIds.map((s) => s.chatId),
+      );
 
-      console.log('Fetched chat IDs from MongoDB:', chatIds);
-
-      for (const chatId of chatIds) {
+      for (const student of studentChatIds) {
         try {
-          console.log(`Sending message to chat ID: ${chatId}`);
-          await this.bot.telegram.sendMessage(chatId, message);
+          console.log(`Sending message to chat ID: ${student.chatId}`);
+          await this.bot.telegram.sendMessage(student.chatId, message);
         } catch (error) {
-          console.error(`Failed to send message to ${chatId}:`, error);
+          console.error(`Failed to send message to ${student.chatId}:`, error);
         }
       }
     } catch (error) {
-      console.error('Error retrieving chat IDs from MongoDB:', error);
+      console.error('Error retrieving student chat IDs from MongoDB:', error);
     }
   }
 }
