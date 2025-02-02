@@ -147,35 +147,41 @@ Total Grade: ${student.TOTAL}
     console.log('Sending notification:', message);
     try {
       const studentChatIds = await this.studentChatIdModel.find({});
-
-      if (!studentChatIds || studentChatIds.length === 0) {
-        console.log('No students found. Skipping notification.');
+      if (studentChatIds.length === 0) {
+        console.log('No students found.');
         return;
       }
 
       for (const student of studentChatIds) {
         try {
+          // Check if the user is active
           if (await this.isUserActive(student.chatId)) {
             await this.bot.telegram.sendMessage(student.chatId, message);
-            console.log(`Message sent to: ${student.chatId}`);
+            console.log(`✅ Message sent to: ${student.chatId}`);
           } else {
-            console.log(`User ${student.chatId} is inactive. Removing.`);
+            // Remove inactive users from the database
+            console.log(
+              `⚠️ User ${student.chatId} is inactive. Removing from database.`,
+            );
             await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
           }
         } catch (error) {
           if (error.response?.error_code === 403) {
-            console.log(`Blocked user ${student.chatId}. Removing.`);
+            // Handle "bot blocked" errors
+            console.log(
+              `🚫 User ${student.chatId} blocked the bot. Removing from database.`,
+            );
             await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
           } else {
             console.error(
-              `Failed to send message to ${student.chatId}:`,
+              `❌ Failed to send message to ${student.chatId}:`,
               error,
             );
           }
         }
       }
     } catch (error) {
-      console.error('Error retrieving student chat IDs:', error);
+      console.error('❌ Error retrieving student chat IDs:', error);
     }
   }
 }
