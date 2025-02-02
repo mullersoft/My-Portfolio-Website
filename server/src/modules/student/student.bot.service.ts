@@ -16,14 +16,14 @@ interface MyContext extends Context {
 
 @Injectable()
 export class StudentBotService {
+  private bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN);
+  private adminChatId = process.env.ASSESSMENT_BOT_CHAT_ID;
+
   constructor(
     private readonly studentService: StudentService,
     @InjectModel('StudentChatId')
     private readonly studentChatIdModel: Model<StudentChatId>,
   ) {}
-
-  private bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN);
-  private adminChatId = process.env.ASSESSMENT_BOT_CHAT_ID;
 
   getBotInstance(): Telegraf<MyContext> {
     return this.bot;
@@ -43,56 +43,7 @@ export class StudentBotService {
       return;
     }
 
-    //     ? `@${ctx.from.username}`
-    //     : ctx.from.first_name || 'User';
-    //   ctx.reply(
-    //     `Welcome, ${username}! Use /grade to check your results, /contact to message the admin, or /restart to reset your session.`,
-    //   );
-
-    //   console.log(`New student chat ID: ${ctx.chat.id}`);
-
-    //   // Store student chat ID in MongoDB if it doesn't exist
-    //   const existingChat = await this.studentChatIdModel.findOne({
-    //     chatId: ctx.chat.id,
-    //   });
-
-    //   if (!existingChat) {
-    //     await new this.studentChatIdModel({ chatId: ctx.chat.id }).save();
-    //     console.log(`Stored new chat ID: ${ctx.chat.id}`);
-    //   }
-    // });
-    // this.bot.start(async (ctx) => {
-    //   const username = ctx.from.username
-    //     ? `@${ctx.from.username}`
-    //     : ctx.from.first_name || 'User';
-    //   ctx.reply(
-    //     `Welcome, ${username}! Use /grade to check your results, /contact to message the admin, or /restart to reset your session.`,
-    //   );
-
-    //   console.log(`New student chat ID: ${ctx.chat.id}`);
-
-    //   // Store student chat ID in MongoDB if it doesn't exist
-    //   const existingChat = await this.studentChatIdModel.findOne({
-    //     chatId: ctx.chat.id,
-    //   });
-
-    //   if (!existingChat) {
-    //     await new this.studentChatIdModel({ chatId: ctx.chat.id }).save();
-    //     console.log(`Stored new chat ID: ${ctx.chat.id}`);
-    //   }
-    // });
-
-    // Function to check and register chat ID
-    async function registerChatId(chatId: number) {
-      // Check if the chat ID is already in the database
-      const existingChat = await this.studentChatIdModel.findOne({ chatId });
-
-      if (!existingChat) {
-        // If it doesn't exist, register it
-        await new this.studentChatIdModel({ chatId }).save();
-        console.log(`Stored new chat ID: ${chatId}`);
-      }
-    }
+    // Start command handling
     this.bot.start(async (ctx) => {
       const username = ctx.from.username
         ? `@${ctx.from.username}`
@@ -104,16 +55,18 @@ export class StudentBotService {
       console.log(`New student chat ID: ${ctx.chat.id}`);
 
       // Register chat ID if it doesn't exist
-      await registerChatId(ctx.chat.id);
+      await this.registerChatId(ctx.chat.id);
     });
 
+    // Grade command
     this.bot.command('grade', async (ctx) => {
       // Register chat ID if it doesn't exist
-      await registerChatId(ctx.chat.id);
+      await this.registerChatId(ctx.chat.id);
       ctx.reply('Please enter your Student ID:');
       ctx.session.awaitingStudentId = true;
     });
 
+    // Contact command
     this.bot.command('contact', async (ctx) => {
       const username = ctx.from.username
         ? `@${ctx.from.username}`
@@ -123,17 +76,19 @@ export class StudentBotService {
       );
       ctx.session.awaitingAdminMessage = true;
       // Register chat ID if it doesn't exist
-      await registerChatId(ctx.chat.id);
+      await this.registerChatId(ctx.chat.id);
     });
 
+    // Restart command
     this.bot.command('restart', async (ctx) => {
       ctx.session.awaitingStudentId = false;
       ctx.session.awaitingAdminMessage = false;
       ctx.reply('Your session has been reset.');
       // Register chat ID if it doesn't exist
-      await registerChatId(ctx.chat.id);
+      await this.registerChatId(ctx.chat.id);
     });
 
+    // Handling text messages
     this.bot.on('text', async (ctx) => {
       if (ctx.session.awaitingStudentId) {
         const studentId = ctx.message.text.trim();
@@ -171,11 +126,18 @@ Total Grade: ${student.TOTAL}
           : ctx.from.first_name || 'User';
 
         if (this.adminChatId) {
-          await this.bot.telegram.sendMessage(
-            this.adminChatId,
-            `Message from ${username} (${ctx.from.id}):\n\n${studentMessage}`,
-          );
-          ctx.reply('Your message has been sent to the admin. Thank you!');
+          try {
+            await this.bot.telegram.sendMessage(
+              this.adminChatId,
+              `Message from ${username} (${ctx.from.id}):\n\n${studentMessage}`,
+            );
+            ctx.reply('Your message has been sent to the admin. Thank you!');
+          } catch (error) {
+            console.error('Error sending message to admin:', error);
+            ctx.reply(
+              'Failed to send the message to the admin. Please try again later.',
+            );
+          }
         } else {
           ctx.reply(
             'Unable to send the message. Admin contact is not configured.',
@@ -191,48 +153,24 @@ Total Grade: ${student.TOTAL}
     });
   }
 
+  // Register chat ID in the database if it doesn't already exist
+  private async registerChatId(chatId: number) {
+    try {
+      const existingChat = await this.studentChatIdModel.findOne({ chatId });
+
+      if (!existingChat) {
+        await new this.studentChatIdModel({ chatId }).save();
+        console.log(`Stored new chat ID: ${chatId}`);
+      }
+    } catch (error) {
+      console.error('Error registering chat ID:', error);
+    }
+  }
+
   /**
    * Send a notification to all students who have interacted with the bot.
    * @param message - The message to send.
    */
-
-  // async sendNotification(message: string) {
-  //   console.log('Sending notification to students:', message);
-
-  //   try {
-  //     // Fetch all stored chat IDs from MongoDB
-  //     const studentChatIds = await this.studentChatIdModel.find({});
-  //     console.log(
-  //       'Stored student chat IDs:',
-  //       studentChatIds.map((s) => s.chatId),
-  //     );
-
-  //     if (studentChatIds.length === 0) {
-  //       console.log('No students found to send notification.');
-  //       return;
-  //     }
-
-  //     for (const student of studentChatIds) {
-  //       try {
-  //         console.log(`Sending message to chat ID: ${student.chatId}`);
-  //         await this.bot.telegram.sendMessage(student.chatId, message);
-  //       } catch (error) {
-  //         if (error.response?.error_code === 403) {
-  //           console.log(
-  //             `Bot was blocked by user with chat ID: ${student.chatId}`,
-  //           );
-  //         } else {
-  //           console.error(
-  //             `Failed to send message to ${student.chatId}:`,
-  //             error,
-  //           );
-  //         }
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error('Error retrieving student chat IDs from MongoDB:', error);
-  //   }
-  // }
   async sendNotification(message: string) {
     console.log('Sending notification to students:', message);
 
@@ -245,7 +183,7 @@ Total Grade: ${student.TOTAL}
       );
 
       if (studentChatIds.length === 0) {
-        console.log('No student chat IDs found');
+        console.log('No students found for notification.');
         return;
       }
 
@@ -254,16 +192,7 @@ Total Grade: ${student.TOTAL}
           console.log(`Sending message to chat ID: ${student.chatId}`);
           await this.bot.telegram.sendMessage(student.chatId, message);
         } catch (error) {
-          if (error.response && error.response.error_code === 403) {
-            console.error(
-              `User with chat ID ${student.chatId} has blocked the bot`,
-            );
-          } else {
-            console.error(
-              `Failed to send message to ${student.chatId}:`,
-              error,
-            );
-          }
+          console.error(`Failed to send message to ${student.chatId}:`, error);
         }
       }
     } catch (error) {
