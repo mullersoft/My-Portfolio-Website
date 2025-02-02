@@ -98,7 +98,6 @@ export class StudentBotService {
 Student Name: ${student.Name}
 Student ID: ${student.STUDENT_ID}
 Assignment: ${student.ASSIGNMENT}
-Project: ${student.PROJECT}
 Midterm: ${student.MIDTERM}
 Final Term: ${student.FINALTERM}
 Total Grade: ${student.TOTAL}
@@ -154,34 +153,27 @@ Total Grade: ${student.TOTAL}
 
       for (const student of studentChatIds) {
         try {
-          // Check if the user is active
           if (await this.isUserActive(student.chatId)) {
             await this.bot.telegram.sendMessage(student.chatId, message);
-            console.log(`✅ Message sent to: ${student.chatId}`);
+            console.log(`Message sent to: ${student.chatId}`);
           } else {
-            // Remove inactive users from the database
-            console.log(
-              `⚠️ User ${student.chatId} is inactive. Removing from database.`,
-            );
+            console.log(`User ${student.chatId} is inactive. Removing.`);
             await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
           }
         } catch (error) {
           if (error.response?.error_code === 403) {
-            // Handle "bot blocked" errors
-            console.log(
-              `🚫 User ${student.chatId} blocked the bot. Removing from database.`,
-            );
+            console.log(`Blocked user ${student.chatId}. Removing.`);
             await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
           } else {
             console.error(
-              `❌ Failed to send message to ${student.chatId}:`,
+              `Failed to send message to ${student.chatId}:`,
               error,
             );
           }
         }
       }
     } catch (error) {
-      console.error('❌ Error retrieving student chat IDs:', error);
+      console.error('Error retrieving student chat IDs:', error);
     }
   }
 }
