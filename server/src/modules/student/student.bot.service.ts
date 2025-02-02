@@ -195,6 +195,7 @@ Total Grade: ${student.TOTAL}
    * Send a notification to all students who have interacted with the bot.
    * @param message - The message to send.
    */
+
   // async sendNotification(message: string) {
   //   console.log('Sending notification to students:', message);
 
@@ -206,12 +207,26 @@ Total Grade: ${student.TOTAL}
   //       studentChatIds.map((s) => s.chatId),
   //     );
 
+  //     if (studentChatIds.length === 0) {
+  //       console.log('No students found to send notification.');
+  //       return;
+  //     }
+
   //     for (const student of studentChatIds) {
   //       try {
   //         console.log(`Sending message to chat ID: ${student.chatId}`);
   //         await this.bot.telegram.sendMessage(student.chatId, message);
   //       } catch (error) {
-  //         console.error(`Failed to send message to ${student.chatId}:`, error);
+  //         if (error.response?.error_code === 403) {
+  //           console.log(
+  //             `Bot was blocked by user with chat ID: ${student.chatId}`,
+  //           );
+  //         } else {
+  //           console.error(
+  //             `Failed to send message to ${student.chatId}:`,
+  //             error,
+  //           );
+  //         }
   //       }
   //     }
   //   } catch (error) {
@@ -230,7 +245,7 @@ Total Grade: ${student.TOTAL}
       );
 
       if (studentChatIds.length === 0) {
-        console.log('No students found to send notification.');
+        console.log('No student chat IDs found');
         return;
       }
 
@@ -239,9 +254,9 @@ Total Grade: ${student.TOTAL}
           console.log(`Sending message to chat ID: ${student.chatId}`);
           await this.bot.telegram.sendMessage(student.chatId, message);
         } catch (error) {
-          if (error.response?.error_code === 403) {
-            console.log(
-              `Bot was blocked by user with chat ID: ${student.chatId}`,
+          if (error.response && error.response.error_code === 403) {
+            console.error(
+              `User with chat ID ${student.chatId} has blocked the bot`,
             );
           } else {
             console.error(
