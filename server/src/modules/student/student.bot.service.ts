@@ -208,15 +208,7 @@ Total Grade: ${student.TOTAL}
       for (const student of studentChatIds) {
         try {
           console.log(`Sending message to chat ID: ${student.chatId}`);
-          const result = await this.bot.telegram.sendMessage(
-            student.chatId,
-            message,
-          );
-          if (!result.ok) {
-            console.error(
-              `Error sending message to chat ID ${student.chatId}: ${result.description}`,
-            );
-          }
+          await this.bot.telegram.sendMessage(student.chatId, message);
         } catch (error) {
           if (error.response?.error_code === 403) {
             console.log(
