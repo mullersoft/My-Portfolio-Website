@@ -29,15 +29,25 @@ export class StudentBotService {
     return this.bot;
   }
 
-  // Function to register chat ID if not already stored
   private async registerChatId(chatId: number) {
-    const existingChat = await this.studentChatIdModel.findOne({
-      chatId,
-    });
+    try {
+      // Check if the bot can send messages before storing the chat ID
+      await this.bot.telegram.sendMessage(chatId, 'Welcome!');
 
-    if (!existingChat) {
-      await new this.studentChatIdModel({ chatId }).save();
-      console.log(`Stored new chat ID: ${chatId}`);
+      const existingChat = await this.studentChatIdModel.findOne({ chatId });
+
+      if (!existingChat) {
+        await new this.studentChatIdModel({ chatId }).save();
+        console.log(`Stored new chat ID: ${chatId}`);
+      }
+    } catch (error) {
+      if (error.response?.error_code === 403) {
+        console.log(
+          `Bot was blocked by user with chat ID: ${chatId}. Skipping storage.`,
+        );
+      } else {
+        console.error('Error storing chat ID:', error);
+      }
     }
   }
 
@@ -57,43 +67,19 @@ export class StudentBotService {
 
     this.bot.start(async (ctx) => {
       console.log(`New student chat ID: ${ctx.chat.id}`);
-
-      // Ensure we only store the chat ID if it's not blocked
-      try {
-        const existingChat = await this.studentChatIdModel.findOne({
-          chatId: ctx.chat.id,
-        });
-
-        if (!existingChat) {
-          await new this.studentChatIdModel({ chatId: ctx.chat.id }).save();
-          console.log(`Stored new chat ID: ${ctx.chat.id}`);
-        }
-
-        ctx.reply(
-          `Welcome! Use /grade to check results, /contact to message the admin, or /restart to reset your session.`,
-        );
-      } catch (error) {
-        if (error.response?.error_code === 403) {
-          console.log(
-            `Bot was blocked by user with chat ID: ${ctx.chat.id}. Skipping reply.`,
-          );
-        } else {
-          console.error('Error storing chat ID:', error);
-        }
-      }
-    });
-
-    // /grade command handler
-    this.bot.command('grade', async (ctx) => {
-      // Register chat ID if not already stored
       await this.registerChatId(ctx.chat.id);
 
-      // Proceed with the grade request
+      ctx.reply(
+        `Welcome! Use /grade to check results, /contact to message the admin, or /restart to reset your session.`,
+      );
+    });
+
+    this.bot.command('grade', async (ctx) => {
+      await this.registerChatId(ctx.chat.id);
       ctx.reply('Please enter your Student ID:');
       ctx.session.awaitingStudentId = true;
     });
 
-    // /contact command handler
     this.bot.command('contact', (ctx) => {
       const username = ctx.from.username
         ? `@${ctx.from.username}`
@@ -104,14 +90,12 @@ export class StudentBotService {
       ctx.session.awaitingAdminMessage = true;
     });
 
-    // /restart command handler
     this.bot.command('restart', (ctx) => {
       ctx.session.awaitingStudentId = false;
       ctx.session.awaitingAdminMessage = false;
       ctx.reply('Your session has been reset.');
     });
 
-    // Text message handler
     this.bot.on('text', async (ctx) => {
       if (ctx.session.awaitingStudentId) {
         const studentId = ctx.message.text.trim();
@@ -149,11 +133,16 @@ Total Grade: ${student.TOTAL}
           : ctx.from.first_name || 'User';
 
         if (this.adminChatId) {
-          await this.bot.telegram.sendMessage(
-            this.adminChatId,
-            `Message from ${username} (${ctx.from.id}):\n\n${studentMessage}`,
-          );
-          ctx.reply('Your message has been sent to the admin. Thank you!');
+          try {
+            await this.bot.telegram.sendMessage(
+              this.adminChatId,
+              `Message from ${username} (${ctx.from.id}):\n\n${studentMessage}`,
+            );
+            ctx.reply('Your message has been sent to the admin. Thank you!');
+          } catch (error) {
+            console.error('Error sending message to admin:', error);
+            ctx.reply('Failed to send the message. Please try again later.');
+          }
         } else {
           ctx.reply(
             'Unable to send the message. Admin contact is not configured.',
@@ -169,10 +158,6 @@ Total Grade: ${student.TOTAL}
     });
   }
 
-  /**
-   * Send a notification to all students who have interacted with the bot.
-   * @param message - The message to send.
-   */
   async sendNotification(message: string) {
     console.log('Sending notification to students:', message);
 
@@ -197,7 +182,6 @@ Total Grade: ${student.TOTAL}
             console.log(
               `Bot was blocked by user with chat ID: ${student.chatId}. Removing from DB.`,
             );
-            // Remove blocked users from the database
             await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
           } else {
             console.error(
