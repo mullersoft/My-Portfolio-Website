@@ -1,3 +1,4 @@
+// student-chat-id.schema.ts
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
@@ -8,3 +9,6 @@ export class StudentChatId extends Document {
 }
 
 export const StudentChatIdSchema = SchemaFactory.createForClass(StudentChatId);
+
+// Add an explicit index (optional)
+StudentChatIdSchema.index({ chatId: 1 });

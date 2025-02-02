@@ -1,3 +1,4 @@
+// student.schema.ts
 import { Schema, model } from 'mongoose';
 
 // Define the schema
@@ -12,14 +13,13 @@ export const StudentSchema = new Schema(
     MIDTERM: { type: Number, required: true },
     FINALTERM: { type: Number, required: true },
     TOTAL: { type: Number, required: true },
-    chatId: { type: String, unique: true, sparse: true }, // Store Telegram chat ID
   },
   {
     collection: 'students',
   },
 );
 
-// Create an index for faster lookup
-StudentSchema.index({ chatId: 1 });
+// Create an index on STUDENT_ID field for fast lookups
+StudentSchema.index({ STUDENT_ID: 1 }); // Index on STUDENT_ID
 
 export const StudentModel = model('Student', StudentSchema);

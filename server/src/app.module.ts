@@ -1,5 +1,5 @@
-// D:\web D\portfolio-website\server\src\app.module.ts
-import { Module, MiddlewareConsumer } from '@nestjs/common';
+// app.module.ts
+import { Module, MiddlewareConsumer, OnModuleInit } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ProjectsModule } from './modules/projects/projects.module';
@@ -11,6 +11,11 @@ import { BotModule } from './modules/contact/bot/bot.module';
 import { FrontendModule } from './modules/contact/frontend/frontend.module';
 import { StudentModule } from './modules/student/student.module';
 import { TelegramModule } from './modules/telegram/telegram.module';
+
+// Importing models to ensure indexes
+import { StudentChatId } from './modules/student/student-chat-id.schema';
+import { StudentModel } from './modules/student/student.schema';
+import { ProjectModel } from './modules/projects/project.schema';
 
 @Module({
   imports: [
@@ -31,7 +36,14 @@ import { TelegramModule } from './modules/telegram/telegram.module';
   controllers: [],
   providers: [],
 })
-export class AppModule {
+export class AppModule implements OnModuleInit {
+  async onModuleInit() {
+    // Ensure indexes after MongoDB connection is established
+    await StudentChatId.ensureIndexes();
+    await StudentModel.ensureIndexes();
+    await ProjectModel.ensureIndexes();
+  }
+
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(IpTrackingMiddleware).forRoutes('*');
   }
