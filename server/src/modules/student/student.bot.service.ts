@@ -55,19 +55,32 @@ export class StudentBotService {
       return;
     }
 
-    // /start command handler
     this.bot.start(async (ctx) => {
-      const username = ctx.from.username
-        ? `@${ctx.from.username}`
-        : ctx.from.first_name || 'User';
-      ctx.reply(
-        `Welcome, ${username}! Use /grade to check your results, /contact to message the admin, or /restart to reset your session.`,
-      );
-
       console.log(`New student chat ID: ${ctx.chat.id}`);
 
-      // Register chat ID if not already stored
-      await this.registerChatId(ctx.chat.id);
+      // Ensure we only store the chat ID if it's not blocked
+      try {
+        const existingChat = await this.studentChatIdModel.findOne({
+          chatId: ctx.chat.id,
+        });
+
+        if (!existingChat) {
+          await new this.studentChatIdModel({ chatId: ctx.chat.id }).save();
+          console.log(`Stored new chat ID: ${ctx.chat.id}`);
+        }
+
+        ctx.reply(
+          `Welcome! Use /grade to check results, /contact to message the admin, or /restart to reset your session.`,
+        );
+      } catch (error) {
+        if (error.response?.error_code === 403) {
+          console.log(
+            `Bot was blocked by user with chat ID: ${ctx.chat.id}. Skipping reply.`,
+          );
+        } else {
+          console.error('Error storing chat ID:', error);
+        }
+      }
     });
 
     // /grade command handler
@@ -164,7 +177,6 @@ Total Grade: ${student.TOTAL}
     console.log('Sending notification to students:', message);
 
     try {
-      // Fetch all stored chat IDs from MongoDB
       const studentChatIds = await this.studentChatIdModel.find({});
       console.log(
         'Stored student chat IDs:',
@@ -183,9 +195,9 @@ Total Grade: ${student.TOTAL}
         } catch (error) {
           if (error.response?.error_code === 403) {
             console.log(
-              `Bot was blocked by user with chat ID: ${student.chatId}. Skipping...`,
+              `Bot was blocked by user with chat ID: ${student.chatId}. Removing from DB.`,
             );
-            // Optionally, you can remove the blocked user from your database
+            // Remove blocked users from the database
             await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
           } else {
             console.error(
