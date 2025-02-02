@@ -147,8 +147,13 @@ Total Grade: ${student.TOTAL}
     console.log('Sending notification:', message);
     try {
       const studentChatIds = await this.studentChatIdModel.find({});
+      console.log(
+        'Retrieved chat IDs:',
+        studentChatIds.map((s) => s.chatId),
+      );
+
       if (studentChatIds.length === 0) {
-        console.log('No students found.');
+        console.log('No students found. Skipping message sending.');
         return;
       }
 
@@ -164,7 +169,7 @@ Total Grade: ${student.TOTAL}
         } catch (error) {
           if (error.response?.error_code === 403) {
             console.log(`Blocked user ${student.chatId}. Removing.`);
-            await this.studentChatIdModel.deleteOne({ chatId: student.chatId }); // Remove blocked user
+            await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
           } else {
             console.error(
               `Failed to send message to ${student.chatId}:`,
