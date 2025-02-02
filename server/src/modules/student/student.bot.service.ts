@@ -98,6 +98,7 @@ export class StudentBotService {
 Student Name: ${student.Name}
 Student ID: ${student.STUDENT_ID}
 Assignment: ${student.ASSIGNMENT}
+Project: ${student.PROJECT}
 Midterm: ${student.MIDTERM}
 Final Term: ${student.FINALTERM}
 Total Grade: ${student.TOTAL}
