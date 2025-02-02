@@ -23,7 +23,7 @@ export class StudentBotController {
     @Body() body: { message: string },
     @Res() res: Response,
   ) {
-    console.log('Received notification request:', body); // Debugging log
+    console.log('Received notification request:', body);
     try {
       await this.studentBotService.sendNotification(body.message);
       res.status(200).send('Notification sent successfully.');

@@ -31,9 +31,7 @@ export class StudentBotService {
 
   private async registerChatId(chatId: number) {
     try {
-      // Check if the bot can send messages before storing the chat ID
       await this.bot.telegram.sendMessage(chatId, 'Welcome!');
-
       const existingChat = await this.studentChatIdModel.findOne({ chatId });
 
       if (!existingChat) {
@@ -42,9 +40,7 @@ export class StudentBotService {
       }
     } catch (error) {
       if (error.response?.error_code === 403) {
-        console.log(
-          `Bot was blocked by user with chat ID: ${chatId}. Skipping storage.`,
-        );
+        console.log(`Bot was blocked by user with chat ID: ${chatId}.`);
       } else {
         console.error('Error storing chat ID:', error);
       }
@@ -68,9 +64,8 @@ export class StudentBotService {
     this.bot.start(async (ctx) => {
       console.log(`New student chat ID: ${ctx.chat.id}`);
       await this.registerChatId(ctx.chat.id);
-
       ctx.reply(
-        `Welcome! Use /grade to check results, /contact to message the admin, or /restart to reset your session.`,
+        `Welcome! Use /grade to check results or /contact to message the admin.`,
       );
     });
 
@@ -81,12 +76,7 @@ export class StudentBotService {
     });
 
     this.bot.command('contact', (ctx) => {
-      const username = ctx.from.username
-        ? `@${ctx.from.username}`
-        : ctx.from.first_name || 'User';
-      ctx.reply(
-        `Please type your message for the admin. Your username (${username}) will be included in the message sent to the admin.`,
-      );
+      ctx.reply('Please type your message for the admin.');
       ctx.session.awaitingAdminMessage = true;
     });
 
@@ -101,87 +91,78 @@ export class StudentBotService {
         const studentId = ctx.message.text.trim();
         try {
           const student = await this.studentService.getStudentGrade(studentId);
-
           if (!student) {
-            ctx.reply('Student not found. Please check your ID and try again.');
+            ctx.reply('Student not found.');
           } else {
-            const response = `
+            ctx.reply(`
 Student Name: ${student.Name}
 Student ID: ${student.STUDENT_ID}
 Assignment: ${student.ASSIGNMENT}
-Test 1: ${student.TEST_1}
-Test 2: ${student.TEST_2}
-Project: ${student.PROJECT}
 Midterm: ${student.MIDTERM}
 Final Term: ${student.FINALTERM}
 Total Grade: ${student.TOTAL}
-            `;
-            ctx.reply(response);
+            `);
           }
         } catch (error) {
           console.error('Error fetching student data:', error);
-          ctx.reply(
-            'An error occurred while fetching the data. Please try again later.',
-          );
+          ctx.reply('An error occurred. Please try again later.');
         } finally {
           ctx.session.awaitingStudentId = false;
         }
       } else if (ctx.session.awaitingAdminMessage) {
         const studentMessage = ctx.message.text.trim();
-        const username = ctx.from.username
-          ? `@${ctx.from.username}`
-          : ctx.from.first_name || 'User';
-
-        if (this.adminChatId) {
-          try {
+        try {
+          if (this.adminChatId) {
             await this.bot.telegram.sendMessage(
               this.adminChatId,
-              `Message from ${username} (${ctx.from.id}):\n\n${studentMessage}`,
+              `Message from ${ctx.from.username || 'User'}: ${studentMessage}`,
             );
-            ctx.reply('Your message has been sent to the admin. Thank you!');
-          } catch (error) {
-            console.error('Error sending message to admin:', error);
-            ctx.reply('Failed to send the message. Please try again later.');
+            ctx.reply('Your message has been sent.');
+          } else {
+            ctx.reply('Admin contact is not configured.');
           }
-        } else {
-          ctx.reply(
-            'Unable to send the message. Admin contact is not configured.',
-          );
+        } catch (error) {
+          console.error('Error sending message:', error);
+          ctx.reply('Failed to send message.');
         }
-
         ctx.session.awaitingAdminMessage = false;
       } else {
-        ctx.reply(
-          'Please use /grade to check your results, /contact to message the admin, or /restart to reset the session.',
-        );
+        ctx.reply('Use /grade or /contact.');
       }
     });
   }
 
-  async sendNotification(message: string) {
-    console.log('Sending notification to students:', message);
+  async isUserActive(chatId: number): Promise<boolean> {
+    try {
+      const member = await this.bot.telegram.getChatMember(chatId, chatId);
+      return member.status !== 'kicked' && member.status !== 'left';
+    } catch (error) {
+      console.error(`Error checking chat status for ${chatId}:`, error);
+      return false;
+    }
+  }
 
+  async sendNotification(message: string) {
+    console.log('Sending notification:', message);
     try {
       const studentChatIds = await this.studentChatIdModel.find({});
-      console.log(
-        'Stored student chat IDs:',
-        studentChatIds.map((s) => s.chatId),
-      );
-
       if (studentChatIds.length === 0) {
-        console.log('No students found to send notification.');
+        console.log('No students found.');
         return;
       }
 
       for (const student of studentChatIds) {
         try {
-          console.log(`Sending message to chat ID: ${student.chatId}`);
-          await this.bot.telegram.sendMessage(student.chatId, message);
+          if (await this.isUserActive(student.chatId)) {
+            await this.bot.telegram.sendMessage(student.chatId, message);
+            console.log(`Message sent to: ${student.chatId}`);
+          } else {
+            console.log(`User ${student.chatId} is inactive. Removing.`);
+            await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
+          }
         } catch (error) {
           if (error.response?.error_code === 403) {
-            console.log(
-              `Bot was blocked by user with chat ID: ${student.chatId}. Removing from DB.`,
-            );
+            console.log(`Blocked user ${student.chatId}. Removing.`);
             await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
           } else {
             console.error(
@@ -192,7 +173,7 @@ Total Grade: ${student.TOTAL}
         }
       }
     } catch (error) {
-      console.error('Error retrieving student chat IDs from MongoDB:', error);
+      console.error('Error retrieving student chat IDs:', error);
     }
   }
 }
