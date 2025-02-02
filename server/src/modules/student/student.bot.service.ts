@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Telegraf, Context, session } from 'telegraf';
 import { StudentService } from './student.service';
+import { StudentChatModel } from './studentChat.model';  // Import Mongoose model
+import mongoose from 'mongoose';
 
 interface MySessionData {
   awaitingStudentId?: boolean;
@@ -17,7 +19,6 @@ export class StudentBotService {
 
   private bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN);
   private adminChatId = process.env.ASSESSMENT_BOT_CHAT_ID;
-  private studentChatIds: Set<number> = new Set(); // Store student chat IDs
 
   getBotInstance(): Telegraf<MyContext> {
     return this.bot;
@@ -37,16 +38,27 @@ export class StudentBotService {
       return;
     }
 
-    this.bot.start((ctx) => {
+    this.bot.start(async (ctx) => {
       const username = ctx.from.username
         ? `@${ctx.from.username}`
         : ctx.from.first_name || 'User';
+
       ctx.reply(
         `Welcome, ${username}! Use /grade to check your results, /contact to message the admin, or /restart to reset your session.`,
       );
 
       console.log(`New student chat ID: ${ctx.chat.id}`);
-      this.studentChatIds.add(ctx.chat.id); // Store student chat ID
+
+      // 🛑 STORE CHAT ID IN MONGODB (AVOID DUPLICATES)
+      try {
+        const existingChat = await StudentChatModel.findOne({ chatId: ctx.chat.id });
+        if (!existingChat) {
+          await new StudentChatModel({ chatId: ctx.chat.id }).save();
+          console.log(`Saved chat ID: ${ctx.chat.id} to MongoDB`);
+        }
+      } catch (error) {
+        console.error('Error saving chat ID:', error);
+      }
     });
 
     this.bot.command('grade', (ctx) => {
@@ -133,21 +145,24 @@ Total Grade: ${student.TOTAL}
    */
   async sendNotification(message: string) {
     console.log('Sending notification to students:', message);
-    console.log('Stored student chat IDs:', this.studentChatIds); // Debugging log
-    for (const chatId of this.studentChatIds) {
-      try {
-        console.log(`Sending message to chat ID: ${chatId}`);
-        await this.bot.telegram.sendMessage(chatId, message);
-      } catch (error) {
-        if (error.response && error.response.error_code === 403) {
-          console.log(
-            `Chat ID ${chatId} has blocked the bot. Removing from list.`,
-          );
-          this.studentChatIds.delete(chatId); // Remove blocked chat ID from the list
-        } else {
+
+    try {
+      // 🛑 RETRIEVE ALL CHAT IDs FROM MONGODB
+      const studentChats = await StudentChatModel.find();
+      const chatIds = studentChats.map((chat) => chat.chatId);
+
+      console.log('Fetched chat IDs from MongoDB:', chatIds);
+
+      for (const chatId of chatIds) {
+        try {
+          console.log(`Sending message to chat ID: ${chatId}`);
+          await this.bot.telegram.sendMessage(chatId, message);
+        } catch (error) {
           console.error(`Failed to send message to ${chatId}:`, error);
         }
       }
+    } catch (error) {
+      console.error('Error retrieving chat IDs from MongoDB:', error);
     }
   }
 }
