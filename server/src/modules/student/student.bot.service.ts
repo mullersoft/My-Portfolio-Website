@@ -43,6 +43,24 @@ export class StudentBotService {
       return;
     }
 
+    //     ? `@${ctx.from.username}`
+    //     : ctx.from.first_name || 'User';
+    //   ctx.reply(
+    //     `Welcome, ${username}! Use /grade to check your results, /contact to message the admin, or /restart to reset your session.`,
+    //   );
+
+    //   console.log(`New student chat ID: ${ctx.chat.id}`);
+
+    //   // Store student chat ID in MongoDB if it doesn't exist
+    //   const existingChat = await this.studentChatIdModel.findOne({
+    //     chatId: ctx.chat.id,
+    //   });
+
+    //   if (!existingChat) {
+    //     await new this.studentChatIdModel({ chatId: ctx.chat.id }).save();
+    //     console.log(`Stored new chat ID: ${ctx.chat.id}`);
+    //   }
+    // });
     // this.bot.start(async (ctx) => {
     //   const username = ctx.from.username
     //     ? `@${ctx.from.username}`
@@ -63,6 +81,18 @@ export class StudentBotService {
     //     console.log(`Stored new chat ID: ${ctx.chat.id}`);
     //   }
     // });
+
+    // Function to check and register chat ID
+    async function registerChatId(chatId: number) {
+      // Check if the chat ID is already in the database
+      const existingChat = await this.studentChatIdModel.findOne({ chatId });
+
+      if (!existingChat) {
+        // If it doesn't exist, register it
+        await new this.studentChatIdModel({ chatId }).save();
+        console.log(`Stored new chat ID: ${chatId}`);
+      }
+    }
     this.bot.start(async (ctx) => {
       const username = ctx.from.username
         ? `@${ctx.from.username}`
@@ -73,23 +103,18 @@ export class StudentBotService {
 
       console.log(`New student chat ID: ${ctx.chat.id}`);
 
-      // Store student chat ID in MongoDB if it doesn't exist
-      const existingChat = await this.studentChatIdModel.findOne({
-        chatId: ctx.chat.id,
-      });
-
-      if (!existingChat) {
-        await new this.studentChatIdModel({ chatId: ctx.chat.id }).save();
-        console.log(`Stored new chat ID: ${ctx.chat.id}`);
-      }
+      // Register chat ID if it doesn't exist
+      await registerChatId(ctx.chat.id);
     });
 
-    this.bot.command('grade', (ctx) => {
+    this.bot.command('grade', async (ctx) => {
+      // Register chat ID if it doesn't exist
+      await registerChatId(ctx.chat.id);
       ctx.reply('Please enter your Student ID:');
       ctx.session.awaitingStudentId = true;
     });
 
-    this.bot.command('contact', (ctx) => {
+    this.bot.command('contact', async (ctx) => {
       const username = ctx.from.username
         ? `@${ctx.from.username}`
         : ctx.from.first_name || 'User';
@@ -97,12 +122,16 @@ export class StudentBotService {
         `Please type your message for the admin. Your username (${username}) will be included in the message sent to the admin.`,
       );
       ctx.session.awaitingAdminMessage = true;
+      // Register chat ID if it doesn't exist
+      await registerChatId(ctx.chat.id);
     });
 
-    this.bot.command('restart', (ctx) => {
+    this.bot.command('restart', async (ctx) => {
       ctx.session.awaitingStudentId = false;
       ctx.session.awaitingAdminMessage = false;
       ctx.reply('Your session has been reset.');
+      // Register chat ID if it doesn't exist
+      await registerChatId(ctx.chat.id);
     });
 
     this.bot.on('text', async (ctx) => {
