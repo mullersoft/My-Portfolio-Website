@@ -43,6 +43,26 @@ export class StudentBotService {
       return;
     }
 
+    // this.bot.start(async (ctx) => {
+    //   const username = ctx.from.username
+    //     ? `@${ctx.from.username}`
+    //     : ctx.from.first_name || 'User';
+    //   ctx.reply(
+    //     `Welcome, ${username}! Use /grade to check your results, /contact to message the admin, or /restart to reset your session.`,
+    //   );
+
+    //   console.log(`New student chat ID: ${ctx.chat.id}`);
+
+    //   // Store student chat ID in MongoDB if it doesn't exist
+    //   const existingChat = await this.studentChatIdModel.findOne({
+    //     chatId: ctx.chat.id,
+    //   });
+
+    //   if (!existingChat) {
+    //     await new this.studentChatIdModel({ chatId: ctx.chat.id }).save();
+    //     console.log(`Stored new chat ID: ${ctx.chat.id}`);
+    //   }
+    // });
     this.bot.start(async (ctx) => {
       const username = ctx.from.username
         ? `@${ctx.from.username}`
@@ -146,6 +166,29 @@ Total Grade: ${student.TOTAL}
    * Send a notification to all students who have interacted with the bot.
    * @param message - The message to send.
    */
+  // async sendNotification(message: string) {
+  //   console.log('Sending notification to students:', message);
+
+  //   try {
+  //     // Fetch all stored chat IDs from MongoDB
+  //     const studentChatIds = await this.studentChatIdModel.find({});
+  //     console.log(
+  //       'Stored student chat IDs:',
+  //       studentChatIds.map((s) => s.chatId),
+  //     );
+
+  //     for (const student of studentChatIds) {
+  //       try {
+  //         console.log(`Sending message to chat ID: ${student.chatId}`);
+  //         await this.bot.telegram.sendMessage(student.chatId, message);
+  //       } catch (error) {
+  //         console.error(`Failed to send message to ${student.chatId}:`, error);
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error('Error retrieving student chat IDs from MongoDB:', error);
+  //   }
+  // }
   async sendNotification(message: string) {
     console.log('Sending notification to students:', message);
 
@@ -157,12 +200,34 @@ Total Grade: ${student.TOTAL}
         studentChatIds.map((s) => s.chatId),
       );
 
+      if (studentChatIds.length === 0) {
+        console.log('No students found to send notification.');
+        return;
+      }
+
       for (const student of studentChatIds) {
         try {
           console.log(`Sending message to chat ID: ${student.chatId}`);
-          await this.bot.telegram.sendMessage(student.chatId, message);
+          const result = await this.bot.telegram.sendMessage(
+            student.chatId,
+            message,
+          );
+          if (!result.ok) {
+            console.error(
+              `Error sending message to chat ID ${student.chatId}: ${result.description}`,
+            );
+          }
         } catch (error) {
-          console.error(`Failed to send message to ${student.chatId}:`, error);
+          if (error.response?.error_code === 403) {
+            console.log(
+              `Bot was blocked by user with chat ID: ${student.chatId}`,
+            );
+          } else {
+            console.error(
+              `Failed to send message to ${student.chatId}:`,
+              error,
+            );
+          }
         }
       }
     } catch (error) {
