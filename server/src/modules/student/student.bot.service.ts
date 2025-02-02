@@ -183,8 +183,10 @@ Total Grade: ${student.TOTAL}
         } catch (error) {
           if (error.response?.error_code === 403) {
             console.log(
-              `Bot was blocked by user with chat ID: ${student.chatId}`,
+              `Bot was blocked by user with chat ID: ${student.chatId}. Skipping...`,
             );
+            // Optionally, you can remove the blocked user from your database
+            await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
           } else {
             console.error(
               `Failed to send message to ${student.chatId}:`,
