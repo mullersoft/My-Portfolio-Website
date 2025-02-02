@@ -29,6 +29,18 @@ export class StudentBotService {
     return this.bot;
   }
 
+  // Function to register chat ID if not already stored
+  private async registerChatId(chatId: number) {
+    const existingChat = await this.studentChatIdModel.findOne({
+      chatId,
+    });
+
+    if (!existingChat) {
+      await new this.studentChatIdModel({ chatId }).save();
+      console.log(`Stored new chat ID: ${chatId}`);
+    }
+  }
+
   async startBot() {
     this.bot.use(session({ defaultSession: () => ({}) }));
 
@@ -43,6 +55,7 @@ export class StudentBotService {
       return;
     }
 
+    // /start command handler
     this.bot.start(async (ctx) => {
       const username = ctx.from.username
         ? `@${ctx.from.username}`
@@ -53,38 +66,21 @@ export class StudentBotService {
 
       console.log(`New student chat ID: ${ctx.chat.id}`);
 
-      // Store student chat ID in MongoDB if it doesn't exist
-      const existingChat = await this.studentChatIdModel.findOne({
-        chatId: ctx.chat.id,
-      });
-
-      if (!existingChat) {
-        await new this.studentChatIdModel({ chatId: ctx.chat.id }).save();
-        console.log(`Stored new chat ID: ${ctx.chat.id}`);
-      }
+      // Register chat ID if not already stored
+      await this.registerChatId(ctx.chat.id);
     });
 
-    // this.bot.command('grade', (ctx) => {
-    //   ctx.reply('Please enter your Student ID:');
-    //   ctx.session.awaitingStudentId = true;
-    // });
+    // /grade command handler
     this.bot.command('grade', async (ctx) => {
-      // Check if chatId is already registered
-      const existingChat = await this.studentChatIdModel.findOne({
-        chatId: ctx.chat.id,
-      });
-
-      if (!existingChat) {
-        // Register chatId if it doesn't exist
-        await new this.studentChatIdModel({ chatId: ctx.chat.id }).save();
-        console.log(`Stored new chat ID: ${ctx.chat.id}`);
-      }
+      // Register chat ID if not already stored
+      await this.registerChatId(ctx.chat.id);
 
       // Proceed with the grade request
       ctx.reply('Please enter your Student ID:');
       ctx.session.awaitingStudentId = true;
     });
 
+    // /contact command handler
     this.bot.command('contact', (ctx) => {
       const username = ctx.from.username
         ? `@${ctx.from.username}`
@@ -95,12 +91,14 @@ export class StudentBotService {
       ctx.session.awaitingAdminMessage = true;
     });
 
+    // /restart command handler
     this.bot.command('restart', (ctx) => {
       ctx.session.awaitingStudentId = false;
       ctx.session.awaitingAdminMessage = false;
       ctx.reply('Your session has been reset.');
     });
 
+    // Text message handler
     this.bot.on('text', async (ctx) => {
       if (ctx.session.awaitingStudentId) {
         const studentId = ctx.message.text.trim();
@@ -162,29 +160,6 @@ Total Grade: ${student.TOTAL}
    * Send a notification to all students who have interacted with the bot.
    * @param message - The message to send.
    */
-  // async sendNotification(message: string) {
-  //   console.log('Sending notification to students:', message);
-
-  //   try {
-  //     // Fetch all stored chat IDs from MongoDB
-  //     const studentChatIds = await this.studentChatIdModel.find({});
-  //     console.log(
-  //       'Stored student chat IDs:',
-  //       studentChatIds.map((s) => s.chatId),
-  //     );
-
-  //     for (const student of studentChatIds) {
-  //       try {
-  //         console.log(`Sending message to chat ID: ${student.chatId}`);
-  //         await this.bot.telegram.sendMessage(student.chatId, message);
-  //       } catch (error) {
-  //         console.error(`Failed to send message to ${student.chatId}:`, error);
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error('Error retrieving student chat IDs from MongoDB:', error);
-  //   }
-  // }
   async sendNotification(message: string) {
     console.log('Sending notification to students:', message);
 
