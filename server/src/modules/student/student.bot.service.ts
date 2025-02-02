@@ -95,14 +95,14 @@ export class StudentBotService {
             ctx.reply('Student not found.');
           } else {
             ctx.reply(`
-Student Name: ${student.Name}
-Student ID: ${student.STUDENT_ID}
+Full Name: ${student.Name}
 Assignment: ${student.ASSIGNMENT}
 Project: ${student.PROJECT}
 Midterm: ${student.MIDTERM}
 Final Term: ${student.FINALTERM}
-Total Grade: ${student.TOTAL}
             `);
+            // Student ID: ${student.STUDENT_ID}
+            // Total Grade: ${student.TOTAL}
           }
         } catch (error) {
           console.error('Error fetching student data:', error);
