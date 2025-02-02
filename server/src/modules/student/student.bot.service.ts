@@ -147,13 +147,9 @@ Total Grade: ${student.TOTAL}
     console.log('Sending notification:', message);
     try {
       const studentChatIds = await this.studentChatIdModel.find({});
-      console.log(
-        'Retrieved chat IDs:',
-        studentChatIds.map((s) => s.chatId),
-      );
 
-      if (studentChatIds.length === 0) {
-        console.log('No students found. Skipping message sending.');
+      if (!studentChatIds || studentChatIds.length === 0) {
+        console.log('No students found. Skipping notification.');
         return;
       }
 
