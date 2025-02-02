@@ -163,7 +163,7 @@ Total Grade: ${student.TOTAL}
         } catch (error) {
           if (error.response?.error_code === 403) {
             console.log(`Blocked user ${student.chatId}. Removing.`);
-            await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
+            await this.studentChatIdModel.deleteOne({ chatId: student.chatId }); // Remove blocked user
           } else {
             console.error(
               `Failed to send message to ${student.chatId}:`,
