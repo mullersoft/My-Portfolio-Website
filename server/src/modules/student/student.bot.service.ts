@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { Telegraf, Context, session } from 'telegraf';
+import { Telegraf, Context } from 'telegraf';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { StudentService } from './student.service';
 import { StudentChatId } from './student-chat-id.schema';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 interface MySessionData {
   awaitingStudentId?: boolean;
@@ -16,14 +18,16 @@ interface MyContext extends Context {
 
 @Injectable()
 export class StudentBotService {
+  private bot: Telegraf<MyContext>;
+  private adminChatId: string;
+
   constructor(
     private readonly studentService: StudentService,
-    @InjectModel('StudentChatId')
-    private readonly studentChatIdModel: Model<StudentChatId>,
-  ) {}
-
-  private bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN);
-  private adminChatId = process.env.ASSESSMENT_BOT_CHAT_ID;
+    @InjectModel('StudentChatId') private readonly studentChatIdModel: Model<StudentChatId>,
+  ) {
+    this.bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN);
+    this.adminChatId = process.env.ASSESSMENT_BOT_CHAT_ID;
+  }
 
   getBotInstance(): Telegraf<MyContext> {
     return this.bot;
@@ -48,8 +52,6 @@ export class StudentBotService {
   }
 
   async startBot() {
-    this.bot.use(session({ defaultSession: () => ({}) }));
-
     console.log('Bot is starting...');
 
     const webhookUrl = process.env.ASSESSMENT_WEBHOOK_URL;
@@ -64,9 +66,7 @@ export class StudentBotService {
     this.bot.start(async (ctx) => {
       console.log(`New student chat ID: ${ctx.chat.id}`);
       await this.registerChatId(ctx.chat.id);
-      ctx.reply(
-        `Welcome! Use /grade to check results or /contact to message the admin.`,
-      );
+      ctx.reply('Welcome! Use /grade to check results or /contact to message the admin.');
     });
 
     this.bot.command('grade', async (ctx) => {
@@ -101,8 +101,6 @@ Project: ${student.PROJECT}
 Midterm: ${student.MIDTERM}
 Final Term: ${student.FINALTERM}
             `);
-            // Student ID: ${student.STUDENT_ID}
-            // Total Grade: ${student.TOTAL}
           }
         } catch (error) {
           console.error('Error fetching student data:', error);
@@ -131,6 +129,8 @@ Final Term: ${student.FINALTERM}
         ctx.reply('Use /grade or /contact.');
       }
     });
+
+    this.bot.launch();
   }
 
   async isUserActive(chatId: number): Promise<boolean> {
@@ -143,81 +143,43 @@ Final Term: ${student.FINALTERM}
     }
   }
 
-  // async sendNotification(message: string) {
-  //   console.log('Sending notification:', message);
-  //   try {
-  //     const studentChatIds = await this.studentChatIdModel.find({});
-  //     if (studentChatIds.length === 0) {
-  //       console.log('No students found.');
-  //       return;
-  //     }
-
-  //     for (const student of studentChatIds) {
-  //       try {
-  //         if (await this.isUserActive(student.chatId)) {
-  //           await this.bot.telegram.sendMessage(student.chatId, message);
-  //           console.log(`Message sent to: ${student.chatId}`);
-  //         } else {
-  //           console.log(`User ${student.chatId} is inactive. Removing.`);
-  //           await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
-  //         }
-  //       } catch (error) {
-  //         if (error.response?.error_code === 403) {
-  //           console.log(`Blocked user ${student.chatId}. Removing.`);
-  //           await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
-  //         } else {
-  //           console.error(
-  //             `Failed to send message to ${student.chatId}:`,
-  //             error,
-  //           );
-  //         }
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error('Error retrieving student chat IDs:', error);
-  //   }
-  // }
-  import { readFileSync } from 'fs';
-import { join } from 'path';
-
-async sendNotification(body: { message?: string; pdfPath?: string }) {
+  async sendNotification(body: { message?: string; pdfPath?: string }) {
     try {
-        const studentChatIds = await this.studentChatIdModel.find({});
-        if (studentChatIds.length === 0) {
-            console.log('No students found.');
-            return;
-        }
+      const studentChatIds = await this.studentChatIdModel.find({});
+      if (studentChatIds.length === 0) {
+        console.log('No students found.');
+        return;
+      }
 
-        for (const student of studentChatIds) {
-            try {
-                // Check if the user is active
-                if (await this.isUserActive(student.chatId)) {
-                    if (body.message) {
-                        await this.bot.telegram.sendMessage(student.chatId, body.message);
-                        console.log(`✅ Message sent to: ${student.chatId}`);
-                    }
-
-                    if (body.pdfPath) {
-                        const pdfBuffer = readFileSync(join(__dirname, '../../uploads', body.pdfPath));
-                        await this.bot.telegram.sendDocument(student.chatId, { source: pdfBuffer, filename: 'document.pdf' });
-                        console.log(`📄 PDF sent to: ${student.chatId}`);
-                    }
-                } else {
-                    console.log(`⚠️ User ${student.chatId} is inactive. Removing from database.`);
-                    await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
-                }
-            } catch (error) {
-                if (error.response?.error_code === 403) {
-                    console.log(`🚫 User ${student.chatId} blocked the bot. Removing from database.`);
-                    await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
-                } else {
-                    console.error(`❌ Failed to send message/PDF to ${student.chatId}:`, error);
-                }
+      for (const student of studentChatIds) {
+        try {
+          // Check if the user is active
+          if (await this.isUserActive(student.chatId)) {
+            if (body.message) {
+              await this.bot.telegram.sendMessage(student.chatId, body.message);
+              console.log(`✅ Message sent to: ${student.chatId}`);
             }
-        }
-    } catch (error) {
-        console.error('❌ Error retrieving student chat IDs:', error);
-    }
-}
 
+            if (body.pdfPath) {
+              const pdfBuffer = readFileSync(join(__dirname, '../../uploads', body.pdfPath));
+              await this.bot.telegram.sendDocument(student.chatId, { source: pdfBuffer, filename: 'document.pdf' });
+              console.log(`📄 PDF sent to: ${student.chatId}`);
+            }
+          } else {
+            console.log(`⚠️ User ${student.chatId} is inactive. Removing from database.`);
+            await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
+          }
+        } catch (error) {
+          if (error.response?.error_code === 403) {
+            console.log(`🚫 User ${student.chatId} blocked the bot. Removing from database.`);
+            await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
+          } else {
+            console.error(`❌ Failed to send message/PDF to ${student.chatId}:`, error);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error retrieving student chat IDs:', error);
+    }
+  }
 }
