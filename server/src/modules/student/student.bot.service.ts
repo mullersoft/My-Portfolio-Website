@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Telegraf, Context } from 'telegraf';
-import { session } from '@telegraf/session'; // ✅ Add session middleware
+import { session } from 'telegraf-session'; // Corrected session import
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { StudentService } from './student.service';
@@ -27,7 +27,7 @@ export class StudentBotService {
     this.bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN);
     this.adminChatId = process.env.ASSESSMENT_BOT_CHAT_ID;
 
-    this.bot.use(session()); // ✅ Apply session middleware
+    this.bot.use(session()); // Applying session middleware
   }
 
   async startBot() {
@@ -44,13 +44,13 @@ export class StudentBotService {
 
     this.bot.start(async (ctx) => {
       await this.registerChatId(ctx.chat.id);
-      ctx.session = {}; // ✅ Initialize session explicitly
+      ctx.session = {}; // Initialize session
       ctx.reply('Welcome! Use /grade to check results or /contact to message the admin.');
     });
 
     this.bot.command('grade', async (ctx) => {
       await this.registerChatId(ctx.chat.id);
-      ctx.session ||= {}; // ✅ Ensure session is initialized
+      ctx.session ||= {}; // Ensure session is initialized
       ctx.session.awaitingStudentId = true;
       ctx.reply('Please enter your Student ID:');
     });
@@ -113,5 +113,17 @@ Final Term: ${student.FINALTERM}
     });
 
     this.bot.launch();
+  }
+
+  async sendNotification(data: any): Promise<void> {
+    // Implement notification logic here
+    console.log("Sending notification:", data);
+  }
+
+  async registerChatId(chatId: number): Promise<void> {
+    // Logic to register chat ID (save it to a database or memory)
+    console.log('Registering chat ID:', chatId);
+    // Example: save chatId in the database
+    await this.studentChatIdModel.create({ chatId });
   }
 }
