@@ -1,11 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Telegraf, Context } from 'telegraf';
+import { session } from '@telegraf/session'; // ✅ Add session middleware
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { StudentService } from './student.service';
 import { StudentChatId } from './student-chat-id.schema';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 
 interface MySessionData {
   awaitingStudentId?: boolean;
@@ -13,7 +12,7 @@ interface MySessionData {
 }
 
 interface MyContext extends Context {
-  session: MySessionData;
+  session?: MySessionData;
 }
 
 @Injectable()
@@ -27,28 +26,8 @@ export class StudentBotService {
   ) {
     this.bot = new Telegraf<MyContext>(process.env.ASSESSMENT_BOT_TOKEN);
     this.adminChatId = process.env.ASSESSMENT_BOT_CHAT_ID;
-  }
 
-  getBotInstance(): Telegraf<MyContext> {
-    return this.bot;
-  }
-
-  private async registerChatId(chatId: number) {
-    try {
-      await this.bot.telegram.sendMessage(chatId, 'Welcome!');
-      const existingChat = await this.studentChatIdModel.findOne({ chatId });
-
-      if (!existingChat) {
-        await new this.studentChatIdModel({ chatId }).save();
-        console.log(`Stored new chat ID: ${chatId}`);
-      }
-    } catch (error) {
-      if (error.response?.error_code === 403) {
-        console.log(`Bot was blocked by user with chat ID: ${chatId}.`);
-      } else {
-        console.error('Error storing chat ID:', error);
-      }
-    }
+    this.bot.use(session()); // ✅ Apply session middleware
   }
 
   async startBot() {
@@ -64,29 +43,32 @@ export class StudentBotService {
     }
 
     this.bot.start(async (ctx) => {
-      console.log(`New student chat ID: ${ctx.chat.id}`);
       await this.registerChatId(ctx.chat.id);
+      ctx.session = {}; // ✅ Initialize session explicitly
       ctx.reply('Welcome! Use /grade to check results or /contact to message the admin.');
     });
 
     this.bot.command('grade', async (ctx) => {
       await this.registerChatId(ctx.chat.id);
-      ctx.reply('Please enter your Student ID:');
+      ctx.session ||= {}; // ✅ Ensure session is initialized
       ctx.session.awaitingStudentId = true;
+      ctx.reply('Please enter your Student ID:');
     });
 
     this.bot.command('contact', (ctx) => {
-      ctx.reply('Please type your message for the admin.');
+      ctx.session ||= {};
       ctx.session.awaitingAdminMessage = true;
+      ctx.reply('Please type your message for the admin.');
     });
 
     this.bot.command('restart', (ctx) => {
-      ctx.session.awaitingStudentId = false;
-      ctx.session.awaitingAdminMessage = false;
+      ctx.session = {};
       ctx.reply('Your session has been reset.');
     });
 
     this.bot.on('text', async (ctx) => {
+      ctx.session ||= {};
+
       if (ctx.session.awaitingStudentId) {
         const studentId = ctx.message.text.trim();
         try {
@@ -131,55 +113,5 @@ Final Term: ${student.FINALTERM}
     });
 
     this.bot.launch();
-  }
-
-  async isUserActive(chatId: number): Promise<boolean> {
-    try {
-      const member = await this.bot.telegram.getChatMember(chatId, chatId);
-      return member.status !== 'kicked' && member.status !== 'left';
-    } catch (error) {
-      console.error(`Error checking chat status for ${chatId}:`, error);
-      return false;
-    }
-  }
-
-  async sendNotification(body: { message?: string; pdfPath?: string }) {
-    try {
-      const studentChatIds = await this.studentChatIdModel.find({});
-      if (studentChatIds.length === 0) {
-        console.log('No students found.');
-        return;
-      }
-
-      for (const student of studentChatIds) {
-        try {
-          // Check if the user is active
-          if (await this.isUserActive(student.chatId)) {
-            if (body.message) {
-              await this.bot.telegram.sendMessage(student.chatId, body.message);
-              console.log(`✅ Message sent to: ${student.chatId}`);
-            }
-
-            if (body.pdfPath) {
-              const pdfBuffer = readFileSync(join(__dirname, '../../uploads', body.pdfPath));
-              await this.bot.telegram.sendDocument(student.chatId, { source: pdfBuffer, filename: 'document.pdf' });
-              console.log(`📄 PDF sent to: ${student.chatId}`);
-            }
-          } else {
-            console.log(`⚠️ User ${student.chatId} is inactive. Removing from database.`);
-            await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
-          }
-        } catch (error) {
-          if (error.response?.error_code === 403) {
-            console.log(`🚫 User ${student.chatId} blocked the bot. Removing from database.`);
-            await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
-          } else {
-            console.error(`❌ Failed to send message/PDF to ${student.chatId}:`, error);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('❌ Error retrieving student chat IDs:', error);
-    }
   }
 }

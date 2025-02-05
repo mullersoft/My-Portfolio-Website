@@ -26,6 +26,7 @@
     "@nestjs/mongoose": "^10.1.0",
     "@nestjs/platform-express": "^10.4.15",
     "@nestjs/schedule": "^4.1.2",
+    "@telegraf/session": "^2.0.0-beta.7",
     "axios": "^1.7.9",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
