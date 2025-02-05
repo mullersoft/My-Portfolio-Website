@@ -143,38 +143,81 @@ Final Term: ${student.FINALTERM}
     }
   }
 
-  async sendNotification(message: string) {
-    console.log('Sending notification:', message);
-    try {
-      const studentChatIds = await this.studentChatIdModel.find({});
-      if (studentChatIds.length === 0) {
-        console.log('No students found.');
-        return;
-      }
+  // async sendNotification(message: string) {
+  //   console.log('Sending notification:', message);
+  //   try {
+  //     const studentChatIds = await this.studentChatIdModel.find({});
+  //     if (studentChatIds.length === 0) {
+  //       console.log('No students found.');
+  //       return;
+  //     }
 
-      for (const student of studentChatIds) {
-        try {
-          if (await this.isUserActive(student.chatId)) {
-            await this.bot.telegram.sendMessage(student.chatId, message);
-            console.log(`Message sent to: ${student.chatId}`);
-          } else {
-            console.log(`User ${student.chatId} is inactive. Removing.`);
-            await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
-          }
-        } catch (error) {
-          if (error.response?.error_code === 403) {
-            console.log(`Blocked user ${student.chatId}. Removing.`);
-            await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
-          } else {
-            console.error(
-              `Failed to send message to ${student.chatId}:`,
-              error,
-            );
-          }
+  //     for (const student of studentChatIds) {
+  //       try {
+  //         if (await this.isUserActive(student.chatId)) {
+  //           await this.bot.telegram.sendMessage(student.chatId, message);
+  //           console.log(`Message sent to: ${student.chatId}`);
+  //         } else {
+  //           console.log(`User ${student.chatId} is inactive. Removing.`);
+  //           await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
+  //         }
+  //       } catch (error) {
+  //         if (error.response?.error_code === 403) {
+  //           console.log(`Blocked user ${student.chatId}. Removing.`);
+  //           await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
+  //         } else {
+  //           console.error(
+  //             `Failed to send message to ${student.chatId}:`,
+  //             error,
+  //           );
+  //         }
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error('Error retrieving student chat IDs:', error);
+  //   }
+  // }
+  import { readFileSync } from 'fs';
+import { join } from 'path';
+
+async sendNotification(body: { message?: string; pdfPath?: string }) {
+    try {
+        const studentChatIds = await this.studentChatIdModel.find({});
+        if (studentChatIds.length === 0) {
+            console.log('No students found.');
+            return;
         }
-      }
+
+        for (const student of studentChatIds) {
+            try {
+                // Check if the user is active
+                if (await this.isUserActive(student.chatId)) {
+                    if (body.message) {
+                        await this.bot.telegram.sendMessage(student.chatId, body.message);
+                        console.log(`✅ Message sent to: ${student.chatId}`);
+                    }
+
+                    if (body.pdfPath) {
+                        const pdfBuffer = readFileSync(join(__dirname, '../../uploads', body.pdfPath));
+                        await this.bot.telegram.sendDocument(student.chatId, { source: pdfBuffer, filename: 'document.pdf' });
+                        console.log(`📄 PDF sent to: ${student.chatId}`);
+                    }
+                } else {
+                    console.log(`⚠️ User ${student.chatId} is inactive. Removing from database.`);
+                    await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
+                }
+            } catch (error) {
+                if (error.response?.error_code === 403) {
+                    console.log(`🚫 User ${student.chatId} blocked the bot. Removing from database.`);
+                    await this.studentChatIdModel.deleteOne({ chatId: student.chatId });
+                } else {
+                    console.error(`❌ Failed to send message/PDF to ${student.chatId}:`, error);
+                }
+            }
+        }
     } catch (error) {
-      console.error('Error retrieving student chat IDs:', error);
+        console.error('❌ Error retrieving student chat IDs:', error);
     }
-  }
+}
+
 }
