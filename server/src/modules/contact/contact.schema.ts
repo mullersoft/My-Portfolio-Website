@@ -1,9 +1,10 @@
-// D:\web D\portfolio-website\server\src\modules\contact\contact.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
+export type ContactDocument = Contact & Document;
+
 @Schema()
-export class Contact extends Document {
+export class Contact {
   @Prop({ required: true })
   name: string;
 
