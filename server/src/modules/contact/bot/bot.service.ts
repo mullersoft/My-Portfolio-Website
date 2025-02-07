@@ -100,14 +100,23 @@ export class BotService implements OnModuleInit {
         data.message = text;
         this.userStates.delete(chatId);
 
+        // Save message to MongoDB
         const contact = await this.createContact(data as Contact);
         await this.sendTelegramMessage(
           chatId,
           'Thank you! Your message has been saved.',
         );
 
-        const adminMessage = `📩 New Contact:\n\nName: ${contact.name}\nEmail: ${contact.email}\nMessage: ${contact.message}`;
-        await this.sendMessageToTelegram(adminMessage);
+        // Debugging: Log message to admin
+        console.log(`Sending message to admin:`, {
+          chatId: this.adminChatId,
+          message: `📩 New Contact:\n\nName: ${contact.name}\nEmail: ${contact.email}\nMessage: ${contact.message}`,
+        });
+
+        // Send the message to the admin via Telegram
+        await this.sendMessageToTelegram(
+          `📩 New Contact:\n\nName: ${contact.name}\nEmail: ${contact.email}\nMessage: ${contact.message}`,
+        );
       }
     } catch (error) {
       console.error('Error handling Telegram message:', error.message);
@@ -141,7 +150,8 @@ export class BotService implements OnModuleInit {
     try {
       const url = `${this.getTelegramApiUrl()}/sendMessage`;
       const payload = { chat_id: chatId, text };
-      await axios.post(url, payload);
+      const response = await axios.post(url, payload);
+      console.log('Message sent successfully:', response.data);
     } catch (error) {
       console.error(
         'Error sending message:',
@@ -154,7 +164,8 @@ export class BotService implements OnModuleInit {
     try {
       const url = `${this.getTelegramApiUrl()}/sendMessage`;
       const payload = { chat_id: this.adminChatId, text: message };
-      await axios.post(url, payload);
+      const response = await axios.post(url, payload);
+      console.log('Admin message sent successfully:', response.data);
     } catch (error) {
       console.error(
         'Error sending admin message:',
