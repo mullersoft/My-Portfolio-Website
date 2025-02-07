@@ -8,17 +8,17 @@ export class BotController {
   @Post('telegram-webhook')
   async handleTelegramWebhook(@Body() update: any): Promise<any> {
     try {
-      console.log('Webhook hit:', update);
+      console.log('Webhook received:', JSON.stringify(update, null, 2));
 
-      if (update.message) {
+      if (update?.message) {
         await this.botService.handleTelegramMessage(update);
-      } else if (update.callback_query) {
+      } else if (update?.callback_query) {
         await this.botService.handleCallbackQuery(update.callback_query);
       }
 
       return { success: true };
     } catch (error) {
-      console.error('Error handling webhook:', error);
+      console.error('Error handling webhook:', error.message);
       return { success: false, error: error.message };
     }
   }
