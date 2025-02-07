@@ -1,7 +1,7 @@
 import { Controller, Post, Get, Body } from '@nestjs/common';
 import { FrontendService } from './frontend.service';
-import { Contact } from '../contact.schema';
 import { CreateContactDto } from '../dto/create-contact.dto';
+import { Contact } from '../contact.schema';
 
 @Controller('contact/frontend')
 export class FrontendController {

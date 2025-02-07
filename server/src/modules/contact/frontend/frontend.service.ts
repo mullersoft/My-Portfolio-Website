@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Contact, ContactDocument } from '../contact.schema';
@@ -9,24 +9,22 @@ import { BotService } from '../bot/bot.service';
 export class FrontendService {
   constructor(
     @InjectModel(Contact.name) private contactModel: Model<ContactDocument>,
-    private readonly botService: BotService, // Inject BotService
+    private readonly botService: BotService,
   ) {}
 
-  async create(contactDto: CreateContactDto): Promise<Contact> {
+  async create(createContactDto: CreateContactDto): Promise<Contact> {
+    const newContact = new this.contactModel(createContactDto);
+    const savedContact = await newContact.save();
+
     try {
-      const newContact = new this.contactModel(contactDto);
-      const savedContact = await newContact.save();
-
-      // Notify Telegram bot
       await this.botService.sendMessageToTelegram(
-        `New contact created:\nName: ${savedContact.name}\nEmail: ${savedContact.email}\nMessage: ${savedContact.message}`,
+        `New Contact Submitted:\nName: ${savedContact.name}\nEmail: ${savedContact.email}\nMessage: ${savedContact.message}`,
       );
-
-      return savedContact;
     } catch (error) {
-      console.error('Error saving contact:', error);
-      throw new InternalServerErrorException('Failed to save contact');
+      console.error('Error sending notification to Telegram:', error);
     }
+
+    return savedContact;
   }
 
   async findAll(): Promise<Contact[]> {
