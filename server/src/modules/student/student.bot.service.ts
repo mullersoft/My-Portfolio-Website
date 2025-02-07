@@ -31,10 +31,7 @@ export class StudentBotService {
 
   private async registerChatId(chatId: number) {
     try {
-      await this.bot.telegram.sendMessage(
-        chatId,
-        '✅ Welcome to the student bot!',
-      );
+      await this.bot.telegram.sendMessage(chatId, '✅ ወደ ተማሪ ቦት እንኳን ደህና መጡ!');
       const existingChat = await this.studentChatIdModel.findOne({ chatId });
 
       if (!existingChat) {
@@ -73,7 +70,7 @@ export class StudentBotService {
     });
 
     this.bot.command('grade', async (ctx) => {
-      await this.registerChatId(ctx.chat.id);
+      // await this.registerChatId(ctx.chat.id);
       ctx.reply('📚 Please enter your Student ID:');
       ctx.session.awaitingStudentId = true;
     });
@@ -91,7 +88,9 @@ export class StudentBotService {
     this.bot.command('restart', (ctx) => {
       ctx.session.awaitingStudentId = false;
       ctx.session.awaitingAdminMessage = false;
-      ctx.reply('🔄 Your session has been reset.');
+      ctx.reply(
+        '🔄 Your session has been reseted.Use /grade to check results, /contact to message the admin',
+      );
     });
 
     this.bot.on('text', async (ctx) => {
