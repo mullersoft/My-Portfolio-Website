@@ -1,43 +1,113 @@
-# Portfolio Website
+# 📌 Portfolio Website  
 
-This is a full-stack portfolio website with a frontend built using React, and a backend built using NestJS. The frontend is deployed on **Netlify**, and the backend is deployed on **Render**. The website showcases a list of users, projects, and a contact form. The application connects to a MongoDB Atlas database for persistent data storage.
+This is a **full-stack portfolio website** designed to showcase users, projects, and a contact form. The frontend is built with **React and TypeScript**, while the backend is developed using **NestJS and MongoDB**. The application is deployed with:  
 
-## Features
+- **Frontend** → [Netlify](https://aesthetic-stroopwafel-42b2f3.netlify.app/)  
+- **Backend** → [Render](https://my-portfolio-website-z18d.onrender.com/)  
+- **Database** → MongoDB Atlas  
 
-- **Frontend**: 
-  - Built using **React** and **TypeScript**
-  - Responsive and interactive user interface
-  - Fetches data from the backend API for users, projects, and contact form submission
-  - Deployed on **Netlify** (Frontend URL: [https://aesthetic-stroopwafel-42b2f3.netlify.app/](https://aesthetic-stroopwafel-42b2f3.netlify.app/))
+## 🚀 Features  
 
-- **Backend**:
-  - Built using **NestJS** and **TypeScript**
-  - MongoDB Atlas for data storage
-  - Provides RESTful API for CRUD operations on users, projects, and contact messages
-  - Deployed on **Render** (Backend URL: [https://my-portfolio-website-3.onrender.com](https://my-portfolio-website-3.onrender.com))
+### **Frontend**  
+✅ Built with **React & TypeScript**  
+✅ Fully **responsive** & **interactive** UI  
+✅ Fetches data from the backend for:  
+   - Users  
+   - Projects  
+   - Contact form submissions  
+✅ Deployed on **Netlify**  
 
-## Technologies Used
+### **Backend**  
+✅ Developed using **NestJS & TypeScript**  
+✅ **MongoDB Atlas** for persistent data storage  
+✅ Provides **RESTful APIs** for:  
+   - CRUD operations on **users & projects**  
+   - Contact message handling  
+✅ Deployed on **Render**  
 
-- **Frontend**:
-  - ReactJS
-  - TypeScript
-  - Axios for API calls
-  - React Router for page routing
-  - Material UI for UI components
-  - Deployed on **Netlify**
+## 🛠️ Technologies Used  
 
-- **Backend**:
-  - NestJS
-  - TypeScript
-  - MongoDB (via MongoDB Atlas)
-  - CORS for cross-origin requests
-  - Deployed on **Render**
+### **Frontend (React & TypeScript)**  
+- **ReactJS** for UI development  
+- **TypeScript** for static typing  
+- **Axios** for API communication  
+- **React Router** for navigation  
+- **Material UI** for styling  
+- **Deployed on Netlify**  
 
-## Setup Instructions
+### **Backend (NestJS & MongoDB)**  
+- **NestJS** for backend architecture  
+- **TypeScript** for robust typing  
+- **MongoDB Atlas** for cloud database storage  
+- **CORS** for secure cross-origin requests  
+- **Deployed on Render**  
 
-### Backend Setup (NestJS)
+## 🏗️ Setup Instructions  
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/portfolio-website.git
-   cd portfolio-website
+### **1️⃣ Clone the Repository**  
+```bash
+git clone https://github.com/mullersoft/My-Portfolio-Website.git
+cd My-Portfolio-Website
+```
+
+### **2️⃣ Backend Configuration**  
+Create a `.env` file inside the `server` directory and set up the following environment variables:  
+
+```ini
+# MongoDB connection string  
+MONGO_URI=your_mongodb_uri  
+
+# Server port  
+PORT=5000  
+
+# OpenAI API Key (if applicable)  
+OPENAI_API_KEY=your_openai_api_key  
+
+# Telegram Bot Credentials  
+# Contact Bot (@mulersoftbot)  
+BOT_TOKEN=your_bot_token  
+CONTACT_BOT_CHAT_ID=your_chat_id  
+CONTACT_WEBHOOK_URL=your_webhook_url  
+
+# Quote Bot (@mullersoft_bot)  
+TELEGRAM_BOT_TOKEN=your_bot_token  
+QUOTE_BOT_CHAT_ID=your_chat_id  
+QUOT_WEBHOOK_URL=your_webhook_url  
+
+# Assessment Bot (@yourAssessmentBot)  
+ASSESSMENT_BOT_TOKEN=your_bot_token  
+ASSESSMENT_BOT_CHAT_ID=your_chat_id  
+ASSESSMENT_WEBHOOK_URL=your_webhook_url  
+
+# Auto Response Bot  
+AUTORESPONSE_BOT_TOKEN=your_bot_token  
+WEBHOOK_URL=your_webhook_url  
+```
+
+### **3️⃣ Frontend Configuration**  
+Inside `client/src/services/apiService.ts`, update the API URL:  
+
+```typescript
+const API_URL = "https://my-portfolio-website-z18d.onrender.com";
+```
+
+### **4️⃣ Run the Application**  
+
+#### **Start the Backend**  
+```bash
+cd server
+npm install
+npm run dev:start
+```
+
+#### **Start the Frontend**  
+```bash
+cd client
+npm install
+npm start
+```
+
+## 🎯 Deployment Links  
+
+🔗 **Frontend**: [Live Website](https://aesthetic-stroopwafel-42b2f3.netlify.app/)  
+🔗 **Backend API**: [API Endpoint](https://my-portfolio-website-z18d.onrender.com/)  
