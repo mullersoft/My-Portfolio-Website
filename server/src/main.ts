@@ -3,11 +3,12 @@ import { AppModule } from './app.module';
 import { StudentBotService } from './modules/student/student.bot.service';
 import { TelegramService } from './modules/telegram/telegram.service';
 import * as dotenv from 'dotenv';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 dotenv.config();
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   const allowedOrigins = ['https://aesthetic-stroopwafel-42b2f3.netlify.app'];
 
@@ -19,6 +20,18 @@ async function bootstrap() {
         callback(new Error('Not allowed by CORS'));
       }
     },
+  });
+
+  // Default route for root URL "/"
+  app.use('/', (req, res) => {
+    res.send(`
+      <h2>Welcome to my personal website of backend API Developed by Mulugeta Linger!</h2>
+      <p>Please visit our frontend application at 
+        <a href="https://aesthetic-stroopwafel-42b2f3.netlify.app/" target="_blank">Frontend Application</a>
+        to use the full application.</p>
+      <p>You can customize this code for your own use.</p>
+      <p>If you are very kind, please help me find a great job. I don't ask for money, just an opportunity. Thank you, see you again!</p>
+    `);
   });
 
   // Start the Telegram bot
