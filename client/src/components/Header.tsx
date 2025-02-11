@@ -35,7 +35,7 @@ const Header: React.FC = () => {
 
   const drawer = (
     <List sx={{ width: 250 }}>
-      {["Home", "Publications", "Services", "Projects", "About", "Contact"].map(
+      {["Home", "Projects", "About", "Publications", "Services", "Contact"].map(
         (text) => (
           <ListItem
             key={text}
