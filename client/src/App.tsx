@@ -9,6 +9,9 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Chatbot from "./components/Chatbot";
 import { Box, Button } from "@mui/material";
+import PublicationsPage from "./components/PublicationsPage";
+import ServicesPage from "./components/ServicesPage";
+
 
 const App: React.FC = () => {
   // State to toggle chatbot visibility
@@ -36,6 +39,9 @@ const App: React.FC = () => {
             <Route path="/projects" element={<Projects />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+			<Route path="/publications" element={<PublicationsPage />} />
+            <Route path="/services" element={<ServicesPage />} />
+        
           </Routes>
         </Box>
         <Footer />
