@@ -35,7 +35,7 @@ const Header: React.FC = () => {
 
   const drawer = (
     <List sx={{ width: 250 }}>
-      {["Home", "Publications", "Services", "Projects", "About", "Contact"].map(
+      {["Home", "Services", "Projects", "Publications", "About", "Contact"].map(
         (text) => (
           <ListItem
             key={text}
@@ -100,9 +100,10 @@ const Header: React.FC = () => {
             <Box sx={{ display: "flex", gap: "10px" }}>
               {[
                 "Home",
-                "Publications",
+
                 "Services",
                 "Projects",
+                "Publications",
                 "About",
                 "Contact",
               ].map((text, index) => (
