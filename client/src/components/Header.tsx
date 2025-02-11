@@ -35,25 +35,30 @@ const Header: React.FC = () => {
 
   const drawer = (
     <List sx={{ width: 250 }}>
-      {["Home", "Projects", "About", "Publications", "Services", "Contact"].map(
-        (text) => (
-          <ListItem
-            key={text}
-            onClick={() =>
-              handleNavigation(text === "Home" ? "/" : `/${text.toLowerCase()}`)
-            }
-            component="li"
-            disablePadding
-          >
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-              <ListItemText
-                primary={text}
-                sx={{ color: "white", cursor: "pointer" }}
-              />
-            </motion.div>
-          </ListItem>
-        )
-      )}
+      {[
+        "Home",
+        "Projects",
+        "Publications",
+        "About Me",
+        "Services",
+        "Contact",
+      ].map((text) => (
+        <ListItem
+          key={text}
+          onClick={() =>
+            handleNavigation(text === "Home" ? "/" : `/${text.toLowerCase()}`)
+          }
+          component="li"
+          disablePadding
+        >
+          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+            <ListItemText
+              primary={text}
+              sx={{ color: "white", cursor: "pointer" }}
+            />
+          </motion.div>
+        </ListItem>
+      ))}
     </List>
   );
 
@@ -100,10 +105,10 @@ const Header: React.FC = () => {
             <Box sx={{ display: "flex", gap: "10px" }}>
               {[
                 "Home",
-                "Publications",
-                "Services",
                 "Projects",
-                "About",
+                "Publications",
+                "About Me",
+                "Services",
                 "Contact",
               ].map((text, index) => (
                 <motion.div
