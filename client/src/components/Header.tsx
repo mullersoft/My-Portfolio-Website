@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   AppBar,
   Toolbar,
@@ -35,21 +35,25 @@ const Header: React.FC = () => {
 
   const drawer = (
     <List sx={{ width: 250 }}>
-      {["Home", "Projects", "About", "Contact"].map((text) => (
-        <ListItem
-          key={text}
-          onClick={() => handleNavigation(text === "Home" ? "/" : `/${text}`)}
-          component="li"
-          disablePadding
-        >
-          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-            <ListItemText
-              primary={text}
-              sx={{ color: "white", cursor: "pointer" }}
-            />
-          </motion.div>
-        </ListItem>
-      ))}
+      {["Home", "Publications", "Services", "Projects", "About", "Contact"].map(
+        (text) => (
+          <ListItem
+            key={text}
+            onClick={() =>
+              handleNavigation(text === "Home" ? "/" : `/${text.toLowerCase()}`)
+            }
+            component="li"
+            disablePadding
+          >
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+              <ListItemText
+                primary={text}
+                sx={{ color: "white", cursor: "pointer" }}
+              />
+            </motion.div>
+          </ListItem>
+        )
+      )}
     </List>
   );
 
@@ -94,7 +98,14 @@ const Header: React.FC = () => {
           ) : (
             // Animated Desktop Menu
             <Box sx={{ display: "flex", gap: "10px" }}>
-              {["Home", "Projects", "About", "Contact"].map((text, index) => (
+              {[
+                "Home",
+                "Publications",
+                "Services",
+                "Projects",
+                "About",
+                "Contact",
+              ].map((text, index) => (
                 <motion.div
                   key={text}
                   initial={{ opacity: 0, y: -10 }}
@@ -106,7 +117,9 @@ const Header: React.FC = () => {
                   <Button
                     sx={{ color: "#ecf0f1" }}
                     onClick={() =>
-                      handleNavigation(text === "Home" ? "/" : `/${text}`)
+                      handleNavigation(
+                        text === "Home" ? "/" : `/${text.toLowerCase()}`
+                      )
                     }
                   >
                     {text}
