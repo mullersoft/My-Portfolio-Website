@@ -1,49 +1,84 @@
 import { Injectable } from '@nestjs/common';
-import axios from 'axios';
-import * as dotenv from 'dotenv';
-
-dotenv.config();
 
 @Injectable()
 export class ChatGptService {
-  private readonly apiKey = process.env.HUGGINGFACE_API_KEY;
-  private readonly apiUrl =
-    'https://api-inference.huggingface.co/models/google/flan-t5-base';
-
   async getChatResponse(prompt: string): Promise<string> {
-    try {
-      const response = await axios.post(
-        this.apiUrl,
-        {
-          inputs: prompt,
-          options: {
-            wait_for_model: true,   // 🔥 VERY IMPORTANT
-          },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          timeout: 60000, // wait up to 60 seconds for cold start
-        },
-      );
+    const message = prompt.toLowerCase();
 
-      if (
-        Array.isArray(response.data) &&
-        response.data.length > 0 &&
-        response.data[0].generated_text
-      ) {
-        return response.data[0].generated_text;
-      }
+    // ---- ABOUT YOU ----
+    if (message.includes('who are you') || message.includes('about you')) {
+      return `
+I am an AI assistant for Mulugeta Linger.
 
-      return 'I could not generate a response. Please try again.';
-    } catch (error) {
-      console.error(
-        'HuggingFace API Error:',
-        error.response?.data || error.message,
-      );
-      return 'Sorry, the AI service is currently unavailable.';
+Mulugeta is a Software Engineer, Lecturer, and Researcher with strong experience in:
+• Full-stack web development
+• Odoo ERP
+• AI & Cybersecurity research
+• Automation and cloud systems
+`;
     }
+
+    // ---- SERVICES ----
+    if (message.includes('service') || message.includes('offer')) {
+      return `
+Here are the services offered:
+
+1. Full-stack web development (MERN, Laravel, TypeScript)
+2. Odoo ERP customization & module development
+3. SharePoint, PowerApps & workflow automation
+4. AI-powered chatbots and automation
+5. API development & system integration
+6. Secure backend & database design
+`;
+    }
+
+    // ---- PROJECTS ----
+    if (message.includes('project')) {
+      return `
+Highlighted projects include:
+
+• MessageHub – MERN + TypeScript web app
+• Event Management System – Geo-based backend
+• AI-based XSS attack detection (CNN-BiLSTM)
+• Music Management System (MERN stack)
+`;
+    }
+
+    // ---- PUBLICATIONS ----
+    if (message.includes('publication') || message.includes('paper')) {
+      return `
+Publications:
+
+1. Enhancing Cross-Site Scripting Attack Detection using CNN-BiLSTM and Online Learning
+2. Intelligent Fault Diagnosis for Bearings using Deep Transfer Learning
+
+Both published in Springer.
+`;
+    }
+
+    // ---- CONTACT ----
+    if (
+      message.includes('contact') ||
+      message.includes('email') ||
+      message.includes('reach')
+    ) {
+      return `
+You can contact Mulugeta via the contact form on this website
+or connect through LinkedIn and GitHub.
+`;
+    }
+
+    // ---- DEFAULT FALLBACK ----
+    return `
+Thanks for your message 😊
+
+I can help you with:
+• Services
+• Projects
+• Publications
+• Contact information
+
+Please ask about any of these.
+`;
   }
 }
