@@ -1,7 +1,9 @@
 import axios from "axios";
 
 // Get the API URL from environment variables
+//production
 const API_URL = "https://my-portfolio-website-z18d.onrender.com";
+//development
 // const API_URL = "http://localhost:5000";
 
 //const API_URL = process.env.REACT_APP_API_URL;
@@ -17,7 +19,11 @@ export const createUser = async (user: { name: string; email: string }) => {
 
 // Projects API
 export const fetchProjects = async () => {
+  //production
   return await axios.get(`${API_URL}/projects`);
+  //development
+    // return await axios.get('/projects'); // no need for full URL
+
 };
 
 export const createProject = async (project: {

@@ -18,7 +18,7 @@ interface Project {
   _id: string;
   title: string;
   description: string;
-  imageUrl: string;
+  imageUrl?: string; // optional
   techStack: string[];
   githubLink: string;
   deploymentLink: string;

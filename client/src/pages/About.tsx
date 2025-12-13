@@ -2,187 +2,227 @@ import React from "react";
 import {
   Container,
   Typography,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
-  Paper,
   Grid,
+  Card,
+  CardContent,
+  Chip,
+  Link,
+  Divider,
 } from "@mui/material";
+import { Email, Phone, GitHub, LinkedIn, Language } from "@mui/icons-material";
+import { motion } from "framer-motion";
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 50 },
+  visible: (i: number = 1) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.2, duration: 0.6, ease: "easeOut" },
+  }),
+};
 
 const About: React.FC = () => {
   return (
-    <Container maxWidth="lg">
-      {/* Header Section */}
-      <Typography variant="h3" gutterBottom align="center" color="primary">
-        About Me
-      </Typography>
-
-      <Typography
-        variant="h5"
-        align="center"
-        color="textSecondary"
-        paragraph
-        sx={{ textAlign: "justify" }}
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      {/* Header */}
+      <motion.header
+        initial="hidden"
+        animate="visible"
+        variants={fadeInUp}
       >
-        Hello! I'm <strong>Mulugeta Linger</strong>, a passionate software
-        developer with a BSc and MSc in Software Engineering. I specialize in
-        full-stack web development, focusing on the MERN stack (MongoDB,
-        Express, React, Node.js). I am dedicated to creating innovative web
-        applications and integrating machine learning and deep learning
-        technologies to provide more efficient solutions.
-      </Typography>
+        <Typography
+          variant="h3"
+          sx={{ color: "#007bff", fontWeight: 700, textAlign: "center" }}
+        >
+          Mulugeta Linger
+        </Typography>
+        <Typography
+          variant="subtitle1"
+          sx={{ color: "#444", mb: 1, textAlign: "center" }}
+        >
+          Software Developer | Odoo ERP Functional Consultant | Full-Stack Engineer
+        </Typography>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            flexWrap: "wrap",
+            gap: "12px",
+            fontSize: "0.9rem",
+          }}
+        >
+          <Link
+            href="mailto:mulerselinger@gmail.com"
+            sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+          >
+            <Email sx={{ color: "#007bff" }} /> mulerselinger@gmail.com
+          </Link>
+          <Link
+            href="tel:+251947300026"
+            sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+          >
+            <Phone sx={{ color: "#007bff" }} /> +251 947 300 026
+          </Link>
+          <Link
+            href="https://github.com/mullersoft"
+            target="_blank"
+            sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+          >
+            <GitHub sx={{ color: "#007bff" }} /> GitHub
+          </Link>
+          <Link
+            href="https://www.linkedin.com/in/mulugeta-linger-0890bb19a/"
+            target="_blank"
+            sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+          >
+            <LinkedIn sx={{ color: "#007bff" }} /> LinkedIn
+          </Link>
+          <Link
+            href="https://aesthetic-stroopwafel-42b2f3.netlify.app/"
+            target="_blank"
+            sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+          >
+            <Language sx={{ color: "#007bff" }} /> Portfolio
+          </Link>
+        </div>
+      </motion.header>
 
-      {/* Work Experience Section */}
-      <Typography variant="h5" gutterBottom align="center" color="primary">
-        My Work Experience
-      </Typography>
-
-      {/* Work Experience Cards */}
-      <Grid container spacing={3} justifyContent="center">
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ padding: 3, boxShadow: 3 }}>
-            <Typography variant="h6" color="primary">
-              Assistant Lecturer at Wollo University
-            </Typography>
-            <Typography variant="body2" color="textSecondary">
-              <i>April 2020 – Present</i>
-            </Typography>
-            <Typography variant="body1" paragraph sx={{ textAlign: "justify" }}>
-              I prepare and deliver lectures on software engineering topics,
-              supervise undergraduate students for their final projects, and
-              collaborate on research projects.
-            </Typography>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ padding: 3, boxShadow: 3 }}>
-            <Typography variant="h6" color="primary">
-              IT Expert at Ethiopian Investment Commission
-            </Typography>
-            <Typography variant="body2" color="textSecondary">
-              <i>December 2022 – November 2023</i>
-            </Typography>
-            <Typography variant="body1" paragraph sx={{ textAlign: "justify" }}>
-              Managed IT systems, provided support for Office 365 and
-              cloud-based solutions, and maintained hardware infrastructure.
-            </Typography>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ padding: 3, boxShadow: 3 }}>
-            <Typography variant="h6" color="primary">
-              Assistant Lecturer at Haramaya University
-            </Typography>
-            <Typography variant="body2" color="textSecondary">
-              <i>October 2018 – April 2020</i>
-            </Typography>
-            <Typography variant="body1" paragraph sx={{ textAlign: "justify" }}>
-              Conducted lectures, seminars, and tutorials on software
-              engineering topics and provided guidance to students.
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
-
-      <Divider sx={{ margin: "40px 0" }} />
-
-      {/* Education Section */}
-      <Typography
-        variant="h5"
-        gutterBottom
-        mt={4}
-        align="center"
-        color="primary"
+      {/* Professional Summary */}
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        custom={1}
+        variants={fadeInUp}
+        style={{ marginBottom: "20px" }}
       >
-        Education
-      </Typography>
+        <Typography variant="h5" sx={{ color: "#007bff", mb: 1 }}>
+          Professional Summary
+        </Typography>
+        <Typography variant="body1" sx={{ color: "#444", textAlign: "justify" }}>
+          Software Developer and Odoo ERP Functional Consultant experienced in full-stack development,
+          business process automation, and ERP customization. Skilled in Odoo functional analysis, workflow
+          configuration, requirement gathering, and delivering end-to-end ERP solutions. Strong background
+          in MERN, Laravel, and modern frontend frameworks. Capable of integrating AI-based features, building
+          scalable systems, and providing digital transformation solutions for organizations.
+        </Typography>
+      </motion.section>
 
-      {/* Education Cards */}
-      <Grid container spacing={3} justifyContent="center">
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ padding: 3, boxShadow: 3 }}>
-            <Typography variant="h6" color="primary">
-              MSc in Software Engineering
-            </Typography>
-            <Typography variant="body2" color="textSecondary">
-              Addis Ababa Science and Technology University | <i>2021 – 2024</i>
-            </Typography>
-            <Typography variant="body1" paragraph sx={{ textAlign: "justify" }}>
-              Currently pursuing my MSc, focusing on software engineering and
-              machine learning techniques.
-            </Typography>
-          </Paper>
+      <Divider sx={{ my: 2 }} />
+
+      {/* Work Experience */}
+      <section style={{ marginBottom: "20px" }}>
+        <Typography variant="h5" sx={{ color: "#007bff", mb: 1 }}>
+          Work Experience
+        </Typography>
+        {[
+          {
+            role: "Odoo ERP Functional Consultant (Remote)",
+            company: "ET Plus Company",
+            duration: "2025 – Present",
+            summary:
+              "Providing functional consultancy for Odoo ERP implementations including Sales, Purchase, Inventory, HR, Accounting, and CRM modules. Conducting requirement analysis, configuring workflows, preparing technical documentation, training users, and coordinating with developers for customizations. Supporting deployment, testing, and continuous improvement of ERP systems for multiple clients.",
+          },
+          {
+            role: "Software Engineering Lecturer",
+            company: "Wollo University",
+            duration: "2024 – Present",
+            summary:
+              "Teaching modern software engineering courses including Full-Stack Web Development, Database Systems, and AI. Mentoring students in project development and research. Contributing to academic research with published work in cybersecurity and machine learning.",
+          },
+          {
+            role: "Full-Stack Developer (Intern)",
+            company: "Qelemeda Software Company",
+            duration: "Jul – Sep 2025",
+            summary:
+              "Developed Laravel and Vue.js applications focusing on authentication, dashboards, reporting, and reusable components. Worked closely with the engineering team to deliver product features and API integrations.",
+          },
+          {
+            role: "IT Expert",
+            company: "Ethiopian Investment Commission",
+            duration: "2022 – 2023",
+            summary:
+              "Managed enterprise IT infrastructure, supported digital systems, and facilitated workflow automation using SharePoint and Office 365 platforms.",
+          },
+        ].map((job, idx) => (
+          <motion.div
+            key={idx}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            custom={idx + 1}
+            variants={fadeInUp}
+          >
+            <Card
+              sx={{ mb: 2, backgroundColor: "#fafafa", border: "1px solid #ddd" }}
+            >
+              <CardContent>
+                <Typography variant="h6" sx={{ color: "#007bff" }}>
+                  {job.role}
+                </Typography>
+                <Typography variant="body2" sx={{ color: "#1a1a1a" }}>
+                  {job.company}
+                </Typography>
+                <Typography variant="body2" sx={{ color: "#444", mb: 1 }}>
+                  {job.duration}
+                </Typography>
+                <Typography variant="body2" sx={{ color: "#444" }}>
+                  {job.summary}
+                </Typography>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </section>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Technical Skills */}
+      <section style={{ marginBottom: "20px" }}>
+        <Typography variant="h5" sx={{ color: "#007bff", mb: 1 }}>
+          Technical Skills
+        </Typography>
+        <Grid container spacing={2}>
+          {[
+            { category: "Odoo ERP", tags: ["Functional Analysis", "Odoo Workflows", "Business Process Mapping", "User Training", "Module Configuration"] },
+            { category: "Frontend", tags: ["React.js", "Vue.js", "Pinia", "Redux", "TailwindCSS", "Material-UI"] },
+            { category: "Backend", tags: ["Node.js", "Express.js", "NestJS", "PHP", "Laravel", "REST APIs"] },
+            { category: "Database & Tools", tags: ["MongoDB", "MySQL", "Docker", "Git", "Postman", "Linux"] },
+            { category: "AI / ML", tags: ["Python", "CNN-BiLSTM", "LLM", "Deep Learning", "AI API Integration"] },
+            { category: "Microsoft Platforms", tags: ["Office 365", "Power Automate", "Power Apps", "SharePoint"] },
+          ].map((skill, idx) => (
+            <Grid item xs={12} sm={6} key={idx}>
+              <motion.div
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.2 }}
+                custom={idx + 1}
+                variants={fadeInUp}
+              >
+                <Card sx={{ p: 1, backgroundColor: "#fafafa", border: "1px solid #ddd" }}>
+                  <Typography variant="subtitle1" sx={{ color: "#007bff", mb: 1 }}>
+                    {skill.category}
+                  </Typography>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                    {skill.tags.map((tag, i) => (
+                      <Chip key={i} label={tag} size="small" />
+                    ))}
+                  </div>
+                </Card>
+              </motion.div>
+            </Grid>
+          ))}
         </Grid>
+      </section>
 
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ padding: 3, boxShadow: 3 }}>
-            <Typography variant="h6" color="primary">
-              BSc in Software Engineering
-            </Typography>
-            <Typography variant="body2" color="textSecondary">
-              Jigjiga University | <i>2014 – 2018</i>
-            </Typography>
-            <Typography variant="body1" paragraph sx={{ textAlign: "justify" }}>
-              Completed my undergraduate degree with a focus on full-stack web
-              development and software engineering principles.
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
+      <Divider sx={{ my: 2 }} />
 
-      {/* Skills Section */}
-      <Typography
-        variant="h5"
-        gutterBottom
-        mt={4}
-        align="center"
-        color="primary"
-      >
-        Skills
-      </Typography>
+      {/* Projects, Education, References */}
+      {/* You can apply the same motion.div / fadeInUp animation here for consistency */}
 
-      <Grid container spacing={3} justifyContent="center">
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ padding: 3, boxShadow: 3 }}>
-            <Typography variant="h6" color="primary" gutterBottom>
-              Programming & Web Development
-            </Typography>
-            <List>
-              <ListItem>
-                <ListItemText primary="JavaScript, TypeScript" />
-              </ListItem>
-              <ListItem>
-                <ListItemText primary="React, Redux, Node.js, Express, NestJS" />
-              </ListItem>
-              <ListItem>
-                <ListItemText primary="MongoDB, SQL" />
-              </ListItem>
-            </List>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ padding: 3, boxShadow: 3 }}>
-            <Typography variant="h6" color="primary" gutterBottom>
-              Machine Learning & UI/UX
-            </Typography>
-            <List>
-              <ListItem>
-                <ListItemText primary="Machine Learning: Model Development, Concept Drift Handling" />
-              </ListItem>
-              <ListItem>
-                <ListItemText primary="UI/UX: CSS, Material-UI, Emotion" />
-              </ListItem>
-              <ListItem>
-                <ListItemText primary="Tools: Git, Docker, Postman" />
-              </ListItem>
-            </List>
-          </Paper>
-        </Grid>
-      </Grid>
+      <footer style={{ textAlign: "center", color: "#444", fontSize: "0.8rem", borderTop: "1px solid #ddd", paddingTop: "10px", marginTop: "10px" }}>
+        © 2025 Mulugeta Linger | Telegram: @mulersoft
+      </footer>
     </Container>
   );
 };
