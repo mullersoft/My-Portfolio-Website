@@ -1,3 +1,4 @@
+// server/src/middlewares/ip-tracking.middleware.ts
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import axios from 'axios';
@@ -6,71 +7,84 @@ import axios from 'axios';
 export class IpTrackingMiddleware implements NestMiddleware {
   private readonly botToken = process.env.BOT_TOKEN;
   private readonly chatId = process.env.CONTACT_BOT_CHAT_ID;
+  private readonly ipInfoToken = process.env.IPINFO_TOKEN;
 
   private getTelegramApiUrl() {
     return `https://api.telegram.org/bot${this.botToken}/sendMessage`;
   }
 
-  private async getGeoLocation(ipAddress: string): Promise<string> {
+  private async getGeoLocation(ip: string): Promise<string> {
     try {
-      const response = await axios.get(`http://ip-api.com/json/${ipAddress}`);
-      const { country, city, status, query } = response.data;
+      const res = await axios.get(
+        `https://ipinfo.io/${ip}?token=${this.ipInfoToken}`
+      );
 
-      if (status === 'success' && country && city) {
-        return `${city}, ${country}`;
-      } else {
-        console.warn(
-          `Incomplete or failed location data for IP ${query}:`,
-          response.data,
-        );
-        return 'Unknown Location';
-      }
+      const {
+        city,
+        region,
+        country,
+        org,
+        hostname,
+      } = res.data;
+
+      return `
+Approx. Location: ${city || 'Unknown'}, ${region || 'Unknown'}, ${country || ''}
+ISP / Org: ${org || 'Unknown'}
+Hostname: ${hostname || 'N/A'}
+      `.trim();
     } catch (error) {
-      console.error('Error fetching geo-location:', error.message);
-      return 'Unknown Location';
+      console.error('Geo lookup failed:', error.message);
+      return 'Location unavailable (GeoIP lookup failed)';
     }
   }
 
-  private async sendNotificationToTelegram(message: string) {
+  private async sendNotification(message: string) {
     try {
       await axios.post(this.getTelegramApiUrl(), {
         chat_id: this.chatId,
         text: message,
+        parse_mode: 'HTML',
       });
     } catch (error) {
       console.error(
-        'Error sending notification to Telegram:',
-        error.response?.data || error.message,
+        'Telegram error:',
+        error.response?.data || error.message
       );
     }
   }
 
-  private extractIpAddress(req: Request): string {
-    const forwardedFor = req.headers['x-forwarded-for'] as string;
-    const ipAddress = forwardedFor
-      ? forwardedFor.split(',')[0].trim()
-      : req.connection.remoteAddress || req.ip;
+  private extractIp(req: Request): string {
+    const forwarded = req.headers['x-forwarded-for'] as string;
 
-    return ipAddress === '::1' || ipAddress === '127.0.0.1'
-      ? '127.0.0.1'
-      : ipAddress;
+    const ip = forwarded
+      ? forwarded.split(',')[0].trim()
+      : req.socket.remoteAddress || req.ip;
+
+    return ip === '::1' || ip === '127.0.0.1' ? '127.0.0.1' : ip;
   }
 
   async use(req: Request, res: Response, next: NextFunction) {
-    const requestedUrl = req.originalUrl;
+    const url = req.originalUrl;
 
-    // Send notifications only for homepage ("/") and projects ("/project")
-    if (requestedUrl === '/' || requestedUrl.startsWith('/project')) {
-      const ipAddress = this.extractIpAddress(req);
-      const userAgent = req.headers['user-agent'] || 'Unknown User-Agent';
+    if (url === '/' || url.startsWith('/project')) {
+      const ip = this.extractIp(req);
+      const ua = req.headers['user-agent'] || 'Unknown';
       const location =
-        ipAddress === '127.0.0.1'
+        ip === '127.0.0.1'
           ? 'Localhost'
-          : await this.getGeoLocation(ipAddress);
+          : await this.getGeoLocation(ip);
 
-      const notificationMessage = `🌐 Website Visit:\n\nIP Address: ${ipAddress}\nLocation: ${location}\nPage: ${requestedUrl}\nUser-Agent: ${userAgent}`;
+      const message = `
+🌐 <b>Portfolio Visit</b>
 
-      await this.sendNotificationToTelegram(notificationMessage);
+<b>IP:</b> ${ip}
+<b>Page:</b> ${url}
+<b>User Agent:</b> ${ua}
+
+<b>${location}</b>
+      `.trim();
+
+      await this.sendNotification(message);
     }
 
     next();

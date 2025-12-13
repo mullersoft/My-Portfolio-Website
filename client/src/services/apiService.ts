@@ -44,7 +44,8 @@ export const sendMessage = async (contact: {
   return await axios.post(`${API_URL}/contact/frontend`, contact);
 };
 
-// Chatbot API
-export const askChatbot = async (prompt: string) => {
-  return await axios.post(`${API_URL}/chatgpt/ask`, { prompt });
+export const askChatbot = (message: string) => {
+  return axios.post(`${API_URL}/chatgpt/ask`, {
+    prompt: message,
+  });
 };

@@ -1,34 +1,37 @@
-// server/src/modules/chatgpt/chatgpt.service.ts
 import { Injectable } from '@nestjs/common';
-import { OpenAI } from 'openai';
+import axios from 'axios';
 import * as dotenv from 'dotenv';
 
-dotenv.config(); // Load environment variables from .env file
+dotenv.config();
 
 @Injectable()
 export class ChatGptService {
-  private openai: OpenAI;
-
-  constructor() {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      throw new Error(
-        'OPENAI_API_KEY is not defined in the environment variables',
-      );
-    }
-    this.openai = new OpenAI({ apiKey });
-  }
+  private readonly apiKey = process.env.HUGGINGFACE_API_KEY;
+  private readonly apiUrl =
+    'https://api-inference.huggingface.co/models/google/flan-t5-base';
 
   async getChatResponse(prompt: string): Promise<string> {
     try {
-      const response = await this.openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: prompt }],
-      });
-      return response.choices[0].message.content;
+      const response = await axios.post(
+        this.apiUrl,
+        {
+          inputs: prompt,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      return response.data[0]?.generated_text || 'No response.';
     } catch (error) {
-      console.error('Error in ChatGPT API call:', error);
-      throw new Error('Failed to get response from ChatGPT');
+      console.error(
+        'HuggingFace API Error:',
+        error.response?.data || error.message,
+      );
+      return 'Sorry, the AI service is currently unavailable.';
     }
   }
 }
