@@ -16,16 +16,28 @@ export class ChatGptService {
         this.apiUrl,
         {
           inputs: prompt,
+          options: {
+            wait_for_model: true,   // 🔥 VERY IMPORTANT
+          },
         },
         {
           headers: {
             Authorization: `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json',
           },
+          timeout: 60000, // wait up to 60 seconds for cold start
         },
       );
 
-      return response.data[0]?.generated_text || 'No response.';
+      if (
+        Array.isArray(response.data) &&
+        response.data.length > 0 &&
+        response.data[0].generated_text
+      ) {
+        return response.data[0].generated_text;
+      }
+
+      return 'I could not generate a response. Please try again.';
     } catch (error) {
       console.error(
         'HuggingFace API Error:',
