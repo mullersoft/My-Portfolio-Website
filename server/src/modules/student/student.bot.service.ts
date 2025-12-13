@@ -80,7 +80,7 @@ export class StudentBotService {
         ? `@${ctx.from.username}`
         : ctx.from.first_name || 'User';
       ctx.reply(
-        `✉️ Please type your message for the admin. Your username (${username}) will be included.`,
+        `✉️ Please type your message for the admin: `,
       );
       ctx.session.awaitingAdminMessage = true;
     });

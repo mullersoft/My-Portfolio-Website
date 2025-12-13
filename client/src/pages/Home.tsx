@@ -66,7 +66,7 @@ const Home: React.FC = () => {
           transition={{ duration: 0.8, delay: 0.6 }}
         >
           <Typography variant="h5" paragraph align="center">
-            Let me walk you through some of my recent projects and achievements.
+            Let me walk you through some of my recent achievements.
           </Typography>
         </motion.div>
 
