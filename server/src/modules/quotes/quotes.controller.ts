@@ -6,43 +6,47 @@ export class QuotesController {
   constructor(private readonly quotesService: QuotesService) {}
 
   @Post('telegram-webhook')
-  async handleTelegramWebhook(@Body() update: any) {
+  async handleTelegramWebhook(@Body() update: any): Promise<any> {
     try {
-      const message = update.message;
+      // Log the incoming update
+      console.log('Received update from Telegram:', update);
 
+      const message = update.message;
       if (!message || !message.text) {
-        return { success: true };
+        return { success: true }; // Ignore updates without text
       }
 
       const chatId = message.chat.id;
       const text = message.text.trim();
 
+      // Handle commands
       if (text === '/start') {
-        await this.quotesService.sendMessageToChat(
+        await this.quotesService.sendMessageToTelegram(
           chatId,
-          '🌟 Welcome to the Daily Quotes Bot!\n\nYou will receive daily quotes and motivational messages.\n\nCommands:\n/start\n/help\n/contact',
+          'Welcome to the Daily Quotes & Motivational Speeches Bot! 🌟\n\nYou can use the following commands:\n/start - Start the bot\n/help - Get help\n/contact - Contact us',
         );
       } else if (text === '/help') {
-        await this.quotesService.sendMessageToChat(
+        await this.quotesService.sendMessageToTelegram(
           chatId,
-          'ℹ️ Commands:\n/start\n/help\n/contact\n\nDaily messages are sent automatically.',
+          'Here are the available commands:\n/start - Start the bot\n/help - Get help\n/contact - Contact us\n\nYou will also receive daily quotes and motivational speeches.',
         );
       } else if (text === '/contact') {
-        await this.quotesService.sendMessageToChat(
+        await this.quotesService.sendMessageToTelegram(
           chatId,
-          '📩 Contact: @mulersoft',
+          '📩 Contact Us:\n\nIf you have any questions or feedback, please reach out to us at @mulersoft.',
         );
       } else {
-        await this.quotesService.sendMessageToChat(
+        // Default response for unknown commands
+        await this.quotesService.sendMessageToTelegram(
           chatId,
-          '❓ Unknown command. Type /help to see available commands.',
+          "Sorry, I didn't understand that command. Type /help to see the available commands.",
         );
       }
 
       return { success: true };
     } catch (error) {
-      console.error('Webhook error:', error.message);
-      return { success: false };
+      console.error('Error handling webhook:', error);
+      return { success: false, error: error.message };
     }
   }
 }
