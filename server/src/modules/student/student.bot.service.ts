@@ -71,8 +71,7 @@ export class StudentBotService {
 
     this.bot.command('grade', async (ctx) => {
       // await this.registerChatId(ctx.chat.id);
-      ctx.reply('Please enter your Student ID: e.g. WOUR/0000/17
-');
+      ctx.reply('Please enter your Student ID: e.g. WOUR/0000/17');
       ctx.session.awaitingStudentId = true;
     });
 
