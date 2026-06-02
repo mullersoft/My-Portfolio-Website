@@ -31,7 +31,7 @@ export class StudentBotService {
 
   private async registerChatId(chatId: number) {
     try {
-      await this.bot.telegram.sendMessage(chatId, '✅ ወደ ተማሪ ቦት እንኳን ደህና መጡ!');
+      await this.bot.telegram.sendMessage(chatId, 'እንኳን ወደ ተማሪ ቦት  በደህና መጡ!');
       const existingChat = await this.studentChatIdModel.findOne({ chatId });
 
       if (!existingChat) {
@@ -65,13 +65,14 @@ export class StudentBotService {
       console.log(`👤 New student chat ID: ${ctx.chat.id}`);
       await this.registerChatId(ctx.chat.id);
       ctx.reply(
-        `✅ Welcome! Use /grade to check results, /contact to message the admin, or /restart to reset your session.`,
+        `ሰላም👋 Use /grade to check results, /contact to message the admin, or /restart to reset your session.`,
       );
     });
 
     this.bot.command('grade', async (ctx) => {
       // await this.registerChatId(ctx.chat.id);
-      ctx.reply('📚 Please enter your Student ID:');
+      ctx.reply('Please enter your Student ID: e.g. WOUR/0000/17
+');
       ctx.session.awaitingStudentId = true;
     });
 
@@ -89,7 +90,7 @@ export class StudentBotService {
       ctx.session.awaitingStudentId = false;
       ctx.session.awaitingAdminMessage = false;
       ctx.reply(
-        '🔄 Your session has been reseted.Use /grade to check results, /contact to message the admin',
+        ' Your session has been reseted.Use /grade to check results, /contact to message the admin',
       );
     });
 
@@ -104,14 +105,14 @@ export class StudentBotService {
             );
           } else {
             const response = `
-🎓 Student Name: ${student.Name}
-🆔 Student ID: ${student.STUDENT_ID}
-📑 Assignment: ${student.ASSIGNMENT}
-📝 Test 1: ${student.TEST_1}
-📝 Test 2: ${student.TEST_2}
-📌 Project: ${student.PROJECT}
-📖 Midterm: ${student.MIDTERM}
-📚 Final Term: ${student.FINALTERM}
+Student Name: ${student.Name}
+Student ID: ${student.STUDENT_ID}
+Assignment: ${student.ASSIGNMENT}
+Test 1: ${student.TEST_1}
+Test 2: ${student.TEST_2}
+Project: ${student.PROJECT}
+Midterm: ${student.MIDTERM}
+Final Term: ${student.FINALTERM}
 🏆 Total Grade: ${student.TOTAL}
             `;
             ctx.reply(response);
@@ -134,7 +135,7 @@ export class StudentBotService {
               this.adminChatId,
               `📩 Message from ${username} (${ctx.from.id}):\n\n${studentMessage}`,
             );
-            ctx.reply('✅ Your message has been sent to the admin.');
+            ctx.reply('Your message has been sent to the admin.');
           } catch (error) {
             console.error('❌ Error sending message to admin:', error);
             ctx.reply('⚠️ Failed to send the message.');
