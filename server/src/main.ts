@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import * as dotenv from 'dotenv';
 import { Request, Response } from 'express';
 import { AppModule } from './app.module';
@@ -8,7 +9,10 @@ import { StudentBotService } from './modules/student/student.bot.service';
 dotenv.config();
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Needed on Render so the real visitor IP is read from proxy headers
+  app.set('trust proxy', true);
 
   const allowedOrigins = ['https://aesthetic-stroopwafel-42b2f3.netlify.app'];
 
